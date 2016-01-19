@@ -9,4 +9,7 @@ package br.com.riselabs.crawlers;
  */
 public class GitRepositiryHandlerTest {
 
+	// TODO [Test] create tag in a repository
+	// TODO [Test] create a list of tags
+	
 }
