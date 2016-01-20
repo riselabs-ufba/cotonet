@@ -3,7 +3,7 @@ import java.io.File;
 import java.sql.*;
 
 /**
- * Creates the connection with the database (SQLite 3).
+ * TODO Creates the connection with the database (MySQL).
  * @author Alcemir R. Santos
  *
  */
