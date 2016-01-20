@@ -26,6 +26,16 @@ public class ReposCrawler {
 	private static final String USER_HOME = System.getProperty("user.home");
 	private static final String REPOS_DIR = USER_HOME
 			+ "/Downloads/ReposCrawler/";
+	private static ReposCrawler instance;
+	
+	private ReposCrawler() {
+	}
+	
+	public static ReposCrawler getInstance() {
+		if (instance == null)
+			instance = new ReposCrawler();
+		return instance;
+	}
 
 	@SuppressWarnings("unchecked")
 	public static void main(String[] args) {
@@ -66,16 +76,6 @@ public class ReposCrawler {
 
 	// TODO clonar repositorio
 
-	private static ReposCrawler instance;
-
-	private ReposCrawler() {
-	}
-
-	public static ReposCrawler getInstance() {
-		if (instance == null)
-			instance = new ReposCrawler();
-		return instance;
-	}
 
 	public Repository cloneRepository(String remoteURL) throws IOException,
 			InvalidRemoteException, TransportException, GitAPIException {
