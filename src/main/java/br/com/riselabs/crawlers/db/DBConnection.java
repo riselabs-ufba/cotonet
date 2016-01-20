@@ -18,6 +18,38 @@ public class DBConnection {
 	// indica o ambiente que está sendo utilizado. TEST ou PRODUCTION
 	public static String ENVIROMENT = TEST;
 
+	
+	  public static void main(String[] argv) {
+
+			System.out.println("-------- MySQL JDBC Connection Testing ------------");
+
+			try {
+				Class.forName("com.mysql.jdbc.Driver");
+			} catch (ClassNotFoundException e) {
+				System.out.println("Where is your MySQL JDBC Driver?");
+				e.printStackTrace();
+				return;
+			}
+
+			System.out.println("MySQL JDBC Driver Registered!");
+			Connection connection = null;
+
+			try {
+				connection = DriverManager
+				.getConnection("jdbc:mysql://localhost/ghanalysis","root", "");
+
+			} catch (SQLException e) {
+				System.out.println("Connection Failed! Check output console");
+				e.printStackTrace();
+				return;
+			}
+
+			if (connection != null) {
+				System.out.println("You made it, take control your database now!");
+			} else {
+				System.out.println("Failed to make connection!");
+			}
+		  }
 	public DBConnection() {
 	}
 
@@ -58,16 +90,14 @@ public class DBConnection {
 			default:
 				// This will load the MySQL driver, each DB has its own driver
 				String dbClass = "com.mysql.jdbc.Driver";
-				Class.forName(dbClass);
+				Class.forName(dbClass).newInstance();
 				String dbURL = "jdbc:mysql://localhost/ghanalysis";
 				String user = "root";
-				String password = "root";
+				String password = "";
 				// Setup the connection with the DB
 				conn = DriverManager.getConnection(dbURL, user, password);
 				break;
 			}
-			// Retornando a conexão
-			return conn;
 		} catch (ClassNotFoundException e) {
 			// Tratando caso não carregue o driver
 			String errorMsg = "Driver not found.";
@@ -76,7 +106,15 @@ public class DBConnection {
 			// Tratando casso não consiga obter a conexão
 			String errorMsg = "Conncection error.";
 			throw new ClassNotFoundException(errorMsg, e);
+		} catch (InstantiationException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalAccessException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
+		// Retornando a conexão
+		return conn;
 	}
 
 	public static void closeConnection(Connection conn) {

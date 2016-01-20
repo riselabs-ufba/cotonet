@@ -3,11 +3,15 @@
  */
 package br.com.riselabs.crawlers;
 
-import static org.junit.Assert.assertNotNull;
-import static org.junit.Assert.fail;
+import static org.junit.Assert.*;
 
 import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Test;
 
 import br.com.riselabs.crawlers.db.DBConnection;
@@ -18,24 +22,40 @@ import br.com.riselabs.crawlers.db.DBConnection;
  */
 public class CrawlerDBManagerTest {
 
-	// TODO [Test] connect to the mysql DB;
-	@Test public void testMySQLConnection() throws ClassNotFoundException{
-		Connection conn = DBConnection.getConnection();
+	private Connection conn;
+	
+	@Before
+	public void setup() throws ClassNotFoundException{
+		conn = DBConnection.getConnection();
+	}
+	
+	@After
+	public void teardown() throws SQLException{
+		if (!conn.isClosed()) conn.close();
+			
+	}
+	
+	// connect to the mysql DB;
+	@Test
+	public void openMySQLConnection(){
 		assertNotNull(conn);
 	}
-	
-	// TODO [Test] execute a get repositories query;
-	@Test public void testExecuteMySQL(){
-		fail("not implemented yet.");
+
+	// close connection to the mysql DB;
+	@Test
+	public void closeMySQLConnection() throws SQLException  {
+		DBConnection.closeConnection(conn);
+		assertTrue(conn.isClosed());
 	}
-	
-	// TODO [Test] execute get merges scenarios;
-	@Test public void testGetMergeScenariosFilter(){
-		fail("not implemented yet.");
+
+	// execute a select query;
+	@Test
+	public void executeSelectQuery() throws ClassNotFoundException, SQLException {
+		PreparedStatement statement = conn.prepareStatement("select count(*) \"count\" from ghanalysis.repository");
+		ResultSet a = statement.executeQuery();
+		a.first();
+		assertEquals("there should be 711 entries", 711, a.getShort("count"));
+		a.close();
 	}
-	
-	// TODO [Test] execute get merges scenarios with filter;
-	@Test public void testGetMergeScenariosFiltered(){
-		fail("not implemented yet.");
-	}
+
 }
