@@ -57,12 +57,13 @@ public class DBConnection {
 			case MYSQL:
 			default:
 				// This will load the MySQL driver, each DB has its own driver
-				Class.forName("com.mysql.jdbc.Driver");
+				String dbClass = "com.mysql.jdbc.Driver";
+				Class.forName(dbClass);
 				String dbURL = "jdbc:mysql://localhost/ghanalysis";
 				String user = "root";
-				String pass = "root";
+				String password = "root";
 				// Setup the connection with the DB
-				conn = DriverManager.getConnection(dbURL, user, pass);
+				conn = DriverManager.getConnection(dbURL, user, password);
 				break;
 			}
 			// Retornando a conexão
