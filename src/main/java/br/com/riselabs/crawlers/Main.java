@@ -39,11 +39,19 @@ public class Main {
 			ReposCrawler crawler = ReposCrawler.getInstance();
 			crawler.setRepositoryID(anEntry.getKey());
 			crawler.setRepositoryURL(anEntry.getValue());
+			String system = IOHandler.getRepositorySystemName(anEntry
+					.getValue());
 			try {
 
 				crawler.cloneRepository();
 				crawler.createMergeBasedTags();
 				crawler.writeTagsFile();
+
+				// Writing codeface configuration files
+				IOHandler.createCodefaceConfFiles(system,
+						crawler.getLeftTags(), "-left.conf");
+				IOHandler.createCodefaceConfFiles(system,
+						crawler.getRightTags(), "-right.conf");
 
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
@@ -70,28 +78,31 @@ public class Main {
 		switch (source) {
 		case "txt": // It is a test. It should read from te .txt file.
 			String filename = "target_systems_repo_urls.txt";
-			File urlsFile = new File(RCProperties.REPOS_DIR + filename);	
+			File urlsFile = new File(RCProperties.USER_HOME +"/Downloads/ReposCrawler/"+ filename);
 			reposURLs = new HashMap<Integer, String>();
 			List<String> l = IOHandler.readFile(urlsFile.toPath());
-			
-			for (int i=1; i<=l.size(); i++) {
-			try {
-				ResultSet rs = DBManager.executeQuery("select r.id id from repository r where r.url=\'"+l.get(i-1).replace("https", "http")+"\'");
-				rs.first();
-				reposURLs.put(rs.getInt("id"), l.get(i-1));
-			} catch (ClassNotFoundException | SQLException e1) {
-				e1.printStackTrace();
+
+			for (int i = 1; i <= l.size(); i++) {
+				try {
+					ResultSet rs = DBManager
+							.executeQuery("select r.id id from repository r where r.url=\'"
+									+ l.get(i - 1).replace("https", "http")
+									+ "\'");
+					rs.first();
+					reposURLs.put(rs.getInt("id"), l.get(i - 1));
+				} catch (ClassNotFoundException | SQLException e1) {
+					e1.printStackTrace();
+				}
+
 			}
-			
-			};
-			
+
 			break;
 		case "db":
 		default:
 			reposURLs = IOHandler.readURLsFromDatabase();
 			break;
 		}
-		
+
 		System.out.println("Ready.");
 		return reposURLs;
 	}

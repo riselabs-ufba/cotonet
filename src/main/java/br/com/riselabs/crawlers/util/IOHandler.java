@@ -164,4 +164,53 @@ public class IOHandler {
 		
 		return scenarios;
 	}
+	
+	
+	public static void createCodefaceConfFiles(String system, List<String> tagsList, String appendix){
+		String releases = getReleases(tagsList);
+		
+		String s = 
+				"# prosoda configuration for voldemort \n"
+				+ "# Copyright UFBA/UniPassau - Alcemir Santos\n"
+				+ "#"
+				+ "# Copying and distribution of this file, with or without modification,\n"
+				+ "# are permitted in any medium without royalty provided the copyright\n"
+				+ "# notice and this notice are preserved.  This file is offered as-is,\n"
+				+ "# without any warranty.\n"
+				+ "\n"
+				+ "---\n"
+				+ "project: "+system + "\n"
+				+ "repo: "+system + " # Relative to git-dir as specified on the command line\n"
+				+ "description: "+system + "\n"
+				+ "mailinglists: \n"
+				+ "    -   name: \n"
+				+ "\n"
+				+ "        type:\n"
+				+ "\n"
+				+ "        source:\n"
+				+ "\n"
+				+ "#    - {name: gmane.comp.emulators.qemu.user, type: user, source: gmane}\n"
+				+ "\n"
+				+ "revisions: [" + releases +" ]\n"
+				+ "\n"
+				+ "rcs : ["+ releases +" ]\n"
+				+ "# tagging types: proximity, tag, file, feature, committer2author, feature_file\n"
+				+ "\n"
+				+ "tagging: file\n"
+				+ "";
+		
+		List<String> content = new ArrayList<String>();
+		content.add(s);
+		writeFile(new File(RCProperties.CONFIG_DIR + system + appendix), content);
+	}
+
+	
+	private static String getReleases(List<String> tagsList) {
+		if(tagsList.size()==1){
+			return "\""+tagsList.remove(0)+ "\"";
+		}else{
+			return "\""+ tagsList.remove(0) + "\", " + getReleases(tagsList);
+		}
+	}
+	
 }

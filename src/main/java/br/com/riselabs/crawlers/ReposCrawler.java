@@ -37,6 +37,8 @@ public class ReposCrawler {
 	private String repositoryURL;
 	private File repositoryDir;
 	private Integer repositoryID;
+	private List<String> left = new ArrayList<String>();
+	private List<String> right = new ArrayList<String>();
 
 	private ReposCrawler() {
 	}
@@ -45,6 +47,14 @@ public class ReposCrawler {
 		if (instance == null)
 			instance = new ReposCrawler();
 		return instance;
+	}
+
+	public List<String> getLeftTags() {
+		return left;
+	}
+
+	public List<String> getRightTags() {
+		return right;
 	}
 
 	public void setRepositoryID(Integer key) {
@@ -126,8 +136,6 @@ public class ReposCrawler {
 		IOHandler.writeTagsFile(targetSystem, tags);
 	}
 
-	List<String> left = new ArrayList<String>();
-	List<String> right = new ArrayList<String>();
 
 	public void createMergeBasedTags() throws IOException {
 		List<MergeScenario> scenarios = IOHandler
@@ -148,10 +156,10 @@ public class ReposCrawler {
 			String tagL = "L" + count;
 			String tagR = "R" + count;
 
-			left.add(tagB + ", ");
-			left.add(tagL + ", ");
-			right.add(tagB + ", ");
-			right.add(tagR + ", ");
+			left.add(tagB);
+			left.add(tagL);
+			right.add(tagB);
+			right.add(tagR);
 
 			// prepare test-repository
 			try (Git git = new Git(repository)) {
@@ -195,11 +203,6 @@ public class ReposCrawler {
 			count++;
 		}
 
-		// Writing codeface configuration files
-		String pathName = RCProperties.REPOS_DIR
-				+ IOHandler.getRepositorySystemName(repositoryURL);
-		IOHandler.writeFile(new File(pathName + "_leftTAGs.txt"), left);
-		IOHandler.writeFile(new File(pathName + "_rightTAGs.txt"), right);
 	}
 
 }
