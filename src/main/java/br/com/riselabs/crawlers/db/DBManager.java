@@ -24,10 +24,10 @@ public class DBManager {
 	  public static ResultSet executeQuery(String sql) throws SQLException, ClassNotFoundException {
 		  ResultSet rs = null;
 		  Connection dbConnection = DBConnection.getConnection();
-		  Statement stm = dbConnection.createStatement();
+		  PreparedStatement stm = dbConnection.prepareStatement(sql);
 		  
 		  try {
-			  rs = stm.executeQuery(sql);
+			  rs = stm.executeQuery();
 		  } catch (SQLException e) {
 			  e.printStackTrace();
 			  if (dbConnection != null) {

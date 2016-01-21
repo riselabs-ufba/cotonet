@@ -10,10 +10,17 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+
+import br.com.riselabs.crawlers.beans.MergeScenario;
+import br.com.riselabs.crawlers.db.DBManager;
 
 public class IOHandler {
 
@@ -23,8 +30,7 @@ public class IOHandler {
 			FileInputStream fis = new FileInputStream(fin);
 
 			// Construct BufferedReader from InputStreamReader
-			BufferedReader br = new BufferedReader(new InputStreamReader(
-					fis));
+			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 
 			urls = new ArrayList<String>();
 			String line = null;
@@ -43,8 +49,7 @@ public class IOHandler {
 	public static List<String> readFile(Path filePath) {
 		Charset charset = Charset.forName("US-ASCII");
 		List<String> urls = null;
-		try (BufferedReader reader = Files.newBufferedReader(filePath,
-				charset)) {
+		try (BufferedReader reader = Files.newBufferedReader(filePath, charset)) {
 			String line = null;
 			urls = new ArrayList<String>();
 			while ((line = reader.readLine()) != null) {
@@ -55,8 +60,7 @@ public class IOHandler {
 		}
 		return urls;
 	}
-	
-	
+
 	public static void writeFile(File file, List<String> content) {
 		BufferedWriter writer = null;
 		try {
@@ -76,25 +80,88 @@ public class IOHandler {
 			}
 		}
 	}
-	
+
 	public static File makeDirectory(String folderName) throws IOException {
 		File localPath = new File(RCProperties.REPOS_DIR + folderName);
 		if (localPath.exists()) {
-			System.out.println("Cleaning directory:" + localPath.toString());
+			System.out.println("Cleaning directory: " + localPath.toString());
 			FileUtils.deleteDirectory(localPath);
 		}
 		localPath.mkdirs();
 		System.gc();
 		return localPath;
 	}
-	
+
 	public static String getRepositorySystemName(String remoteURL) {
 		String[] path = remoteURL.split("/");
 		return path[path.length - 1];
 	}
 
 	public static void writeTagsFile(String tagetSystemName, List<String> tags) {
-		writeFile(new File(RCProperties.REPOS_DIR + tagetSystemName + "_TAGs.txt"), tags);
+		writeFile(new File(RCProperties.REPOS_DIR + tagetSystemName
+				+ "_TAGs.txt"), tags);
+
+	}
+
+	public static Map<Integer,String> readURLsFromDatabase() {
+		Map<Integer,String> result = new HashMap<Integer,String>();
+		try {
+			ResultSet rs = DBManager.executeQuery("select r.id ids, r.url urls from repository as r");
+			while (rs.next()) {
+				Integer id = rs.getInt("ids");
+				String url = rs.getString("urls");
+				url = url.replace("http", "https");
+				result.put(id, url);
+			}
+		} catch (ClassNotFoundException e) {
+			// getConnection fail.
+			e.printStackTrace();
+		} catch (SQLException e) {
+			// prepareStatement fail.
+			e.printStackTrace();
+		}
+		return result;
+	}
+	
+	public static List<MergeScenario> getMergeScenarios(Integer repositoryID) {
+		List<MergeScenario> scenarios = new ArrayList<MergeScenario>();
+		String sql = "select  "
+				+ "m.leftrevision \"left\", " 
+				+ "m.baserevision \"base\", " 
+				+ "m.rightrevision \"right\", "
+				+ "m.leftcommits \"nlcommits\","
+				+ "m.rightcommits \"nrcommits\"," 
+				+ "l.commitid \"leftsha\","
+				+ "b.commitid \"basesha\","
+				+ "r.commitid \"rightsha\" "
+				+ "from mergescenario m, revision l, revision b, revision r "
+				+ "where m.leftrepo = " + repositoryID
+				+ " and m.rightrepo = " + repositoryID
+				+ " and m.diffstatsdone "
+				+ "and m.gitstatsdone "
+				+ "and m.commitstatsdone "
+				+ "and m.leftrevision=l.id "
+				+ "and m.baserevision=b.id "
+				+ "and m.rightrevision=r.id ";
+//				+ " limit ", max_scenarios, sep="";
 		
+		try {
+			ResultSet rs = DBManager.executeQuery(sql);
+			while(rs.next()){
+				scenarios.add(new MergeScenario(
+						rs.getString("basesha"),
+						rs.getString("leftsha"),
+						rs.getString("rightsha"),
+						rs.getInt("nlcommits"),
+						rs.getInt("nrcommits")
+						));
+			}
+		} catch ( SQLException e) {
+			e.printStackTrace();
+		} catch (ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		
+		return scenarios;
 	}
 }
