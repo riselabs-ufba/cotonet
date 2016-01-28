@@ -1,14 +1,14 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers.suites;
+package br.com.riselabs.crawlers.test.suites;
 
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import br.com.riselabs.crawlers.CrawlerDBManagerTest;
-import br.com.riselabs.crawlers.FilesWritingTest;
-import br.com.riselabs.crawlers.GitRepositoryHandlerTest;
+import br.com.riselabs.crawlers.test.CrawlerDBManagerTest;
+import br.com.riselabs.crawlers.test.FilesWritingTest;
+import br.com.riselabs.crawlers.test.GitRepositoryHandlerTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({

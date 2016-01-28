@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers;
+package br.com.riselabs.crawlers.test;
 
 import static org.junit.Assert.*;
 

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers;
+package br.com.riselabs.crawlers.test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -15,6 +15,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import br.com.riselabs.crawlers.ReposCrawler;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
 import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;

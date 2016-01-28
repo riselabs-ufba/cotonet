@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers.util;
+package br.com.riselabs.crawlers.test.util;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers;
+package br.com.riselabs.crawlers.test;
 
 /**
  * @author Alcemir R. Santos
