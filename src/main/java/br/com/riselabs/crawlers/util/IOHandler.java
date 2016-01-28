@@ -97,10 +97,9 @@ public class IOHandler {
 		return path[path.length - 1];
 	}
 
-	public static void writeTagsFile(String tagetSystemName, List<String> tags) {
-		writeFile(new File(RCProperties.REPOS_DIR + tagetSystemName
-				+ "_TAGs.txt"), tags);
-
+	public static void writeTagsMappingFile(String targetSystemName, List<String> tags) throws IOException, NullPointerException, EmptyContentException {
+		writeFile(new File(RCProperties.REPOS_DIR + targetSystemName
+				+ "_TAGsMapping.txt"), tags);
 	}
 
 	public static Map<Integer,String> readURLsFromDatabase() {
@@ -142,7 +141,9 @@ public class IOHandler {
 				+ "and m.commitstatsdone "
 				+ "and m.leftrevision=l.id "
 				+ "and m.baserevision=b.id "
-				+ "and m.rightrevision=r.id ";
+				+ "and m.rightrevision=r.id "
+				+ "and m.leftcommits > 0 "
+				+ "and m.rightcommits > 0";
 //				+ " limit ", max_scenarios, sep="";
 		
 		try {
@@ -166,11 +167,29 @@ public class IOHandler {
 	}
 	
 	
-	public static void createCodefaceConfFiles(String system, List<String> tagsList, String appendix){
-		String releases = getReleases(tagsList);
+	public static void createCodefaceRunScript(List<String> target_systems) throws IOException, NullPointerException, EmptyContentException{
+		String str = "#!/bin/sh\n";
+		for (String s : target_systems) {
+			str += 
+				    "echo \"============================\"\n"
+				  + "echo \"[Running "+s+"]: Start\"\n"
+				  + "codeface run -p conf/"+s+".conf results/ repos/\n"
+				  + "echo \"[Running "+s+"]: End\"\n"
+				  + "echo \n";
+		}
+		str += "echo \"[Running Target Systems]: Done.\"";
+
+		List<String> content = new ArrayList<String>();
+		content.add(str);
+		writeFile(new File(RCProperties.CODEFACE_DIR + "run_target-systems.sh"), content);
+	}
+	
+	
+	public static void createCodefaceConfFiles(String system, List<String> tagsList) throws IOException, NullPointerException, EmptyContentException{
+		String releases = getReleases(tagsList.size()/3);
 		
 		String s = 
-				"# prosoda configuration for voldemort \n"
+				"# Configuration file for the system "+ system +" \n"
 				+ "# Copyright UFBA/UniPassau - Alcemir Santos\n"
 				+ "#"
 				+ "# Copying and distribution of this file, with or without modification,\n"
@@ -193,7 +212,7 @@ public class IOHandler {
 				+ "\n"
 				+ "revisions: [" + releases +" ]\n"
 				+ "\n"
-				+ "rcs : ["+ releases +" ]\n"
+//				+ "rcs : ["+ releases +" ]\n"
 				+ "# tagging types: proximity, tag, file, feature, committer2author, feature_file\n"
 				+ "\n"
 				+ "tagging: file\n"
@@ -201,16 +220,29 @@ public class IOHandler {
 		
 		List<String> content = new ArrayList<String>();
 		content.add(s);
-		writeFile(new File(RCProperties.CONFIG_DIR + system + appendix), content);
+		writeFile(new File(RCProperties.CONFIG_DIR + system + ".conf"), content);
 	}
 
 	
-	private static String getReleases(List<String> tagsList) {
-		if(tagsList.size()==1){
-			return "\""+tagsList.remove(0)+ "\"";
-		}else{
-			return "\""+ tagsList.remove(0) + "\", " + getReleases(tagsList);
+	private static String getReleases(Integer numTags) {
+		List<String> tuples = new ArrayList<String>();
+		for(int i=1; i<=(numTags); i++){
+			tuples.add( "\"B"+i+"\", \"L"+i+"\", \"R"+i+"\"" );
 		}
+		return createReleasesString(tuples);
+	}
+
+	private static String createReleasesString(List<String> tagsList) {
+		if(tagsList.size()==1){
+			return tagsList.remove(0);
+		}else{
+			return tagsList.remove(0) + ", " + createReleasesString(tagsList);
+		}
+	}
+
+	public static File getFile(File f) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

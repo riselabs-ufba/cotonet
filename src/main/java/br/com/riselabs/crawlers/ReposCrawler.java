@@ -5,7 +5,10 @@ import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.ConcurrentRefUpdateException;
@@ -39,6 +42,8 @@ public class ReposCrawler {
 	private Integer repositoryID;
 	private List<String> left = new ArrayList<String>();
 	private List<String> right = new ArrayList<String>();
+	private Map<String, String> tagsMap = new HashMap<String, String>();
+	
 
 	private ReposCrawler() {
 	}
@@ -49,6 +54,10 @@ public class ReposCrawler {
 		return instance;
 	}
 
+	public List<String> getTags(){
+		return new ArrayList<String>(tagsMap.keySet());
+	}
+	
 	public List<String> getLeftTags() {
 		return left;
 	}
@@ -129,11 +138,15 @@ public class ReposCrawler {
 		return tags;
 	}
 
-	public void writeTagsFile() throws IOException {
+	public void writeTagsFile() throws IOException, NullPointerException, EmptyContentException {
 		String targetSystem = IOHandler.getRepositorySystemName(repositoryURL);
-		List<String> tags = new ArrayList<String>(getRepository().getTags()
-				.keySet());
-		IOHandler.writeTagsFile(targetSystem, tags);
+		List<String> tags = new ArrayList<String>();
+		
+		for (Entry<String, String> e : tagsMap.entrySet()) {
+			tags.add(e.getKey()+": "+e.getValue());
+		}
+		
+		IOHandler.writeTagsMappingFile(targetSystem, tags);
 	}
 
 
@@ -156,6 +169,10 @@ public class ReposCrawler {
 			String tagL = "L" + count;
 			String tagR = "R" + count;
 
+			tagsMap.put(tagB,s.getBase());
+			tagsMap.put(tagL, s.getLeft());
+			tagsMap.put(tagR, s.getRight());
+			
 			left.add(tagB);
 			left.add(tagL);
 			right.add(tagB);

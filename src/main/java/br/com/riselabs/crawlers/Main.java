@@ -7,10 +7,13 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import javax.swing.text.html.HTML.Tag;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
@@ -30,10 +33,11 @@ public class Main {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		List<String> target_systems = new ArrayList<String>();
 
 		// read method documentation for more infos.
 		Map<Integer, String> reposURLs = readRepositoryURLs("txt");
-
+		
 		// for each url in the list clones the repository
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
 			ReposCrawler crawler = ReposCrawler.getInstance();
@@ -41,17 +45,17 @@ public class Main {
 			crawler.setRepositoryURL(anEntry.getValue());
 			String system = IOHandler.getRepositorySystemName(anEntry
 					.getValue());
+			target_systems.add(system);
 			try {
 
 				crawler.cloneRepository();
 				crawler.createMergeBasedTags();
+				
+				log("Writing Tags Mapping File.");
 				crawler.writeTagsFile();
 
-				// Writing codeface configuration files
-				IOHandler.createCodefaceConfFiles(system,
-						crawler.getLeftTags(), "-left.conf");
-				IOHandler.createCodefaceConfFiles(system,
-						crawler.getRightTags(), "-right.conf");
+				log("Writing codeface configuration file.");
+				IOHandler.createCodefaceConfFiles(system, crawler.getTags());
 
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
@@ -63,9 +67,16 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		System.out.println("_ Done. _");
+		
+		log("Writing shell script to run the target systems.");
+		IOHandler.createCodefaceRunScript(target_systems);
+		
+		log("_ Done. _");
 	}
 
+	private static void log(String message){
+		System.out.println(message);
+	}
 	/**
 	 * use "db" to recover from the database and "txt" to recover from the file.
 	 * 
