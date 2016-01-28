@@ -24,6 +24,7 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
@@ -90,7 +91,7 @@ public class ReposCrawler {
 		// prepare a new folder for the cloned repository
 		String targetSystemName = IOHandler
 				.getRepositorySystemName(repositoryURL);
-		repositoryDir = IOHandler.makeDirectory(targetSystemName);
+		setWorkDir(IOHandler.makeDirectory(targetSystemName));
 
 		// then clone
 		System.out.println("Cloning \"" + targetSystemName + "\" to "
@@ -107,7 +108,7 @@ public class ReposCrawler {
 
 	}
 
-	private Repository getRepository() throws IOException {
+	public  Repository getRepository() throws IOException {
 		// now open the resulting repository with a FileRepositoryBuilder
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
 		builder.setWorkTree(repositoryDir);
@@ -220,6 +221,10 @@ public class ReposCrawler {
 			count++;
 		}
 
+	}
+
+	public void setWorkDir(File gitRepositoryDirectory) {
+		this.repositoryDir = gitRepositoryDirectory;
 	}
 
 }

@@ -81,9 +81,29 @@ public class IOHandler {
 		}
 	}
 
+	/**
+	 * return the repo directory if it already exists
+	 * @param folderName
+	 * @return
+	 * @throws IOException
+	 */
+	public static File getDirectory(String folderName) throws IOException{
+		File dir = new File(RCProperties.REPOS_DIR + folderName);
+		if (dir.exists()) {
+			return dir;
+		}
+		return null;
+	}
+	
+	/**
+	 * rewrite the repo repository.
+	 * @param folderName
+	 * @return
+	 * @throws IOException
+	 */
 	public static File makeDirectory(String folderName) throws IOException {
-		File localPath = new File(RCProperties.REPOS_DIR + folderName);
-		if (localPath.exists()) {
+		File localPath = getDirectory(folderName);
+		if (localPath != null) {
 			System.out.println("Cleaning directory: " + localPath.toString());
 			FileUtils.deleteDirectory(localPath);
 		}
