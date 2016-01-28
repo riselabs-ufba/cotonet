@@ -22,6 +22,8 @@ import org.eclipse.jgit.api.errors.TransportException;
 import br.com.riselabs.crawlers.db.DBManager;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
 
 /**
  * @author Alcemir R. Santos
@@ -31,8 +33,12 @@ public class Main {
 
 	/**
 	 * @param args
+	 * @throws EmptyContentException 
+	 * @throws IOException 
+	 * @throws NullPointerException 
+	 * @throws InvalidNumberOfTagsException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws NullPointerException, IOException, EmptyContentException, InvalidNumberOfTagsException {
 		List<String> target_systems = new ArrayList<String>();
 
 		// read method documentation for more infos.
@@ -55,7 +61,7 @@ public class Main {
 				crawler.persistTagsMapping();
 
 				log("Writing codeface configuration file.");
-				IOHandler.createCodefaceConfFiles(system, crawler.getTags());
+				IOHandler.createCodefaceConfFiles(system, crawler.getTags().size());
 
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();

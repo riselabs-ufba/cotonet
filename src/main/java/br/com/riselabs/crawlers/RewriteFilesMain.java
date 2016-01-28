@@ -3,6 +3,7 @@
  */
 package br.com.riselabs.crawlers;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,7 +18,9 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.crawlers.util.IOHandler;
+import br.com.riselabs.crawlers.util.RCProperties;
 import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
 
 /**
  * @author alcemir
@@ -25,7 +28,7 @@ import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
  */
 public class RewriteFilesMain {
 
-	public static void main(String[] args) throws IOException, NullPointerException, EmptyContentException{
+	public static void main(String[] args) throws IOException, NullPointerException, EmptyContentException, InvalidNumberOfTagsException{
 		List<String> target_systems = new ArrayList<String>();
 
 		// read repos
@@ -63,7 +66,7 @@ public class RewriteFilesMain {
 						+ "_TAGsMapping.txt"), lines);
 
 				System.out.println("Writing codeface configuration file.");
-				IOHandler.createCodefaceConfFiles(system, new ArrayList<String>(repository.getTags().keySet()));
+				IOHandler.createCodefaceConfFiles(system, repository.getTags().size() );
 				revWalk.close();
 			}
 		}

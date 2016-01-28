@@ -7,12 +7,14 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import br.com.riselabs.crawlers.CrawlerDBManagerTest;
+import br.com.riselabs.crawlers.FilesWritingTest;
 import br.com.riselabs.crawlers.GitRepositoryHandlerTest;
 
 @RunWith(Suite.class)
 @Suite.SuiteClasses({
 	CrawlerDBManagerTest.class,
-	GitRepositoryHandlerTest.class
+	GitRepositoryHandlerTest.class,
+	FilesWritingTest.class
 })
 /**
  * @author Alcemir R. Santos

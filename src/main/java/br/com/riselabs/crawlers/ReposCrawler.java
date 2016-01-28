@@ -34,6 +34,7 @@ import br.com.riselabs.crawlers.beans.MergeScenario;
 import br.com.riselabs.crawlers.db.DBManager;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
 
 public class ReposCrawler {
 
