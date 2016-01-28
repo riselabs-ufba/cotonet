@@ -139,15 +139,16 @@ public class ReposCrawler {
 		return tags;
 	}
 
-	public void writeTagsFile() throws IOException, NullPointerException, EmptyContentException {
-		String targetSystem = IOHandler.getRepositorySystemName(repositoryURL);
+	public void persistTagsMapping() throws IOException, NullPointerException, EmptyContentException {
+		String targetSystemName = IOHandler.getRepositorySystemName(repositoryURL);
 		List<String> tags = new ArrayList<String>();
 		
 		for (Entry<String, String> e : tagsMap.entrySet()) {
 			tags.add(e.getKey()+": "+e.getValue());
 		}
 		
-		IOHandler.writeTagsMappingFile(targetSystem, tags);
+		IOHandler.writeFile(new File(RCProperties.REPOS_DIR + targetSystemName
+				+ "_TAGsMapping.txt"), tags);
 	}
 
 

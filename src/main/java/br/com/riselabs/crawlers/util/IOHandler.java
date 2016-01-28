@@ -117,11 +117,6 @@ public class IOHandler {
 		return path[path.length - 1];
 	}
 
-	public static void writeTagsMappingFile(String targetSystemName, List<String> tags) throws IOException, NullPointerException, EmptyContentException {
-		writeFile(new File(RCProperties.REPOS_DIR + targetSystemName
-				+ "_TAGsMapping.txt"), tags);
-	}
-
 	public static Map<Integer,String> readURLsFromDatabase() {
 		Map<Integer,String> result = new HashMap<Integer,String>();
 		try {

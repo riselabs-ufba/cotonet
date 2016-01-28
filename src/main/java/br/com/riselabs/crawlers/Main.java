@@ -52,7 +52,7 @@ public class Main {
 				crawler.createMergeBasedTags();
 				
 				log("Writing Tags Mapping File.");
-				crawler.writeTagsFile();
+				crawler.persistTagsMapping();
 
 				log("Writing codeface configuration file.");
 				IOHandler.createCodefaceConfFiles(system, crawler.getTags());

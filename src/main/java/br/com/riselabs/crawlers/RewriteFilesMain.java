@@ -59,7 +59,8 @@ public class RewriteFilesMain {
 					lines.add(e.getKey()+": "+rc.getName());
 				}
 
-				IOHandler.writeTagsMappingFile(system, lines);
+				IOHandler.writeFile(new File(RCProperties.REPOS_DIR + system
+						+ "_TAGsMapping.txt"), lines);
 
 				System.out.println("Writing codeface configuration file.");
 				IOHandler.createCodefaceConfFiles(system, new ArrayList<String>(repository.getTags().keySet()));
