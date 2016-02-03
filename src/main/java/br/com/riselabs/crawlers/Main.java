@@ -13,8 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import javax.swing.text.html.HTML.Tag;
-
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -33,17 +31,33 @@ public class Main {
 
 	/**
 	 * @param args
-	 * @throws EmptyContentException 
-	 * @throws IOException 
-	 * @throws NullPointerException 
-	 * @throws InvalidNumberOfTagsException 
+	 * @throws EmptyContentException
+	 * @throws IOException
+	 * @throws NullPointerException
+	 * @throws InvalidNumberOfTagsException
 	 */
-	public static void main(String[] args) throws NullPointerException, IOException, EmptyContentException, InvalidNumberOfTagsException {
-		List<String> target_systems = new ArrayList<String>();
-
-		// read method documentation for more infos.
-		Map<Integer, String> reposURLs = readRepositoryURLs("txt");
+	public static void main(String[] args) throws NullPointerException,
+			IOException, EmptyContentException, InvalidNumberOfTagsException {
+		File reposListFile = null;
 		
+		if(args.length == 1){
+			reposListFile = new File(args[0]);
+			if(!reposListFile.exists()){
+				System.out.println("ReposCrawler finished. File not found ("+ args[0]+ ").");
+				System.exit(0); // Ends execution if file not found.
+			}
+			
+			RCProperties.setWorkingDir(""); // it is running in the VM
+		}else{
+			RCProperties.setWorkingDir("/Downloads"); // it is running locally
+			reposListFile = new File(RCProperties.USER_HOME
+					+ "/Downloads/ReposCrawler/target_systems_repo_urls.txt");
+		}
+		
+		List<String> target_systems = new ArrayList<String>();
+		
+		Map<Integer, String> reposURLs = readRepositoryURLs("txt", reposListFile);
+
 		// for each url in the list clones the repository
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
 			ReposCrawler crawler = ReposCrawler.getInstance();
@@ -56,12 +70,13 @@ public class Main {
 
 				crawler.cloneRepository();
 				crawler.createMergeBasedTags();
-				
+
 				log("Writing Tags Mapping File.");
 				crawler.persistTagsMapping();
 
 				log("Writing codeface configuration file.");
-				IOHandler.createCodefaceConfFiles(system, crawler.getTags().size());
+				IOHandler.createCodefaceConfFiles(system, crawler.getTags()
+						.size());
 
 			} catch (InvalidRemoteException e) {
 				e.printStackTrace();
@@ -73,29 +88,32 @@ public class Main {
 				e.printStackTrace();
 			}
 		}
-		
+
 		log("Writing shell script to run the target systems.");
 		IOHandler.createCodefaceRunScript(target_systems);
-		
+
 		log("_ Done. _");
 	}
 
-	private static void log(String message){
+	private static void log(String message) {
 		System.out.println(message);
 	}
+
 	/**
 	 * use "db" to recover from the database and "txt" to recover from the file.
+	 * <p>
+	 * Ex: <code>readRepositoryURLs("txt", reposListFile);</code> or
+	 *  <code>readRepositoryURLs("db", null)</code>
 	 * 
-	 * @return
+	 *  @return
+	 *   - a map from the repository id in the ghanalysis db to the url.
 	 */
-	private static Map<Integer, String> readRepositoryURLs(String source) {
+	private static Map<Integer, String> readRepositoryURLs(String source, File urlsFile) {
 		Map<Integer, String> reposURLs = null;
-		System.out.print("Reading URLs...");
+		System.out.println("Reading URLs from: "+ urlsFile.toString());
 
 		switch (source) {
 		case "txt": // It is a test. It should read from te .txt file.
-			String filename = "target_systems_repo_urls.txt";
-			File urlsFile = new File(RCProperties.USER_HOME +"/Downloads/ReposCrawler/"+ filename);
 			reposURLs = new HashMap<Integer, String>();
 			List<String> l = IOHandler.readFile(urlsFile.toPath());
 
@@ -103,8 +121,13 @@ public class Main {
 				try {
 					ResultSet rs = DBManager
 							.executeQuery("select r.id id from repository r where r.url=\'"
-									+ l.get(i - 1).replace("https", "http")
+									+ l.get(i - 1).replace("https:", "http:")
 									+ "\'");
+					if (!rs.isBeforeFirst()){
+						System.out.println("[Skipping "+IOHandler.getRepositorySystemName(l.get(i-1))+"]: DB entry not found.");
+						continue; // to avoid nullpointer in case url does not
+									// exists in the database.
+					}
 					rs.first();
 					reposURLs.put(rs.getInt("id"), l.get(i - 1));
 				} catch (ClassNotFoundException | SQLException e1) {
@@ -120,7 +143,7 @@ public class Main {
 			break;
 		}
 
-		System.out.println("Ready.");
+		System.out.println("Done.");
 		return reposURLs;
 	}
 }

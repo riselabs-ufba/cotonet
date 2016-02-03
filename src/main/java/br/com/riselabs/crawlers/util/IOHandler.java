@@ -130,7 +130,7 @@ public class IOHandler {
 			while (rs.next()) {
 				Integer id = rs.getInt("ids");
 				String url = rs.getString("urls");
-				url = url.replace("http", "https");
+				url = url.replace("http:", "https:");
 				result.put(id, url);
 			}
 		} catch (ClassNotFoundException e) {
