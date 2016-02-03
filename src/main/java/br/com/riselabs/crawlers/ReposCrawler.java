@@ -160,10 +160,11 @@ public class ReposCrawler {
 			e.printStackTrace();
 		}
 		int count = 1;
+		String systemname = IOHandler.getRepositorySystemName(repositoryURL);
 		for (MergeScenario s : scenarios) {
-			String tagB = "B" + count;
-			String tagL = "L" + count;
-			String tagR = "R" + count;
+			String tagB = "B" + count+ "-"+systemname;
+			String tagL = "L" + count+ "-"+systemname;
+			String tagR = "R" + count+ "-"+systemname;
 
 			tagsMap.put(tagB,s.getBase());
 			tagsMap.put(tagL, s.getLeft());
