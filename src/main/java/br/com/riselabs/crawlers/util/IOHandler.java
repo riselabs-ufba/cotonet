@@ -107,8 +107,8 @@ public class IOHandler {
 	 * @throws IOException
 	 */
 	public static File makeDirectory(String folderName) throws IOException {
-		File localPath = getDirectory(folderName);
-		if (localPath != null) {
+		File localPath = new File(RCProperties.REPOS_DIR + folderName);
+		if (getDirectory(folderName) != null) {
 			System.out.println("Cleaning directory: " + localPath.toString());
 			FileUtils.deleteDirectory(localPath);
 		}
