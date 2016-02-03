@@ -2,8 +2,6 @@ package br.com.riselabs.crawlers;
 
 import java.io.File;
 import java.io.IOException;
-import java.sql.ResultSet;
-import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,14 +22,10 @@ import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevObject;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import com.sun.corba.se.spi.orbutil.fsm.Guard.Result;
-
 import br.com.riselabs.crawlers.beans.MergeScenario;
-import br.com.riselabs.crawlers.db.DBManager;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
 import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
@@ -163,7 +157,6 @@ public class ReposCrawler {
 				git.tagDelete().setTags(tag).call();
 			}
 		} catch (GitAPIException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		int count = 1;
