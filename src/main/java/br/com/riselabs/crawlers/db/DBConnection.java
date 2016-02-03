@@ -2,6 +2,12 @@ package br.com.riselabs.crawlers.db;
 
 import java.io.File;
 import java.sql.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import br.com.riselabs.crawlers.util.IOHandler;
+import br.com.riselabs.crawlers.util.RCProperties;
 
 /**
  * TODO Creates the connection with the database (MySQL).
@@ -18,38 +24,59 @@ public class DBConnection {
 	// indica o ambiente que está sendo utilizado. TEST ou PRODUCTION
 	public static String ENVIROMENT = TEST;
 
+
+	public static Map<String, String> readCredentials(){
+		List<String> lines = IOHandler.readFile(new File(RCProperties.WORKING_DIR+"/db.credentials"));
+		String user = "";
+		String pass = "";
+		for (String line : lines) {
+			if (line.contains("user")){
+				user = line.split(":")[1].replace(" ", "");
+			}
+			if (line.contains("password")) {
+				pass = line.split(":")[1].replace(" ", "");
+			}
+		}
+		Map<String, String> m = new HashMap<String, String>();
+		m.put("user", user);
+		m.put("pass", pass);
+		return m; 
+	}
 	
-	  public static void main(String[] argv) {
+	public static void main(String[] argv) {
 
-			System.out.println("-------- MySQL JDBC Connection Testing ------------");
+		System.out
+				.println("-------- MySQL JDBC Connection Testing ------------");
 
-			try {
-				Class.forName("com.mysql.jdbc.Driver");
-			} catch (ClassNotFoundException e) {
-				System.out.println("Where is your MySQL JDBC Driver?");
-				e.printStackTrace();
-				return;
-			}
+		try {
+			Class.forName("com.mysql.jdbc.Driver");
+		} catch (ClassNotFoundException e) {
+			System.out.println("Where is your MySQL JDBC Driver?");
+			e.printStackTrace();
+			return;
+		}
 
-			System.out.println("MySQL JDBC Driver Registered!");
-			Connection connection = null;
+		System.out.println("MySQL JDBC Driver Registered!");
+		Connection connection = null;
 
-			try {
-				connection = DriverManager
-				.getConnection("jdbc:mysql://localhost/ghanalysis","root", "");
+		Map<String, String> m = readCredentials();
+		try {
+			connection = DriverManager.getConnection(
+					"jdbc:mysql://localhost/ghanalysis", m.get("user"), m.get("pass"));
 
-			} catch (SQLException e) {
-				System.out.println("Connection Failed! Check output console");
-				e.printStackTrace();
-				return;
-			}
+		} catch (SQLException e) {
+			System.out.println("Connection Failed! Check output console");
+			e.printStackTrace();
+			return;
+		}
 
-			if (connection != null) {
-				System.out.println("You made it, take control your database now!");
-			} else {
-				System.out.println("Failed to make connection!");
-			}
-		  }
+		if (connection != null) {
+			System.out.println("You made it, take control your database now!");
+		} else {
+			System.out.println("Failed to make connection!");
+		}
+	}
+
 	public DBConnection() {
 	}
 
@@ -92,10 +119,9 @@ public class DBConnection {
 				String dbClass = "com.mysql.jdbc.Driver";
 				Class.forName(dbClass).newInstance();
 				String dbURL = "jdbc:mysql://localhost/ghanalysis";
-				String user = "root";
-				String password = "";
+				Map<String, String> m = readCredentials();
 				// Setup the connection with the DB
-				conn = DriverManager.getConnection(dbURL, user, password);
+				conn = DriverManager.getConnection(dbURL, m.get("user"), m.get("password"));
 				break;
 			}
 		} catch (ClassNotFoundException e) {
