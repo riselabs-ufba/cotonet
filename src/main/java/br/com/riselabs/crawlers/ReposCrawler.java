@@ -28,7 +28,7 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import br.com.riselabs.crawlers.beans.MergeScenario;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
-import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 
 public class ReposCrawler {
 

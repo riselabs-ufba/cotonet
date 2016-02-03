@@ -20,8 +20,8 @@ import org.eclipse.jgit.api.errors.TransportException;
 import br.com.riselabs.crawlers.db.DBManager;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
-import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
-import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
+import br.com.riselabs.crawlers.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 
 /**
  * @author Alcemir R. Santos

@@ -1,4 +1,4 @@
-package br.com.riselabs.crawlers.util.exceptions;
+package br.com.riselabs.crawlers.exceptions;
 
 public class InvalidNumberOfTagsException extends Exception {
 	/**

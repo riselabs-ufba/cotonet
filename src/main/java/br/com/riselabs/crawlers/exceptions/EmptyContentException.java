@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers.util.exceptions;
+package br.com.riselabs.crawlers.exceptions;
 
 /**
  * @author alcemir
