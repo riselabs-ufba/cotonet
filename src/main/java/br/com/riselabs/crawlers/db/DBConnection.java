@@ -39,7 +39,7 @@ public class DBConnection {
 		}
 		Map<String, String> m = new HashMap<String, String>();
 		m.put("user", user);
-		m.put("pass", pass);
+		m.put("password", pass);
 		return m; 
 	}
 	
