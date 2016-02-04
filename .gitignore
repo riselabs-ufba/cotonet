@@ -5,3 +5,4 @@ target
 .gradle
 /bin/
 /build/
+build_and_deploy.sh
