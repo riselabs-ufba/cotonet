@@ -36,32 +36,21 @@ public class ReposCrawler {
 	private String repositoryURL;
 	private File repositoryDir;
 	private Integer repositoryID;
-	private List<String> left = new ArrayList<String>();
-	private List<String> right = new ArrayList<String>();
 	private Map<String, String> tagsMap = new HashMap<String, String>();
-	
 
-	private ReposCrawler() {
+	public ReposCrawler() {
 	}
 
-	public static ReposCrawler getInstance() {
-		if (instance == null)
-			instance = new ReposCrawler();
-		return instance;
-	}
+//	public static ReposCrawler getInstance() {
+//		if (instance == null)
+//			instance = new ReposCrawler();
+//		return instance;
+//	}
 
 	public List<String> getTags(){
 		return new ArrayList<String>(tagsMap.keySet());
 	}
 	
-	public List<String> getLeftTags() {
-		return left;
-	}
-
-	public List<String> getRightTags() {
-		return right;
-	}
-
 	public void setRepositoryID(Integer key) {
 		this.repositoryID = key;
 	}
@@ -84,23 +73,22 @@ public class ReposCrawler {
 	public void cloneRepository() throws IOException, InvalidRemoteException,
 			TransportException, GitAPIException {
 		// prepare a new folder for the cloned repository
-		String targetSystemName = IOHandler
+		String targetSystemName = new IOHandler()
 				.getRepositorySystemName(repositoryURL);
-		setWorkDir(IOHandler.makeDirectory(targetSystemName));
+		setWorkDir(new IOHandler().makeDirectory(targetSystemName));
 
 		// then clone
-		System.out.println("Cloning \"" + targetSystemName + "\" to "
+		System.out.println("Cloning \"" + targetSystemName + "\" at: "
 				+ repositoryDir);
 		try (Git result = Git.cloneRepository().setURI(repositoryURL + ".git")
 				.setDirectory(repositoryDir).call()) {
 			// Note: the call() returns an opened repository already which
 			// needs to be closed to avoid file handle leaks!
-			System.out.println("Writing repository.");
 			// workaround for
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
 			result.getRepository().close();
 		}
-
+		System.gc();
 	}
 
 	public  Repository getRepository() throws IOException {
@@ -135,14 +123,14 @@ public class ReposCrawler {
 	}
 
 	public void persistTagsMapping() throws IOException, NullPointerException, EmptyContentException {
-		String targetSystemName = IOHandler.getRepositorySystemName(repositoryURL);
+		String targetSystemName = new IOHandler().getRepositorySystemName(repositoryURL);
 		List<String> tags = new ArrayList<String>();
 		
 		for (Entry<String, String> e : tagsMap.entrySet()) {
 			tags.add(e.getKey()+": "+e.getValue());
 		}
 		
-		IOHandler.writeFile(new File(RCProperties.REPOS_DIR + targetSystemName
+		new IOHandler().writeFile(new File(RCProperties.getReposDir() + targetSystemName
 				+ "_TAGsMapping.txt"), tags);
 	}
 
@@ -160,7 +148,7 @@ public class ReposCrawler {
 			e.printStackTrace();
 		}
 		int count = 1;
-		String systemname = IOHandler.getRepositorySystemName(repositoryURL);
+		String systemname = new IOHandler().getRepositorySystemName(repositoryURL);
 		for (MergeScenario s : scenarios) {
 			String tagB = "B" + count+ "-"+systemname;
 			String tagL = "L" + count+ "-"+systemname;
@@ -170,11 +158,6 @@ public class ReposCrawler {
 			tagsMap.put(tagL, s.getLeft());
 			tagsMap.put(tagR, s.getRight());
 			
-			left.add(tagB);
-			left.add(tagL);
-			right.add(tagB);
-			right.add(tagR);
-
 			// prepare test-repository
 			try (Git git = new Git(repository)) {
 

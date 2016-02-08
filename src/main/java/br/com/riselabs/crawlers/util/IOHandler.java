@@ -48,7 +48,7 @@ public class IOHandler {
 		return lines;
 	}
 
-	public static List<String> readFile(Path filePath) {
+	public List<String> readFile(Path filePath) {
 		Charset charset = Charset.forName("US-ASCII");
 		List<String> urls = null;
 		try (BufferedReader reader = Files.newBufferedReader(filePath, charset)) {
@@ -63,7 +63,7 @@ public class IOHandler {
 		return urls;
 	}
 
-	public static void writeFile(File file, List<String> content)
+	public void writeFile(File file, List<String> content)
 			throws IOException, NullPointerException, EmptyContentException {
 		if (content == null)
 			throw new NullPointerException();
@@ -92,7 +92,7 @@ public class IOHandler {
 	 * @throws IOException
 	 */
 	public static File getDirectory(String folderName) throws IOException {
-		File dir = new File(RCProperties.REPOS_DIR + folderName);
+		File dir = new File(RCProperties.getReposDir() + folderName);
 		if (dir.exists()) {
 			return dir;
 		}
@@ -106,8 +106,8 @@ public class IOHandler {
 	 * @return
 	 * @throws IOException
 	 */
-	public static File makeDirectory(String folderName) throws IOException {
-		File localPath = new File(RCProperties.REPOS_DIR + folderName);
+	public File makeDirectory(String folderName) throws IOException {
+		File localPath = new File(RCProperties.getReposDir() + folderName);
 		if (getDirectory(folderName) != null) {
 			System.out.println("Cleaning directory: " + localPath.toString());
 			FileUtils.deleteDirectory(localPath);
@@ -117,12 +117,12 @@ public class IOHandler {
 		return localPath;
 	}
 
-	public static String getRepositorySystemName(String remoteURL) {
+	public String getRepositorySystemName(String remoteURL) {
 		String[] path = remoteURL.split("/");
 		return path[path.length - 1];
 	}
 
-	public static Map<Integer, String> readURLsFromDatabase() {
+	public Map<Integer, String> readURLsFromDatabase() {
 		Map<Integer, String> result = new HashMap<Integer, String>();
 		try {
 			ResultSet rs = DBManager
@@ -175,7 +175,7 @@ public class IOHandler {
 		return scenarios;
 	}
 
-	public static void createCodefaceRunScript(List<String> target_systems)
+	public void createCodefaceRunScript(List<String> target_systems)
 			throws IOException, NullPointerException, EmptyContentException {
 		String str = "#!/bin/sh\n";
 		for (String s : target_systems) {
@@ -189,11 +189,11 @@ public class IOHandler {
 		List<String> content = new ArrayList<String>();
 		content.add(str);
 		writeFile(
-				new File(RCProperties.CODEFACE_DIR + "run_target-systems.sh"),
+				new File(RCProperties.getCodefaceDir() + "run_target-systems.sh"),
 				content);
 	}
 
-	public static void createCodefaceConfFiles(String system, Integer numTags)
+	public void createCodefaceConfFiles(String system, Integer numTags)
 			throws IOException, NullPointerException, EmptyContentException, InvalidNumberOfTagsException {
 		String releases = getTupletsString(numTags);
 
@@ -236,7 +236,7 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(s);
-		writeFile(new File(RCProperties.CONFIG_DIR + system + ".conf"), content);
+		writeFile(new File(RCProperties.getConfigDir() + system + ".conf"), content);
 	}
 
 	public static String getTupletsString(Integer numTags) throws InvalidNumberOfTagsException {

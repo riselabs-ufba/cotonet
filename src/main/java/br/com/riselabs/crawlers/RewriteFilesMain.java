@@ -19,8 +19,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
-import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
-import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
+import br.com.riselabs.crawlers.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 
 /**
  * @author alcemir
@@ -34,8 +34,8 @@ public class RewriteFilesMain {
 		// read repos
 		Map<Integer, String> reposURLs = new HashMap<Integer, String>();
 //		reposURLs.put(133 , "https://github.com/osmandapp/Osmand");
-		reposURLs.put(151, "https://github.com/groovy/groovy-core");
 		reposURLs.put(601, "https://github.com/abarisain/dmix");
+		reposURLs.put(151, "https://github.com/groovy/groovy-core");
 		
 		// for each repo write files
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
@@ -56,16 +56,16 @@ public class RewriteFilesMain {
 			try (Git git = new Git(repository)) {
 				RevWalk revWalk = new RevWalk(repository);
 
-				System.out.println("Writing Tags Mapping File.");
+				System.out.println("Writing Tags Mapping File for \""+system+"\".");
 				for (Entry<String, Ref>  e : repository.getTags().entrySet()) {
 					RevCommit rc = revWalk.parseCommit(e.getValue().getObjectId());
 					lines.add(e.getKey()+": "+rc.getName());
 				}
 
-				IOHandler.writeFile(new File(RCProperties.REPOS_DIR + system
+				IOHandler.writeFile(new File(RCProperties.getReposDir() + system
 						+ "_TAGsMapping.txt"), lines);
 
-				System.out.println("Writing codeface configuration file.");
+				System.out.println("Writing codeface configuration file for \""+system+"\".");
 				IOHandler.createCodefaceConfFiles(system, repository.getTags().size() );
 				revWalk.close();
 			}

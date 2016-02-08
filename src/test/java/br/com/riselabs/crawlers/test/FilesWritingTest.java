@@ -13,13 +13,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.Ignore;
 import org.junit.Test;
 
 import br.com.riselabs.crawlers.ReposCrawler;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
-import br.com.riselabs.crawlers.util.exceptions.EmptyContentException;
-import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
+import br.com.riselabs.crawlers.exceptions.EmptyContentException;
+import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 
 /**
  * @author alcemir
@@ -27,7 +28,7 @@ import br.com.riselabs.crawlers.util.exceptions.InvalidNumberOfTagsException;
  */
 public class FilesWritingTest {
 
-	private String testFilePath = RCProperties.REPOS_DIR+"test.txt";
+	private String testFilePath = RCProperties.getReposDir()+"test.txt";
 	
 	
 	@Test(expected=NullPointerException.class)
@@ -39,7 +40,7 @@ public class FilesWritingTest {
 	
 	@Test(expected=Exception.class)
 	public void tryToWriteADirectory() throws IOException, NullPointerException, EmptyContentException{
-		IOHandler.writeFile(new File(RCProperties.USER_HOME), new ArrayList<String>());
+		IOHandler.writeFile(new File(RCProperties.getUserHome()), new ArrayList<String>());
 	}
 	
 	@Test(expected = NullPointerException.class)
@@ -124,6 +125,7 @@ public class FilesWritingTest {
 		IOHandler.getTupletsString(tags.size());
 	}
 	
+	@Ignore
 	@Test
 	public void persistTagsMappingCorrectly() throws NullPointerException, IOException, EmptyContentException{
 		fail("not implemented yet.");

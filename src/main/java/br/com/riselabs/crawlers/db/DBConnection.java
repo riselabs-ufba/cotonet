@@ -26,7 +26,7 @@ public class DBConnection {
 
 
 	public static Map<String, String> readCredentials(){
-		List<String> lines = IOHandler.readFile(new File(RCProperties.WORKING_DIR+"/db.credentials"));
+		List<String> lines = IOHandler.readFile(new File(RCProperties.getWorkingDir()+"/db.credentials"));
 		String user = "";
 		String pass = "";
 		for (String line : lines) {
