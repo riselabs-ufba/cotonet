@@ -12,9 +12,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Stack;
 
 import br.com.riselabs.crawlers.core.CrawlerThread;
+import br.com.riselabs.crawlers.core.RCThreadPoolExecutor;
 import br.com.riselabs.crawlers.db.DBManager;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
@@ -37,6 +37,7 @@ public class Main {
 	 */
 	public static void main(String[] args) throws NullPointerException,
 			IOException, EmptyContentException, InvalidNumberOfTagsException {
+		IOHandler io = new IOHandler();
 		File reposListFile = null;
 
 		if (args.length == 1) {
@@ -68,26 +69,24 @@ public class Main {
 				reposListFile);
 
 		int count = 1;
-		IOHandler io = new IOHandler();
 		io.makeDirectory(new File( RCProperties.getLogDir()));
+		
+		RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
 		
 		// for each url in the list clones the repository
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
 			String system = RCUtil.getRepositorySystemName(anEntry.getValue());
-			Thread ct = new Thread(new CrawlerThread(count, system, anEntry));
 			try {
-				ct.start();
-				ct.join();
+				pool.runTask(new CrawlerThread(count, system, anEntry));
 			} catch (Exception e) {
-				RCUtil.log(e.toString());
-				RCUtil.log(e.getMessage());
 				RCUtil.logStackTrace(e);
 			}
 			count++;
 			target_systems.add(system);
 		}
 		
-		RCUtil.log("Writing shell script to run the target systems.");
+		pool.shutDown();
+		
 		io.createCodefaceRunScript(target_systems);
 
 		RCUtil.log("_ Done. _");
@@ -105,7 +104,7 @@ public class Main {
 	private static Map<Integer, String> readRepositoryURLs(String source,
 			File urlsFile) {
 		Map<Integer, String> reposURLs = null;
-		System.out.println("Reading URLs from: " + urlsFile.toString());
+		System.out.print("Reading URLs from: " + urlsFile.toString());
 
 		switch (source) {
 		case "txt": // It is a test. It should read from te .txt file.
@@ -143,7 +142,7 @@ public class Main {
 			break;
 		}
 
-		System.out.println("Done.");
+		System.out.println("..........[Done].");
 		return reposURLs;
 	}
 
