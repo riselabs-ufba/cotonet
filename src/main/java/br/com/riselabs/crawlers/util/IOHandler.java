@@ -228,8 +228,9 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(str);
-		writeFile(new File(RCProperties.getCodefaceDir()
-				+ "run_target-systems.sh"), content);
+		String path = RCProperties.getCodefaceDir() + "run_target-systems.sh";
+		writeFile(new File(path), content);
+		RCUtil.log("Shell script to run codeface with the target systems written at: "+path);
 	}
 
 	public void createCodefaceConfFiles(String system, Integer numTags)

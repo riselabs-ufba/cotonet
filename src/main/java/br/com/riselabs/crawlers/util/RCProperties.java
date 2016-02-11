@@ -3,6 +3,8 @@
  */
 package br.com.riselabs.crawlers.util;
 
+import java.io.File;
+
 /**
  * @author alcemir
  *
@@ -10,22 +12,22 @@ package br.com.riselabs.crawlers.util;
 public class RCProperties {
 
 	private static final String USER_HOME = System.getProperty("user.home");
-	private static  String WORKING_DIR = USER_HOME;
-	
+	private static String WORKING_DIR = USER_HOME;
+
 	public static String getUserHome() {
 		return USER_HOME;
 	}
-	
+
 	public static void setWorkingDir(String suffix) {
-		WORKING_DIR = USER_HOME+suffix;
+		WORKING_DIR = USER_HOME + suffix;
 	}
-	
+
 	public static String getWorkingDir() {
 		return WORKING_DIR;
 	}
 
 	public static String getCodefaceDir() {
-		return WORKING_DIR+"/codeface/";
+		return getWorkingDir() + File.separator + "codeface/";
 	}
 
 	public static String getReposDir() {
@@ -35,5 +37,9 @@ public class RCProperties {
 	public static String getConfigDir() {
 		return getCodefaceDir() + "conf/";
 	}
-	
+
+	public static String getLogDir() {
+		return getWorkingDir() + File.separator + "rc_logs/";
+	}
+
 }

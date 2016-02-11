@@ -28,11 +28,12 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import br.com.riselabs.crawlers.beans.MergeScenario;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.util.RCUtil;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 
 public class ReposCrawler {
 
-	private static ReposCrawler instance;
+//	private static ReposCrawler instance;
 	private String repositoryURL;
 	private File repositoryDir;
 	private Integer repositoryID;
@@ -73,9 +74,9 @@ public class ReposCrawler {
 	public void cloneRepository() throws IOException, InvalidRemoteException,
 			TransportException, GitAPIException {
 		// prepare a new folder for the cloned repository
-		String targetSystemName = new IOHandler()
+		String targetSystemName = RCUtil
 				.getRepositorySystemName(repositoryURL);
-		setWorkDir(new IOHandler().makeDirectory(targetSystemName));
+		setWorkDir(new IOHandler().makeSystemDirectory(targetSystemName));
 
 		// then clone
 		System.out.println("Cloning \"" + targetSystemName + "\" at: "
@@ -87,6 +88,7 @@ public class ReposCrawler {
 			// workaround for
 			// https://bugs.eclipse.org/bugs/show_bug.cgi?id=474093
 			result.getRepository().close();
+			result.close();
 		}
 		System.gc();
 	}
@@ -123,7 +125,7 @@ public class ReposCrawler {
 	}
 
 	public void persistTagsMapping() throws IOException, NullPointerException, EmptyContentException {
-		String targetSystemName = new IOHandler().getRepositorySystemName(repositoryURL);
+		String targetSystemName = RCUtil.getRepositorySystemName(repositoryURL);
 		List<String> tags = new ArrayList<String>();
 		
 		for (Entry<String, String> e : tagsMap.entrySet()) {
@@ -148,13 +150,13 @@ public class ReposCrawler {
 			e.printStackTrace();
 		}
 		int count = 1;
-		String systemname = new IOHandler().getRepositorySystemName(repositoryURL);
+		String systemname = RCUtil.getRepositorySystemName(repositoryURL);
 		for (MergeScenario s : scenarios) {
 			String tagB = "B" + count+ "-"+systemname;
 			String tagL = "L" + count+ "-"+systemname;
 			String tagR = "R" + count+ "-"+systemname;
 
-			tagsMap.put(tagB,s.getBase());
+			tagsMap.put(tagB, s.getBase());
 			tagsMap.put(tagL, s.getLeft());
 			tagsMap.put(tagR, s.getRight());
 			
