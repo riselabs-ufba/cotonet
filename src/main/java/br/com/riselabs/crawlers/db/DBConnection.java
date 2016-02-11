@@ -62,7 +62,7 @@ public class DBConnection {
 		Map<String, String> m = readCredentials();
 		try {
 			connection = DriverManager.getConnection(
-					"jdbc:mysql://localhost/ghanalysis", m.get("user"), m.get("pass"));
+					"jdbc:mysql://localhost/ghanalysis", m.get("user"), m.get("password"));
 
 		} catch (SQLException e) {
 			System.out.println("Connection Failed! Check output console");
