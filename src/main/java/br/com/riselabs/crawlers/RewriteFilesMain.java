@@ -19,6 +19,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.util.RCUtil;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 
@@ -40,15 +41,15 @@ public class RewriteFilesMain {
 		// for each repo write files
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
 			
-			ReposCrawler crawler = ReposCrawler.getInstance();
+			ReposCrawler crawler = new ReposCrawler();
 			
 			crawler.setRepositoryID(anEntry.getKey());
 			crawler.setRepositoryURL(anEntry.getValue());
-			String system = IOHandler.getRepositorySystemName(anEntry
+			String system = RCUtil.getRepositorySystemName(anEntry
 					.getValue());
 
 			target_systems.add(system);
-			crawler.setWorkDir(IOHandler.getDirectory(system));
+			crawler.setWorkDir(new IOHandler().getReposDirectory(system));
 			Repository repository = crawler.getRepository();
 			
 			List<String> lines = new ArrayList<String>();
@@ -62,17 +63,17 @@ public class RewriteFilesMain {
 					lines.add(e.getKey()+": "+rc.getName());
 				}
 
-				IOHandler.writeFile(new File(RCProperties.getReposDir() + system
+				new IOHandler().writeFile(new File(RCProperties.getReposDir() + system
 						+ "_TAGsMapping.txt"), lines);
 
 				System.out.println("Writing codeface configuration file for \""+system+"\".");
-				IOHandler.createCodefaceConfFiles(system, repository.getTags().size() );
+				new IOHandler().createCodefaceConfFiles(system, repository.getTags().size() );
 				revWalk.close();
 			}
 		}
 		
 		System.out.println("Writing shell script to run the target systems.");
-		IOHandler.createCodefaceRunScript(target_systems);
+		new IOHandler().createCodefaceRunScript(target_systems);
 		
 		System.out.println("_ Done. _");
 		

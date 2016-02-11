@@ -29,38 +29,38 @@ import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 public class FilesWritingTest {
 
 	private String testFilePath = RCProperties.getReposDir()+"test.txt";
-	
+	private IOHandler io = new IOHandler();
 	
 	@Test(expected=NullPointerException.class)
 	public void tryToWriteANullFile() throws IOException, NullPointerException, EmptyContentException{
 		List<String> l = new ArrayList<String>();
 		l.add("a");
-		IOHandler.writeFile(null, l);
+		io.writeFile(null, l);
 	}
 	
 	@Test(expected=Exception.class)
 	public void tryToWriteADirectory() throws IOException, NullPointerException, EmptyContentException{
-		IOHandler.writeFile(new File(RCProperties.getUserHome()), new ArrayList<String>());
+		io.writeFile(new File(RCProperties.getUserHome()), new ArrayList<String>());
 	}
 	
 	@Test(expected = NullPointerException.class)
 	public void tryToWriteNullContent() throws IOException, NullPointerException, EmptyContentException{
 		File f = new File(testFilePath);
-		IOHandler.writeFile(f, null);
+		io.writeFile(f, null);
 	}
 	
 	@Test(expected = EmptyContentException.class)
 	public void tryToWriteEmptyFile() throws IOException, NullPointerException, EmptyContentException{
 		File f = new File(testFilePath);
-		IOHandler.writeFile(f, new ArrayList<String>());
+		io.writeFile(f, new ArrayList<String>());
 	}
 	
 	@Test
 	public void createdFileCorrectly() throws NullPointerException, IOException, EmptyContentException{
 		List<String> l = new ArrayList<String>();
 		l.add("a");
-		IOHandler.writeFile(new File(testFilePath), l);
-		File f = IOHandler.getFile(new File(testFilePath));
+		io.writeFile(new File(testFilePath), l);
+		File f = new IOHandler().getFile(new File(testFilePath));
 		assertNotNull("File shouldn't be null.", f);
 	}
 	
@@ -72,10 +72,10 @@ public class FilesWritingTest {
 		expectedContent.add("b");
 		
 		// write the file
-		IOHandler.writeFile(new File(testFilePath), expectedContent);
+		io.writeFile(new File(testFilePath), expectedContent);
 		
 		// read the file
-		File f = IOHandler.getFile(new File(testFilePath));
+		File f = new IOHandler().getFile(new File(testFilePath));
 		List<String> actualContent = IOHandler.readFile(f);
 		
 		// check the content
@@ -130,7 +130,7 @@ public class FilesWritingTest {
 	public void persistTagsMappingCorrectly() throws NullPointerException, IOException, EmptyContentException{
 		fail("not implemented yet.");
 
-		ReposCrawler c = ReposCrawler.getInstance();
+		ReposCrawler c = new ReposCrawler();
 		
 		// TODO mock repository
 
