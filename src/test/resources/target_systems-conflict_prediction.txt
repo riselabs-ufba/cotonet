@@ -70,7 +70,6 @@ https://github.com/Athou/commafeed
 https://github.com/arduino/Arduino
 https://github.com/spring-projects/spring-social
 https://github.com/spring-projects/spring-roo
-https://github.com/spring-projects/spring-boot
 https://github.com/gwtbootstrap/gwt-bootstrap
 https://github.com/dynjs/dynjs
 https://github.com/thinkaurelius/titan
@@ -103,7 +102,6 @@ https://github.com/spullara/mustache.java
 https://github.com/sikuli/sikuli
 https://github.com/pcpratts/rootbeer1
 https://github.com/rzwitserloot/lombok
-https://github.com/TonicArtos/StickyGridHeaders
 https://github.com/webbit/webbit
 https://github.com/flyway/flyway
 https://github.com/trifork/erjang
