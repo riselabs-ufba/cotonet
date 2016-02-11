@@ -10,20 +10,11 @@ import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
 
 /**
- * TODO Creates the connection with the database (MySQL).
  * 
  * @author Alcemir R. Santos
  *
  */
 public class DBConnection {
-
-	public static final String PRODUCTION = "info" + File.separator
-			+ "simules-production.db";
-	public static final String TEST = "info" + File.separator
-			+ "simules-test.db";
-	// indica o ambiente que está sendo utilizado. TEST ou PRODUCTION
-	public static String ENVIROMENT = TEST;
-
 
 	public static Map<String, String> readCredentials(){
 		List<String> lines = IOHandler.readFile(new File(RCProperties.getWorkingDir()+"/db.credentials"));
@@ -111,14 +102,14 @@ public class DBConnection {
 				// Carregando o driver
 				Class.forName("org.sqlite.JDBC");
 				// Estabelecendo conexão
-				conn = DriverManager.getConnection("jdbc:sqlite:" + ENVIROMENT);
+				conn = DriverManager.getConnection("jdbc:sqlite:" +"simules-test.db");
 				break;
 			case MYSQL:
 			default:
 				// This will load the MySQL driver, each DB has its own driver
 				String dbClass = "com.mysql.jdbc.Driver";
 				Class.forName(dbClass).newInstance();
-				String dbURL = "jdbc:mysql://localhost/ghanalysis";
+				String dbURL = "jdbc:mysql://localhost/ghanalysis?autoReconnect=true&useSSL=false";
 				Map<String, String> m = readCredentials();
 				// Setup the connection with the DB
 				conn = DriverManager.getConnection(dbURL, m.get("user"), m.get("password"));
