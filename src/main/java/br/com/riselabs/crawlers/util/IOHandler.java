@@ -63,40 +63,86 @@ public class IOHandler {
 		return urls;
 	}
 
-	public void writeFile(File file, List<String> content)
-			throws IOException, NullPointerException, EmptyContentException {
+	/**
+	 * Appends a line to a given file.
+	 * 
+	 * @param file
+	 * @param aLine
+	 * @throws IOException
+	 */
+	public void writeFileLine(File file, String aLine) throws IOException {
+		BufferedWriter writer = null;
+			writer = new BufferedWriter(new FileWriter(file, true));
+			writer.write(aLine + "\n");
+			// Close the writer regardless of what happens...
+			writer.close();
+	}
+
+	/**
+	 * Appends a list of lines to a given file.
+	 * 
+	 * @param file
+	 * @param content
+	 * @throws IOException
+	 * @throws NullPointerException
+	 * @throws EmptyContentException
+	 */
+	public void writeFile(File file, List<String> content) throws IOException,
+			NullPointerException, EmptyContentException {
 		if (content == null)
 			throw new NullPointerException();
 		if (content.isEmpty())
 			throw new EmptyContentException();
 
-		BufferedWriter writer = null;
-		try {
-			writer = new BufferedWriter(new FileWriter(file));
-
-			for (String line : content) {
-				writer.write(line + "\n");
-			}
-
-		} finally {
-			// Close the writer regardless of what happens...
-			writer.close();
+		for (String line : content) {
+			writeFileLine(file, line + "\n");
 		}
 	}
 
 	/**
-	 * return the repo directory if it already exists
+	 * Checks whether the "repos" directory correspondent to the given name already
+	 * exists. Returns <code>null</code> if not.
 	 * 
 	 * @param folderName
-	 * @return
+	 * @return - the directory
 	 * @throws IOException
 	 */
-	public static File getDirectory(String folderName) throws IOException {
+	public  File getReposDirectory(String folderName) throws IOException {
 		File dir = new File(RCProperties.getReposDir() + folderName);
+		return getDirectory(dir);
+	}
+
+	/**
+	 * Checks whether the directory correspondent to the given name already
+	 * exists. Returns <code>null</code> if not.
+	 * 
+	 * @param folderName
+	 * @return - the directory
+	 * @throws IOException
+	 */
+	public File getDirectory(File dir) throws IOException {
 		if (dir.exists()) {
 			return dir;
 		}
 		return null;
+	}
+
+	/**
+	 * Rewrite the repository folder for a given target system.
+	 * 
+	 * @param sytemName
+	 * @return
+	 * @throws IOException
+	 */
+	public File makeSystemDirectory(String sytemName) throws IOException {
+		File systemDir = new File(RCProperties.getReposDir() + sytemName);
+		if (getDirectory(systemDir) != null) {
+			System.out.println("Cleaning directory: " + systemDir.toString());
+			FileUtils.deleteDirectory(systemDir);
+		}
+		makeDirectory(systemDir);
+		System.gc();
+		return systemDir;
 	}
 
 	/**
@@ -106,22 +152,16 @@ public class IOHandler {
 	 * @return
 	 * @throws IOException
 	 */
-	public File makeDirectory(String folderName) throws IOException {
-		File localPath = new File(RCProperties.getReposDir() + folderName);
-		if (getDirectory(folderName) != null) {
-			System.out.println("Cleaning directory: " + localPath.toString());
-			FileUtils.deleteDirectory(localPath);
-		}
-		localPath.mkdirs();
-		System.gc();
-		return localPath;
+	public File makeDirectory(File aPath) throws IOException {
+		aPath.mkdirs();
+		return aPath;
 	}
-
-	public String getRepositorySystemName(String remoteURL) {
-		String[] path = remoteURL.split("/");
-		return path[path.length - 1];
-	}
-
+	
+	/**
+	 * Returns the URLs from the "ghanalysis" database.
+	 * 
+	 * @return - a map <id, url> for each entry in the "repository" table of the database.
+	 */
 	public Map<Integer, String> readURLsFromDatabase() {
 		Map<Integer, String> result = new HashMap<Integer, String>();
 		try {
@@ -188,13 +228,13 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(str);
-		writeFile(
-				new File(RCProperties.getCodefaceDir() + "run_target-systems.sh"),
-				content);
+		writeFile(new File(RCProperties.getCodefaceDir()
+				+ "run_target-systems.sh"), content);
 	}
 
 	public void createCodefaceConfFiles(String system, Integer numTags)
-			throws IOException, NullPointerException, EmptyContentException, InvalidNumberOfTagsException {
+			throws IOException, NullPointerException, EmptyContentException,
+			InvalidNumberOfTagsException {
 		String releases = getTupletsString(numTags);
 
 		String s = "# Configuration file for the system "
@@ -236,17 +276,19 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(s);
-		writeFile(new File(RCProperties.getConfigDir() + system + ".conf"), content);
+		writeFile(new File(RCProperties.getConfigDir() + system + ".conf"),
+				content);
 	}
 
-	public static String getTupletsString(Integer numTags) throws InvalidNumberOfTagsException {
+	public static String getTupletsString(Integer numTags)
+			throws InvalidNumberOfTagsException {
 		Integer numScenarios;
 
-		if ((numTags % 3) == 0 && numTags != 0 )
+		if ((numTags % 3) == 0 && numTags != 0)
 			numScenarios = numTags / 3;
 		else
 			throw new InvalidNumberOfTagsException();
-		
+
 		List<String> tuples = new ArrayList<String>();
 		for (int i = 1; i <= numScenarios; i++) {
 			tuples.add("\"B" + i + "\", \"L" + i + "\", \"R" + i + "\"");
@@ -262,8 +304,8 @@ public class IOHandler {
 		}
 	}
 
-	public static File getFile(File f) throws IOException {
-		return getDirectory(f.getName());
+	public File getFile(File f) throws IOException {
+		return getReposDirectory(f.getName());
 	}
 
 }

@@ -12,24 +12,21 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Stack;
 
-import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.api.errors.InvalidRemoteException;
-import org.eclipse.jgit.api.errors.TransportException;
-
+import br.com.riselabs.crawlers.core.CrawlerThread;
 import br.com.riselabs.crawlers.db.DBManager;
-import br.com.riselabs.crawlers.util.IOHandler;
-import br.com.riselabs.crawlers.util.RCProperties;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
+import br.com.riselabs.crawlers.util.IOHandler;
+import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.util.RCUtil;
 
 /**
  * @author Alcemir R. Santos
  *
  */
 public class Main {
-	
-	
 
 	/**
 	 * @param args
@@ -52,59 +49,47 @@ public class Main {
 
 			RCProperties.setWorkingDir(""); // it is running in the VM
 		} else {
-			RCProperties.setWorkingDir("/Downloads"); // it is running locally
+			RCProperties.setWorkingDir(File.separator+"Documents"+File.separator+"Workspace"); // it is running
+																// locally
 			reposListFile = new File(RCProperties.getWorkingDir()
-					+ "/ReposCrawler/target_systems_repo_urls.txt");
+					+ File.separator+"repos_crawler"
+					+ File.separator+"src"
+					+ File.separator+"test"
+					+ File.separator+"resources"
+					+ File.separator+"target_systems_repo_urls.txt");
 		}
 
-		IOHandler io = new IOHandler();
 		List<String> target_systems = new ArrayList<String>();
 
 		Map<Integer, String> reposURLs = readRepositoryURLs("txt",
 				reposListFile);
 
+		int count = 1;
+		IOHandler io = new IOHandler();
+		io.makeDirectory(new File( RCProperties.getLogDir()));
+		
 		// for each url in the list clones the repository
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
-			ReposCrawler crawler = new ReposCrawler();
-			crawler.setRepositoryID(anEntry.getKey());
-			crawler.setRepositoryURL(anEntry.getValue());
-			String system = io.getRepositorySystemName(anEntry
-					.getValue());
-			target_systems.add(system);
+			String system = RCUtil.getRepositorySystemName(anEntry.getValue());
+			Thread ct = new Thread(new CrawlerThread(count, system, anEntry));
 			try {
-
-				crawler.cloneRepository();
-				crawler.createMergeBasedTags();
-
-				log("Writing Tags Mapping File at: " + RCProperties.getReposDir()
-						+ system + "_TAGsMapping.txt");
-				crawler.persistTagsMapping();
-
-				log("Writing codeface configuration file at: "
-						+ RCProperties.getConfigDir() + system + ".conf");
-				io.createCodefaceConfFiles(system, crawler.getTags()
-						.size());
-
-			} catch (InvalidRemoteException e) {
-				e.printStackTrace();
-			} catch (TransportException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
-				e.printStackTrace();
-			} catch (GitAPIException e) {
-				e.printStackTrace();
+				ct.start();
+				ct.join();
+			} catch (Exception e) {
+				RCUtil.log(e.toString());
+				RCUtil.log(e.getMessage());
+				RCUtil.logStackTrace(e);
 			}
+			count++;
+			target_systems.add(system);
 		}
-
-		log("Writing shell script to run the target systems.");
+		
+		RCUtil.log("Writing shell script to run the target systems.");
 		io.createCodefaceRunScript(target_systems);
 
-		log("_ Done. _");
+		RCUtil.log("_ Done. _");
 	}
 
-	private static void log(String message) {
-		System.out.println(message);
-	}
 
 	/**
 	 * use "db" to recover from the database and "txt" to recover from the file.
@@ -133,8 +118,9 @@ public class Main {
 					if (!rs.isBeforeFirst()) {
 						System.out
 								.println("[Skipping "
-										+ new IOHandler().getRepositorySystemName(l
-												.get(i - 1))
+										+ RCUtil
+												.getRepositorySystemName(l
+														.get(i - 1))
 										+ "]: DB entry not found.");
 						continue; // to avoid nullpointer in case url does not
 									// exists in the database.
@@ -157,4 +143,6 @@ public class Main {
 		System.out.println("Done.");
 		return reposURLs;
 	}
+
+	
 }
