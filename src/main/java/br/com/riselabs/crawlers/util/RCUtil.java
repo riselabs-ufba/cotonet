@@ -14,7 +14,7 @@ import java.io.StringWriter;
  */
 public class RCUtil {
 	
-	private final static File log = new File(RCProperties.getLogDir() + File.separator + "repos_crawler.log");
+	private static File log;
 
 	/**
 	 * Given a <code>Git</code> repository URL, this method returns the system.
@@ -27,8 +27,6 @@ public class RCUtil {
 		return path[path.length - 1];
 	}
 	
-	
-	
 	/**
 	 * Logs a message in the system log.
 	 * @param message
@@ -37,6 +35,14 @@ public class RCUtil {
 		log(log, message);
 	}
 	
+	public static File getLog() {
+		return log;
+	}
+
+	public static void setLog(File log) {
+		RCUtil.log = log;
+	}
+
 	/**
 	 * Logs a message in a given file.
 	 * @param logFile
