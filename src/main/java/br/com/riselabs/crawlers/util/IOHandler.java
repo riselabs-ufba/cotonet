@@ -136,10 +136,7 @@ public class IOHandler {
 	 */
 	public File makeSystemDirectory(String sytemName) throws IOException {
 		File systemDir = new File(RCProperties.getReposDir() + sytemName);
-		if (getDirectory(systemDir) != null) {
-			System.out.println("Cleaning directory: " + systemDir.toString());
-			FileUtils.deleteDirectory(systemDir);
-		}
+		checkAndRemove(systemDir);
 		makeDirectory(systemDir);
 		System.gc();
 		return systemDir;
@@ -228,9 +225,10 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(str);
-		String path = RCProperties.getCodefaceDir() + "run_target-systems.sh";
-		writeFile(new File(path), content);
-		RCUtil.log("Shell script to run codeface with the target systems written at: "+path);
+		File sh = new File(RCProperties.getCodefaceDir() + "run_target-systems.sh");
+		checkAndRemove(sh);
+		writeFile(sh, content);
+		RCUtil.log("Codeface execution shell script written at: "+sh.getCanonicalPath());
 	}
 
 	public void createCodefaceConfFiles(String system, Integer numTags)
@@ -277,8 +275,24 @@ public class IOHandler {
 
 		List<String> content = new ArrayList<String>();
 		content.add(s);
-		writeFile(new File(RCProperties.getConfigDir() + system + ".conf"),
-				content);
+		
+		File systemDir = new File(RCProperties.getConfigDir() + system + ".conf");
+		checkAndRemove(systemDir);
+//		makeDirectory(systemDir);
+		writeFile(systemDir,content);
+	}
+
+	/**
+	 * Checks and removes either a file or a directory. No exceptions raised if it fails.
+	 * 
+	 * @param instance
+	 * @throws IOException
+	 */
+	public void checkAndRemove(File instance) throws IOException {
+		if (getDirectory(instance) != null) {
+			System.out.println("Removing: " + instance.toString());
+			FileUtils.deleteQuietly(instance);
+		}
 	}
 
 	public static String getTupletsString(Integer numTags)

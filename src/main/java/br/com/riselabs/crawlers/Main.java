@@ -58,6 +58,9 @@ public class Main {
 					+ File.separator+"resources"
 					+ File.separator+"target_systems_repo_urls.txt");
 		}
+		File reposCrawlerLogFile = new File(RCProperties.getLogDir() + File.separator + "repos_crawler.log");
+		io.checkAndRemove(reposCrawlerLogFile);
+		RCUtil.setLog(reposCrawlerLogFile);
 
 		List<String> target_systems = new ArrayList<String>();
 
