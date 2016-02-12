@@ -79,7 +79,7 @@ public class ReposCrawler {
 		setWorkDir(new IOHandler().makeSystemDirectory(targetSystemName));
 
 		// then clone
-		System.out.println("Starting the cloning of\"" + targetSystemName + "\" at: "
+		System.out.println("Starting the cloning of \"" + targetSystemName + "\" at: "
 				+ repositoryDir);
 		try (Git result = Git.cloneRepository().setURI(repositoryURL + ".git")
 				.setDirectory(repositoryDir).call()) {
@@ -153,9 +153,9 @@ public class ReposCrawler {
 		int count = 1;
 		String systemname = RCUtil.getRepositorySystemName(repositoryURL);
 		for (MergeScenario s : scenarios) {
-			String tagB = "B" + count+ "-"+systemname;
-			String tagL = "L" + count+ "-"+systemname;
-			String tagR = "R" + count+ "-"+systemname;
+			String tagB = systemname+"B" + count;
+			String tagL = systemname+"L" + count;
+			String tagR = systemname+"R" + count;
 
 			tagsMap.put(tagB, s.getBase());
 			tagsMap.put(tagL, s.getLeft());
