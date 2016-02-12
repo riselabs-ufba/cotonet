@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers.core;
+package br.com.riselabs.crawlers.core.threads;
 
 import java.io.File;
 import java.io.IOException;
@@ -9,7 +9,7 @@ import java.util.Map.Entry;
 
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import br.com.riselabs.crawlers.ReposCrawler;
+import br.com.riselabs.crawlers.core.ReposCrawler;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 import br.com.riselabs.crawlers.util.IOHandler;
@@ -86,7 +86,6 @@ public class CrawlerThread implements Runnable {
 			RCUtil.log("[Cloning Failed]" + logLine);
 			RCUtil.log(log, "[Cloning Failed]" + logLine);
 			RCUtil.logStackTrace(log, e);
-			e.printStackTrace();
 		}
 		crawler = null;
 		io = null;

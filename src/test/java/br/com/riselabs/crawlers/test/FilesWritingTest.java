@@ -16,9 +16,9 @@ import java.util.List;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import br.com.riselabs.crawlers.ReposCrawler;
 import br.com.riselabs.crawlers.util.IOHandler;
 import br.com.riselabs.crawlers.util.RCProperties;
+import br.com.riselabs.crawlers.core.ReposCrawler;
 import br.com.riselabs.crawlers.exceptions.EmptyContentException;
 import br.com.riselabs.crawlers.exceptions.InvalidNumberOfTagsException;
 

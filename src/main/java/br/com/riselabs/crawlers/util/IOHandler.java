@@ -290,7 +290,7 @@ public class IOHandler {
 	 */
 	public void checkAndRemove(File instance) throws IOException {
 		if (getDirectory(instance) != null) {
-			System.out.println("Removing: " + instance.toString());
+			System.out.println("Removing old file: " + instance.toString());
 			FileUtils.deleteQuietly(instance);
 		}
 	}

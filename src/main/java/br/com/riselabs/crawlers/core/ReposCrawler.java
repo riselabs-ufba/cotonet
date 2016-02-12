@@ -1,4 +1,4 @@
-package br.com.riselabs.crawlers;
+package br.com.riselabs.crawlers.core;
 
 import java.io.File;
 import java.io.IOException;
@@ -79,7 +79,7 @@ public class ReposCrawler {
 		setWorkDir(new IOHandler().makeSystemDirectory(targetSystemName));
 
 		// then clone
-		System.out.println("Cloning \"" + targetSystemName + "\" at: "
+		System.out.println("Starting the cloning of\"" + targetSystemName + "\" at: "
 				+ repositoryDir);
 		try (Git result = Git.cloneRepository().setURI(repositoryURL + ".git")
 				.setDirectory(repositoryDir).call()) {
@@ -90,6 +90,7 @@ public class ReposCrawler {
 			result.getRepository().close();
 			result.close();
 		}
+		System.out.println("Clonning of \""+ targetSystemName+ "\": [_DONE_]");
 		System.gc();
 	}
 

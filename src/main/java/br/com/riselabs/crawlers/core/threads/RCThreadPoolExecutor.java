@@ -1,9 +1,9 @@
 /**
  * 
  */
-package br.com.riselabs.crawlers.core;
+package br.com.riselabs.crawlers.core.threads;
 
-import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -20,8 +20,7 @@ public class RCThreadPoolExecutor {
 
 	ThreadPoolExecutor threadPool = null;
 
-	final ArrayBlockingQueue<Runnable> queue = new ArrayBlockingQueue<Runnable>(
-			12);
+	final LinkedBlockingQueue<Runnable> queue = new LinkedBlockingQueue<Runnable>();
 
 	public RCThreadPoolExecutor() {
 		threadPool = new ThreadPoolExecutor(poolSize, maxPoolSize,
@@ -39,7 +38,7 @@ public class RCThreadPoolExecutor {
 		// System.out.println("Pool Size after assigning the
 		// task.."+threadPool.getActiveCount() );
 		// System.out.println("Task count.."+threadPool.getTaskCount() );
-		System.out.println("Task count.." + queue.size());
+		// System.out.println("Task count.." + queue.size());
 	}
 
 	public void shutDown() {
