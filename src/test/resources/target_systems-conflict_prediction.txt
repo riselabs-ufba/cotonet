@@ -32,7 +32,6 @@ https://github.com/junit-team/junit
 https://github.com/k9mail/k-9
 https://github.com/gocd/gocd
 https://github.com/BroadleafCommerce/BroadleafCommerce
-https://github.com/nutzam/nutz
 https://github.com/gitblit/gitblit
 https://github.com/dropwizard/metrics
 https://github.com/square/picasso
