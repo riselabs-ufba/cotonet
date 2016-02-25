@@ -132,9 +132,11 @@ public class ReposCrawler {
 		for (Entry<String, String> e : tagsMap.entrySet()) {
 			tags.add(e.getKey()+": "+e.getValue());
 		}
-		
-		new IOHandler().writeFile(new File(RCProperties.getReposDir() + targetSystemName
-				+ "_TAGsMapping.txt"), tags);
+		String mappingFilePath = RCProperties.getReposDir() + targetSystemName
+				+ "_TAGsMapping.txt";
+		File mappingFile = new File(mappingFilePath);
+		if (mappingFile.exists()) mappingFile.delete();
+		new IOHandler().writeFile(new File(mappingFilePath), tags);
 	}
 
 
@@ -148,6 +150,7 @@ public class ReposCrawler {
 				git.tagDelete().setTags(tag).call();
 			}
 		} catch (GitAPIException e) {
+			RCUtil.logStackTrace(e);
 			e.printStackTrace();
 		}
 		int count = 1;
