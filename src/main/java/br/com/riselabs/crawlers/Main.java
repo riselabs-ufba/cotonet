@@ -44,7 +44,6 @@ public class Main {
 	 */
 	public static void main(String[] args) throws NullPointerException,
 			IOException, EmptyContentException, InvalidNumberOfTagsException {
-		IOHandler io = new IOHandler();
 		File reposListFile = null;
 
 		if (args.length == 0) {// it is running locally
@@ -54,47 +53,62 @@ public class Main {
 					+ File.separator + "repos_crawler" + File.separator + "src"
 					+ File.separator + "test" + File.separator + "resources"
 					+ File.separator + "target_systems_repo_urls.txt");
-
+			mainRun(reposListFile);
 		} else if (args.length == 1) {// it is running in the VM
 			reposListFile = new File(args[0]);
 			if (!reposListFile.exists()) {
 				System.out.println("ReposCrawler finished. File not found ("
 						+ args[0] + ").");
-				System.exit(0); // Ends execution if file not found.
+				System.exit(1); // Ends execution if file not found.
 			}
 
 			RCProperties.setWorkingDir(""); // it is running in the VM
+			mainRun(reposListFile);
 		} else if (args.length == 2) {// it may be running to rewrite
+			Boolean rwTags = false;
 			if (args[0].equals("-rw")) {
 				reposListFile = new File(args[1]);
+			} else if (args[0].equals("-rwt")) {
+				reposListFile = new File(args[1]);
+				rwTags = true;
 			} else if (args[1].equals("-rw")) {
 				reposListFile = new File(args[0]);
+			} else if (args[1].equals("-rwt")) {
+				reposListFile = new File(args[0]);
+				rwTags = true;
 			} else {
 				System.out
 						.println("ReposCrawler finished. Illegal parameters. "
-								+ "At least one the the two parameters must be \"-rw\".");
-				System.exit(0);
+								+ "At least one the the two parameters must be \"-rw\" or \"-rwt\".");
+				System.exit(1);
 			}
-			
-			if(System.getProperty("os.name").equals("Mac OS X")){
+
+			if (System.getProperty("os.name").equals("Mac OS X")) {
 				RCProperties.setWorkingDir(File.separator + "Documents"
-					+ File.separator + "Workspace");
+						+ File.separator + "Workspace");
 				System.out.println(System.getProperty("os.name"));
-			}else{ 
+			} else {
 				RCProperties.setWorkingDir("");
 			}
 			File tmpLogFile = new File(RCProperties.getLogDir()
 					+ File.separator + "repos_crawler.log");
 			RCUtil.setLog(tmpLogFile);
-			rewriteAuxFiles(reposListFile);
+			rewriteAuxFiles(reposListFile, rwTags);
 			System.out.println("ReposCrawler finished. Files rewritten.");
-			System.exit(0);
 		} else {
 			System.out
 					.println("ReposCrawler finished. Illegal amount of parameters.");
-			System.exit(0);
+			System.exit(1);
 		}
 
+		
+
+		RCUtil.log("_ Main Done. _");
+	}
+
+	
+	private static void mainRun(File reposListFile) throws IOException, NullPointerException, EmptyContentException{
+		IOHandler io = new IOHandler();
 		File reposCrawlerLogFile = new File(RCProperties.getLogDir()
 				+ File.separator + "repos_crawler.log");
 		io.checkAndRemove(reposCrawlerLogFile);
@@ -125,10 +139,7 @@ public class Main {
 		pool.shutDown();
 
 		io.createCodefaceRunScript(target_systems);
-
-		RCUtil.log("_ Done. _");
 	}
-
 	/**
 	 * This method should be used to rewrite the auxiliary files (i.e. *.conf,
 	 * *TAGsMapping.txt).
@@ -139,24 +150,84 @@ public class Main {
 	 * @throws EmptyContentException
 	 * @throws InvalidNumberOfTagsException
 	 */
-	public static void rewriteAuxFiles(File urlsFile) throws IOException,
-			NullPointerException, EmptyContentException,
+	public static void rewriteAuxFiles(File urlsFile, Boolean rwTags)
+			throws IOException, NullPointerException, EmptyContentException,
 			InvalidNumberOfTagsException {
-		IOHandler io = new IOHandler();
 		List<String> target_systems = new ArrayList<String>();
 
 		// read repos
 		Map<Integer, String> reposURLs = readRepositoryURLs("txt", urlsFile);
+		RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
 
 		// for each repo write files
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
+			String system = RCUtil.getRepositorySystemName(anEntry
+					.getValue());
+			
+			target_systems.add(system);
 
-			ReposCrawler crawler = new ReposCrawler();
+			pool.runTask(new Runnable() {
 
-			crawler.setRepositoryID(anEntry.getKey());
-			crawler.setRepositoryURL(anEntry.getValue());
+				@Override
+				public void run() {
+					try {
+						IOHandler io = new IOHandler();
+						ReposCrawler crawler = new ReposCrawler();
 
-			String system = RCUtil.getRepositorySystemName(anEntry.getValue());
+						crawler.setRepositoryID(anEntry.getKey());
+						crawler.setRepositoryURL(anEntry.getValue());
+
+						crawler.setWorkDir(io.getReposDirectory(system));
+						Repository repository = crawler.getRepository();
+
+						if (rwTags == true) {
+							crawler.createMergeBasedTags();
+						}
+
+						List<String> lines = new ArrayList<String>();
+
+						try (Git git = new Git(repository)) {
+							RevWalk revWalk = new RevWalk(repository);
+
+							System.out
+									.println("Writing Tags Mapping File for \""
+											+ system + "\".");
+							for (Entry<String, Ref> e : repository.getTags()
+									.entrySet()) {
+								RevCommit rc = revWalk.parseCommit(e.getValue()
+										.getObjectId());
+								lines.add(e.getKey() + ": " + rc.getName());
+							}
+
+							File f = new File(RCProperties.getReposDir() + system + "_TAGsMapping.txt");
+							if(f.exists()) f.delete();
+							io.writeFile(f, lines);
+
+							System.out
+									.println("Writing codeface configuration file for \""
+											+ system + "\".");
+							io.createCodefaceConfFiles(system, repository
+									.getTags().size());
+							revWalk.close();
+						} catch (NullPointerException | EmptyContentException
+								| InvalidNumberOfTagsException e1) {
+							RCUtil.logStackTrace(e1);
+							e1.printStackTrace();
+						}
+					} catch (IOException e) {
+						RCUtil.logStackTrace(e);
+						e.printStackTrace();
+					}
+
+				}
+			});
+
+		}
+		pool.shutDown();
+		System.out.println("Writing shell script to run the target systems.");
+		new IOHandler().createCodefaceRunScript(target_systems);
+	}
+	
 
 			target_systems.add(system);
 			crawler.setWorkDir(io.getReposDirectory(system));
