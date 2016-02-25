@@ -234,7 +234,7 @@ public class IOHandler {
 	public void createCodefaceConfFiles(String system, Integer numTags)
 			throws IOException, NullPointerException, EmptyContentException,
 			InvalidNumberOfTagsException {
-		String releases = getTupletsString(numTags);
+		String releases = getTupletsString(system, numTags);
 
 		String s = "# Configuration file for the system "
 				+ system
@@ -295,7 +295,7 @@ public class IOHandler {
 		}
 	}
 
-	public static String getTupletsString(Integer numTags)
+	public static String getTupletsString(String systemName, Integer numTags)
 			throws InvalidNumberOfTagsException {
 		Integer numScenarios;
 
@@ -306,7 +306,8 @@ public class IOHandler {
 
 		List<String> tuples = new ArrayList<String>();
 		for (int i = 1; i <= numScenarios; i++) {
-			tuples.add("\"B" + i + "\", \"L" + i + "\", \"R" + i + "\"");
+			
+			tuples.add("\""+systemName+"B" + i + "\", \""+systemName+"L" + i + "\", \""+systemName+"R" + i + "\"");
 		}
 		return createReleasesString(tuples);
 	}
