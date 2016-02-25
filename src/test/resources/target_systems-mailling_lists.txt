@@ -1,0 +1,18 @@
+https://github.com/dropwizard/dropwizard gmane.comp.java.dropwizard.devel
+https://github.com/forcedotcom/phoenix http://mail-archives.apache.org/mod_mbox/phoenix-dev/
+https://github.com/junit-team/junit gmane.comp.java.junit.devel
+https://github.com/nathanmarz/storm http://mail-archives.apache.org/mod_mbox/incubator-storm-dev/
+https://github.com/cbeust/testng gmane.comp.java.testng.devel
+https://github.com/metamx/druid https://groups.google.com/forum/#!forum/druid-development
+https://github.com/Activiti/Activiti https://forums.activiti.org/forums/activiti-developers
+https://github.com/amplab/tachyon https://groups.google.com/forum/#!forum/tachyon-dev
+https://github.com/hector-client/hector https://groups.google.com/forum/#!forum/hector-dev
+https://github.com/k9mail/k-9 https://groups.google.com/forum/#!forum/k-9-dev
+https://github.com/gocd/gocd https://groups.google.com/forum/#!forum/go-cd-dev
+https://github.com/syncany/syncany https://lists.launchpad.net/syncany-team/
+https://github.com/torquebox/torquebox http://torquebox.markmail.org/search/list:org%2Etorquebox%2Etorquebox-dev
+https://github.com/arduino/Arduino https://groups.google.com/a/arduino.cc/forum/#!forum/developers
+https://github.com/qos-ch/logback http://www.qos.ch/pipermail/logback-dev/
+https://github.com/RobotiumTech/robotium https://groups.google.com/forum/#!forum/robotium-developers
+
+robotium
