@@ -27,7 +27,7 @@ dependencies {
 
 
 jar {
-	version = '1.0'
+	version = "1.0r"+getDate()
     from {
 
         configurations.runtime.collect {
@@ -46,4 +46,10 @@ jar {
         	"Implementation-Version": version)
     }
     exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+}
+
+def getDate() {
+    def date = new Date()
+    def formattedDate = date.format('yyyyMMddHHmm')
+    return formattedDate
 }
