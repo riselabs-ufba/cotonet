@@ -13,12 +13,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.Option;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import br.com.riselabs.crawlers.beans.MergeScenario;
 import br.com.riselabs.crawlers.core.ReposCrawler;
 import br.com.riselabs.crawlers.core.threads.CrawlerThread;
 import br.com.riselabs.crawlers.core.threads.RCThreadPoolExecutor;
@@ -42,72 +50,109 @@ public class Main {
 	 * @throws NullPointerException
 	 * @throws InvalidNumberOfTagsException
 	 */
-	public static void main(String[] args) throws NullPointerException,
-			IOException, EmptyContentException, InvalidNumberOfTagsException {
+	public static void main(String[] args) {
+
+		CommandLineParser parser = new DefaultParser();
+		Options options = new Options();
+
+		options.addOption(Option
+				.builder("l")
+				.longOpt("list")
+				.desc("The path to the file containig the repository's URL of the target systems.")
+				.hasArg().required().build());
+
+		options.addOption(Option
+				.builder("rw")
+				.longOpt("rewrite-aux")
+				.desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
+						+ "_WITHOUT_ "
+						+ "the recreation of the merge scenarios based tags.")
+				.hasArg(false).build());
+
+		options.addOption(Option
+				.builder("rwt")
+				.longOpt("rewrite-tagfile")
+				.desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
+						+ "_INCLUDING_ "
+						+ "the recreation of the merge scenarios based tags.")
+				.hasArg(false).build());
+
+		options.addOption("h", "help", false, "Print this help page");
+
 		File reposListFile = null;
+		Boolean rwTags = false;
+		try {
+			CommandLine cmd = parser.parse(options, args);
 
-		if (args.length == 0) {// it is running locally
-			RCProperties.setWorkingDir(File.separator + "Documents"
-					+ File.separator + "Workspace");
-			reposListFile = new File(RCProperties.getWorkingDir()
-					+ File.separator + "repos_crawler" + File.separator + "src"
-					+ File.separator + "test" + File.separator + "resources"
-					+ File.separator + "target_systems_repo_urls.txt");
-			mainRun(reposListFile);
-		} else if (args.length == 1) {// it is running in the VM
-			reposListFile = new File(args[0]);
-			if (!reposListFile.exists()) {
-				System.out.println("ReposCrawler finished. File not found ("
-						+ args[0] + ").");
-				System.exit(1); // Ends execution if file not found.
+			// user is looking for help
+			if (cmd.hasOption("h")) {
+				new HelpFormatter().printHelp("java ", options);
+				System.exit(0);
 			}
 
-			RCProperties.setWorkingDir(""); // it is running in the VM
-			mainRun(reposListFile);
-		} else if (args.length == 2) {// it may be running to rewrite
-			Boolean rwTags = false;
-			if (args[0].equals("-rw")) {
-				reposListFile = new File(args[1]);
-			} else if (args[0].equals("-rwt")) {
-				reposListFile = new File(args[1]);
-				rwTags = true;
-			} else if (args[1].equals("-rw")) {
-				reposListFile = new File(args[0]);
-			} else if (args[1].equals("-rwt")) {
-				reposListFile = new File(args[0]);
-				rwTags = true;
-			} else {
+			// the "l" option is required
+			if (!cmd.hasOption("l")) {
 				System.out
-						.println("ReposCrawler finished. Illegal parameters. "
-								+ "At least one the the two parameters must be \"-rw\" or \"-rwt\".");
+						.println("ReposCrawler ended without retrive the repositories. "
+								+ "You should use 'h' if you are looking for help. Otherwise,"
+								+ " the 'l' option is mandatory.");
 				System.exit(1);
-			}
-
-			if (System.getProperty("os.name").equals("Mac OS X")) {
-				RCProperties.setWorkingDir(File.separator + "Documents"
-						+ File.separator + "Workspace");
-				System.out.println(System.getProperty("os.name"));
 			} else {
-				RCProperties.setWorkingDir("");
+				// running to download the repositories
+				String urlsFilePath = cmd.getOptionValue("l");
+				reposListFile = new File(urlsFilePath);
+
+				// Ends execution if file not found.
+				if (!reposListFile.exists()) {
+					System.out
+							.println("ReposCrawler ended without retrive the repositories. "
+									+ "The file containig the repository's URL of the target systems was not found. "
+									+ "Check wether the file \""
+									+ urlsFilePath
+									+ "\" exists.");
+					System.exit(1);
+				}
+
+				// TODO remove workaround
+				if (System.getProperty("os.name").equals("Mac OS X")) {
+					// it is running locally
+					RCProperties.setWorkingDir(File.separator + "Documents"
+							+ File.separator + "Workspace");
+				} else {
+					// it is running @ tindao
+					RCProperties.setWorkingDir();
+				}
+
+				rwTags = cmd.hasOption("rwt") ? true : false;
+
+				// user is running to rewrite the auxiliary files
+				if (cmd.hasOption("rw") || cmd.hasOption("rwt")) {
+					File tmpLogFile = new File(RCProperties.getLogDir()
+							+ File.separator + "repos_crawler.log");
+					RCUtil.setLog(tmpLogFile);
+					rewriteAuxFiles(reposListFile, rwTags);
+					RCUtil.log("ReposCrawler finished. Files rewritten.");
+					System.exit(0);
+				}
+
+				run(reposListFile);
 			}
-			File tmpLogFile = new File(RCProperties.getLogDir()
-					+ File.separator + "repos_crawler.log");
-			RCUtil.setLog(tmpLogFile);
-			rewriteAuxFiles(reposListFile, rwTags);
-			System.out.println("ReposCrawler finished. Files rewritten.");
-		} else {
-			System.out
-					.println("ReposCrawler finished. Illegal amount of parameters.");
-			System.exit(1);
+
+		} catch (ParseException e) {
+			new HelpFormatter().printHelp("java ", options);
+		} catch (NullPointerException e) {
+			RCUtil.log(e.getMessage());
+		} catch (IOException e) {
+			RCUtil.log(e.getMessage());
+		} catch (EmptyContentException e) {
+			RCUtil.log(e.getMessage());
+		} catch (InvalidNumberOfTagsException e) {
+			RCUtil.log(e.getMessage());
 		}
-
-		
-
-		RCUtil.log("_ Main Done. _");
 	}
 
-	
-	private static void mainRun(File reposListFile) throws IOException, NullPointerException, EmptyContentException{
+	private static void run(File reposListFile) throws IOException,
+			NullPointerException, EmptyContentException {
 		IOHandler io = new IOHandler();
 		File reposCrawlerLogFile = new File(RCProperties.getLogDir()
 				+ File.separator + "repos_crawler.log");
@@ -140,6 +185,7 @@ public class Main {
 
 		io.createCodefaceRunScript(target_systems);
 	}
+
 	/**
 	 * This method should be used to rewrite the auxiliary files (i.e. *.conf,
 	 * *TAGsMapping.txt).
@@ -161,9 +207,8 @@ public class Main {
 
 		// for each repo write files
 		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
-			String system = RCUtil.getRepositorySystemName(anEntry
-					.getValue());
-			
+			String system = RCUtil.getRepositorySystemName(anEntry.getValue());
+
 			target_systems.add(system);
 
 			pool.runTask(new Runnable() {
@@ -199,8 +244,10 @@ public class Main {
 								lines.add(e.getKey() + ": " + rc.getName());
 							}
 
-							File f = new File(RCProperties.getReposDir() + system + "_TAGsMapping.txt");
-							if(f.exists()) f.delete();
+							File f = new File(RCProperties.getReposDir()
+									+ system + "_TAGsMapping.txt");
+							if (f.exists())
+								f.delete();
 							io.writeFile(f, lines);
 
 							System.out
@@ -227,37 +274,93 @@ public class Main {
 		System.out.println("Writing shell script to run the target systems.");
 		new IOHandler().createCodefaceRunScript(target_systems);
 	}
-	
+
+	/**
+	 * This method should be used to rewrite the auxiliary files (i.e. *.conf,
+	 * *TAGsMapping.txt).
+	 * 
+	 * @param urlsFile
+	 * @throws IOException
+	 * @throws NullPointerException
+	 * @throws EmptyContentException
+	 * @throws InvalidNumberOfTagsException
+	 */
+	public static void rewriteAuxFiles2(File urlsFile, Boolean rwTags)
+			throws IOException, NullPointerException, EmptyContentException,
+			InvalidNumberOfTagsException {
+		List<String> target_systems = new ArrayList<String>();
+
+		// read repos
+		Map<Integer, String> reposURLs = readRepositoryURLs("txt", urlsFile);
+		RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
+
+		// for each repo write files
+		for (Entry<Integer, String> anEntry : reposURLs.entrySet()) {
+			String system = RCUtil.getRepositorySystemName(anEntry.getValue());
 
 			target_systems.add(system);
-			crawler.setWorkDir(io.getReposDirectory(system));
-			Repository repository = crawler.getRepository();
 
-			List<String> lines = new ArrayList<String>();
+			pool.runTask(new Runnable() {
 
-			try (Git git = new Git(repository)) {
-				RevWalk revWalk = new RevWalk(repository);
+				@Override
+				public void run() {
+					try {
+						IOHandler io = new IOHandler();
 
-				System.out.println("Writing Tags Mapping File for \"" + system
-						+ "\".");
-				for (Entry<String, Ref> e : repository.getTags().entrySet()) {
-					RevCommit rc = revWalk.parseCommit(e.getValue()
-							.getObjectId());
-					lines.add(e.getKey() + ": " + rc.getName());
+						List<MergeScenario> scenarios = IOHandler
+								.getMergeScenarios(anEntry.getKey());
+
+						System.out.println("Writing Tags Mapping File for \""
+								+ system + "\".");
+						int count = 1;
+						Map<String, String> tagsMap = new HashMap<String, String>();
+						for (MergeScenario s : scenarios) {
+							String tagB = system + "B" + count;
+							String tagL = system + "L" + count;
+							String tagR = system + "R" + count;
+
+							tagsMap.put(tagB, s.getBase());
+							tagsMap.put(tagL, s.getLeft());
+							tagsMap.put(tagR, s.getRight());
+						}
+
+						List<String> lines = new ArrayList<String>();
+						for (Entry<String, String> e : tagsMap.entrySet()) {
+							lines.add(e.getKey() + ":" + e.getValue());
+						}
+						String filePath = RCProperties.getReposDir() + system
+								+ "_TAGsMapping.txt";
+						File f = new File(filePath);
+						if (f.exists())
+							f.delete();
+						io.writeFile(new File(filePath), lines);
+
+						System.out
+								.println("Writing codeface configuration file for \""
+										+ system + "\".");
+						io.createCodefaceConfFiles(system, tagsMap.size());
+
+					} catch (IOException e) {
+						RCUtil.logStackTrace(e);
+						e.printStackTrace();
+					} catch (NullPointerException e2) {
+						RCUtil.logStackTrace(e2);
+						e2.printStackTrace();
+					} catch (EmptyContentException e2) {
+						RCUtil.logStackTrace(e2);
+						e2.printStackTrace();
+					} catch (InvalidNumberOfTagsException e2) {
+						RCUtil.logStackTrace(e2);
+						e2.printStackTrace();
+					}
+
 				}
+			});
 
-				io.writeFile(new File(RCProperties.getReposDir()
-						+ system + "_TAGsMapping.txt"), lines);
-
-				System.out.println("Writing codeface configuration file for \""
-						+ system + "\".");
-				io.createCodefaceConfFiles(system, repository.getTags().size());
-				revWalk.close();
-			}
 		}
-
+		pool.shutDown();
 		System.out.println("Writing shell script to run the target systems.");
-		io.createCodefaceRunScript(target_systems);
+		new IOHandler().createCodefaceRunScript(target_systems);
 	}
 
 	/**
