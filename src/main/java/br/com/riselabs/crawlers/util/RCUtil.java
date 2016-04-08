@@ -32,6 +32,7 @@ public class RCUtil {
 	 * @param message
 	 */
 	public static void log(String message) {
+		System.out.println(message);
 		log(log, message);
 	}
 	

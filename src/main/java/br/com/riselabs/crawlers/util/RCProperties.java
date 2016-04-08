@@ -18,6 +18,15 @@ public class RCProperties {
 		return USER_HOME;
 	}
 
+	/**
+	 * Set the working directory to the User Home directory.
+	 */
+	public static void setWorkingDir(){
+		setWorkingDir("");
+	}
+	/**
+	 * Set the working directory appending the "suffix" to the User Home directory.
+	 */
 	public static void setWorkingDir(String suffix) {
 		WORKING_DIR = USER_HOME + suffix;
 	}
