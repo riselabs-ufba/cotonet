@@ -31,7 +31,8 @@ public class ConflictBasedNetwork {
 
 	public ConflictBasedNetwork(Project aProject, JGitMergeScenario aScenario,
 			List<DeveloperNode> lNodes, List<DeveloperEdge> lEdges) {
-
+		setNodes(lNodes);
+		setEdges(lEdges);
 	}
 
 	/**
@@ -138,12 +139,10 @@ public class ConflictBasedNetwork {
 	}
 
 	public void add(DeveloperNode developerNode) {
-		if (this.nodes != null) {
-			this.nodes.add(developerNode);
-		} else {
-			throw new NullPointerException(
-					"The set of nodes of this network is empty.");
+		if (this.nodes == null) {
+			this.nodes = new ArrayList<DeveloperNode>();
 		}
+		this.nodes.add(developerNode);
 	}
 
 	@Override
@@ -152,5 +151,12 @@ public class ConflictBasedNetwork {
 		sb.append(this.scenario.toString());
 		sb.append(")");
 		return sb.toString();
+	}
+
+	public void add(DeveloperEdge developerEdge) {
+		if (this.edges == null) {
+			this.edges = new ArrayList<DeveloperEdge>();
+		}
+		this.edges.add(developerEdge);
 	}
 }

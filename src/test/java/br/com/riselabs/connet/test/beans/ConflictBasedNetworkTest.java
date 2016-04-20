@@ -1,31 +1,33 @@
 package br.com.riselabs.connet.test.beans;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import org.eclipse.jgit.junit.RepositoryTestCase;
+import org.junit.Before;
 import org.junit.Test;
 
 import br.com.riselabs.connet.beans.ConflictBasedNetwork;
+import br.com.riselabs.connet.beans.DeveloperEdge;
 import br.com.riselabs.connet.beans.DeveloperNode;
 
 public class ConflictBasedNetworkTest extends RepositoryTestCase {
 
-	@Test
-	public void emptyEdges() {
-		fail("not implemented yet.");
+	private ConflictBasedNetwork connet;
+
+	@Before
+	public void setUp(){
+		connet = new ConflictBasedNetwork();
 	}
 	
 	@Test
-	public void emptyNodes() {
-		fail("not implemented yet.");
-	}
-
-	@Test
-	public void withEdgesButEmptyNodes() {
-		fail("not implemented yet.");
+	public void checkWithEdgesButEmptyNodes() {
+		connet.add(new DeveloperEdge(1,2));
+		assertTrue(connet.getNodes().isEmpty());
+		assertFalse(connet.getEdges().isEmpty());
+		assertFalse(connet.check());
 	}
 	
 	@Test
