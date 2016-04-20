@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -51,6 +52,7 @@ import br.com.riselabs.connet.beans.DeveloperNode;
 import br.com.riselabs.connet.beans.JGitMergeScenario;
 import br.com.riselabs.connet.beans.Project;
 import br.com.riselabs.connet.commands.RecursiveBlame;
+import br.com.riselabs.connet.filters.InBetweenRevFilter;
 
 /**
  * @author alcemirsantos
@@ -253,7 +255,9 @@ public class ConflictBasedNetworkBuilder {
 
 			add(aScenario, blames);
 
-			List<DeveloperNode> newNodes = getDeveloperNodes(blames,aScenario, null, null);
+			List<RevCommit> commits = getCommitsFrom(aScenario);
+			List<DeveloperNode> newNodes = getDeveloperNodes(blames, commits,
+					false);
 			for (DeveloperNode n : newNodes) {
 				if (!nodes.contains(n)) {
 					nodes.add(n);
@@ -400,46 +404,59 @@ public class ConflictBasedNetworkBuilder {
 		return merges;
 	}
 
+	public List<RevCommit> getCommitsFrom(JGitMergeScenario aScenario)
+			throws RevisionSyntaxException, MissingObjectException,
+			IncorrectObjectTypeException, AmbiguousObjectException,
+			IOException, GitAPIException {
+		List<RevCommit> commits = between(aScenario.getBase().getName(),
+				aScenario.getLeft().getName());
+		commits.addAll(between(aScenario.getBase().getName(), aScenario
+				.getRight().getName()));
+		return commits;
+	}
+
 	/**
-	 * Returns all commits from the {@code start} to {@code end}. 
+	 * Returns all commits from the {@code start} to {@code end}.
 	 *
 	 * @param start
-	 *           - skip all commits before
+	 *            - skip all commits before
 	 * @param end
-	 *           - skip all commits after
+	 *            - skip all commits after
 	 * @return all commits within the specified range
-	 * @throws IOException 
-	 * @throws IncorrectObjectTypeException 
-	 * @throws MissingObjectException 
+	 * @throws IOException
+	 * @throws IncorrectObjectTypeException
+	 * @throws MissingObjectException
 	 */
-	public List<RevCommit> getCommitsBetween(String start, String end ) throws MissingObjectException, IncorrectObjectTypeException, IOException {
-		List<RevCommit> merges = new LinkedList<>();
-		Iterable<RevCommit> log;
-		boolean addCommits = start == null;
-		try {
-			Git git = Git.wrap(this.project.getRepository());
-			log = git.log().call();
-			for (RevCommit commit : log) {
-				if (!addCommits) {
-					if (commit.getName().equals(end)) {
-						addCommits = true;
-					} else {
-						continue;
-					}
-				}
-				RevCommit[] parents = commit.getParents();
-				if (commit.getParentCount() < 2 && !parents[0].getName().equals(start)) {
-					merges.add(commit);
-				}
-				if (start != null && commit.getName().equals(start)) {
-					break;
-				}
-			}
-		} catch (GitAPIException e) {
-			System.out.println(e.getMessage());
-		}
+	public List<RevCommit> between(String start, String end)
+			throws RevisionSyntaxException, MissingObjectException,
+			IncorrectObjectTypeException, AmbiguousObjectException,
+			IOException, GitAPIException {
+		RevWalk walk = new RevWalk(getProject().getRepository());
+		RevCommit beginCommit = walk.parseCommit(getProject().getRepository()
+				.resolve(start));
+		RevCommit endCommit = walk.parseCommit(getProject().getRepository()
+				.resolve(end));
+		walk.close();
+		return commitsBetween(beginCommit, endCommit);
+	}
 
-		return merges;
+	private List<RevCommit> commitsBetween(RevCommit begin, RevCommit end)
+			throws GitAPIException, MissingObjectException,
+			IncorrectObjectTypeException, IOException {
+		List<RevCommit> commits = new LinkedList<>();
+		RevWalk walk = new RevWalk(getProject().getRepository());
+		RevCommit parent = walk.parseCommit(end.getParent(0).getId());
+
+		if (parent.getName().equals(begin.getName())) {
+			commits.add(end);
+			walk.close();
+			return commits;
+		} else {
+			commits.add(end);
+			commits.addAll(commitsBetween(begin, parent));
+			walk.close();
+			return commits;
+		}
 	}
 
 	/**
@@ -466,14 +483,14 @@ public class ConflictBasedNetworkBuilder {
 	 *            - used in case of filter a specific line range
 	 * @return
 	 * @throws IOException
+	 * @throws GitAPIException
 	 */
-	public List<DeveloperNode> getDeveloperNodes(List<Blame> fileBlames, JGitMergeScenario aScenario,
-			Integer beginLine, Integer endLine) throws IOException {
+	public List<DeveloperNode> getDeveloperNodes(List<Blame> fileBlames,
+			List<RevCommit> commits, Boolean flag)
+			throws IOException, GitAPIException {
 
 		List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
-		List<RevCommit> commits = getCommitsBetween(aScenario.getBase().getName(),aScenario.getLeft().getName());
-		commits.addAll(getCommitsBetween(aScenario.getBase().getName(), aScenario.getRight().getName()));
-		
+
 		for (Blame b : fileBlames) {
 			RevCommit key = b.getCommit();
 			BlameResult value = b.getResult();
@@ -483,11 +500,9 @@ public class ConflictBasedNetworkBuilder {
 			int lines = countFileLines(key.getId(), value.getResultPath());
 
 			// running FILE_BASED network
-			if (beginLine == null || endLine == null) {
-				beginLine = 0;
-				endLine = lines;
-				for (int i = beginLine; i < endLine; i++) {
-					if(commits.contains(value.getSourceCommit(i).getName())){
+			if (!flag) {
+				for (int i = 0; i < lines; i++) {
+					if (commits.contains(value.getSourceCommit(i))) {
 						PersonIdent person = value.getSourceAuthor(i);
 						DeveloperNode dev = new DeveloperNode();
 						dev.setName(person.getName());
@@ -501,15 +516,10 @@ public class ConflictBasedNetworkBuilder {
 						}
 					}
 				}
-				beginLine = null;
-				endLine = null;
 				// running CHUNK_BASED network
 			} else {
 
-				if (endLine > lines) {
-					endLine = lines;
-				}
-				for (int i = beginLine; i < endLine; i++) {
+				for (int i = 0; i < lines; i++) {
 					PersonIdent person = value.getSourceAuthor(i);
 					DeveloperNode dev = new DeveloperNode();
 					dev.setName(person.getName());
@@ -577,6 +587,7 @@ public class ConflictBasedNetworkBuilder {
 
 	/**
 	 * Prints only changed lines
+	 * 
 	 * @param diff
 	 */
 	@Deprecated

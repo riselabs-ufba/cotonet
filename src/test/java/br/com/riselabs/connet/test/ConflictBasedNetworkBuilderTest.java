@@ -82,8 +82,16 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 		ConflictBasedNetwork connet = builder.buildConflictBasedNetwork(aScenario);
 		
 		assertTrue(connet.check());
-		assertFalse("the scenario setted adds collboration. nodes should not be empty.", connet.getNodes().isEmpty());
-		assertFalse("the scenario setted adds collboration. edges should not be empty.", connet.getEdges().isEmpty());
+		List<DeveloperNode> nodes = connet.getNodes();
+		assertTrue(nodes.size()==5);
+		assertTrue(nodes.contains(new DeveloperNode("Dev A", "deva@project.com")));
+		assertTrue(nodes.contains(new DeveloperNode("Dev B", "devb@project.com")));
+		assertTrue(nodes.contains(new DeveloperNode("Dev C", "devc@project.com")));
+		assertTrue(nodes.contains(new DeveloperNode("Dev D", "devd@project.com")));
+		assertTrue(nodes.contains(new DeveloperNode("Dev E", "deve@project.com")));
+		
+		assertFalse(nodes.contains(new DeveloperNode("Dev X", "devx@project.com")));
+		assertFalse(nodes.contains(new DeveloperNode("Dev Y", "devy@project.com")));
 	}
 
 	@Test
@@ -133,7 +141,7 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 	}
 	
 	@Test
-	public void shouldRetriveFooContributors() throws Exception {
+	public void shouldRetriveFooFileBasedContributors() throws Exception {
 		builder.setProject(new Project("", db));
 		JGitMergeScenario scenario = setCollaborationScenario(true);
 		RecursiveBlame blame = new RecursiveBlame();
@@ -142,15 +150,29 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 				.setBeginRevision(scenario.getLeft())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
-		List<DeveloperNode> list = builder.getDeveloperNodes(blames, scenario,
-				null, null);
+		blames.addAll(blame.setRepository(db)
+				.setBeginRevision(scenario.getRight())
+				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
+				.call());
+		List<RevCommit> commits = builder.getCommitsFrom(scenario);
+		List<DeveloperNode> list = builder.getDeveloperNodes(blames, commits, false);
 
 		Iterator<DeveloperNode> i = list.iterator();
 		DeveloperNode aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("Dev C", "devc@project.com")));
+		assertTrue(aNode.getName().equals("Dev C"));
+		assertTrue(aNode.getEmail().equals("devc@project.com"));
+		aNode = i.next();
 		assertTrue(aNode.equals(new DeveloperNode("Dev E", "deve@project.com")));
 		assertTrue(aNode.getName().equals("Dev E"));
 		assertTrue(aNode.getEmail().equals("deve@project.com"));
 		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("Dev D", "devd@project.com")));
+		assertTrue(aNode.getName().equals("Dev D"));
+		assertTrue(aNode.getEmail().equals("devd@project.com"));
+		assertFalse(i.hasNext());
+	}
+	
 		assertTrue(aNode.equals(new DeveloperNode("Dev C", "devc@project.com")));
 		assertTrue(aNode.getName().equals("Dev C"));
 		assertTrue(aNode.getEmail().equals("devc@project.com"));
