@@ -35,7 +35,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromTheLeftBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenario(true);
+		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
@@ -57,7 +57,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromTheRightBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenario(true);
+		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
@@ -80,7 +80,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromBothBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenario(true);
+		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
