@@ -1,7 +1,7 @@
 /**
  * 
  */
-package br.com.riselabs.connet.test;
+package br.com.riselabs.connet.test.builders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
