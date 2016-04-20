@@ -17,13 +17,13 @@ import br.com.riselabs.connet.beans.JGitMergeScenario;
 import br.com.riselabs.connet.beans.Project;
 import br.com.riselabs.connet.builders.ConflictBasedNetworkBuilder;
 import br.com.riselabs.connet.commands.RecursiveBlame;
-import br.com.riselabs.connet.test.helpers.MyOwnHelper;
+import br.com.riselabs.connet.test.helpers.ConflictBasedRepositoryTestCase;
 
 /**
  * @author alcemirsantos
  *
  */
-public class RecursiveBlameTest extends MyOwnHelper {
+public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 
 	private ConflictBasedNetworkBuilder builder;
 
