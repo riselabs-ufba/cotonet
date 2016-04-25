@@ -5,9 +5,7 @@ package br.com.riselabs.connet.test.builders;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
-import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.Iterator;
@@ -62,8 +60,6 @@ public class ConflictBasedNetworkBuilderTest extends
 				files);
 
 		assertTrue(connet.check());
-		List<DeveloperNode> nodes = connet.getNodes();
-		List<DeveloperEdge> edges = connet.getEdges();
 	}
 
 	@Test

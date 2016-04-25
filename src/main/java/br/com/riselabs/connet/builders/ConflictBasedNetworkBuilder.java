@@ -9,14 +9,11 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jgit.api.BlameCommand;
 import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
@@ -25,31 +22,23 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.diff.DiffEntry;
 import org.eclipse.jgit.diff.DiffFormatter;
-import org.eclipse.jgit.diff.RawText;
-import org.eclipse.jgit.diff.Sequence;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.ObjectReader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.ReflogEntry;
 import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.merge.MergeChunk;
 import org.eclipse.jgit.merge.MergeStrategy;
-import org.eclipse.jgit.merge.ResolveMerger;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.revwalk.filter.RevFilter;
-import org.eclipse.jgit.treewalk.AbstractTreeIterator;
-import org.eclipse.jgit.treewalk.CanonicalTreeParser;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
-import org.eclipse.jgit.util.IO;
 
 import br.com.riselabs.connet.beans.Blame;
 import br.com.riselabs.connet.beans.ChunkBlame;
@@ -62,7 +51,6 @@ import br.com.riselabs.connet.beans.JGitMergeScenario;
 import br.com.riselabs.connet.beans.Project;
 import br.com.riselabs.connet.commands.GitConflictBlame;
 import br.com.riselabs.connet.commands.RecursiveBlame;
-import br.com.riselabs.connet.filters.InBetweenRevFilter;
 
 /**
  * @author alcemirsantos
@@ -582,22 +570,6 @@ public class ConflictBasedNetworkBuilder {
 		}
 	}
 
-	private List<DiffEntry> call(RevCommit olderCommit, RevCommit newerCommit,
-			String filepath) throws IOException, GitAPIException {
-		// the diff works on TreeIterators, we prepare two for the two branches
-		AbstractTreeIterator oldTreeParser = prepareTreeParser(olderCommit
-				.getName());
-		AbstractTreeIterator newTreeParser = prepareTreeParser(newerCommit
-				.getName());
-
-		// then the procelain diff-command returns a list of diff entries
-		Git git = Git.wrap(getProject().getRepository());
-		List<DiffEntry> diff = git.diff().setOldTree(oldTreeParser)
-				.setNewTree(newTreeParser)
-				.setPathFilter(PathFilter.create(filepath)).call();
-		return diff;
-	}
-
 	/**
 	 * Prints only changed lines
 	 * 
@@ -619,24 +591,4 @@ public class ConflictBasedNetworkBuilder {
 		}
 	}
 
-	private AbstractTreeIterator prepareTreeParser(String objectId)
-			throws IOException, MissingObjectException,
-			IncorrectObjectTypeException {
-		// from the commit we can build the tree which allows us to construct
-		// the TreeParser
-		try (RevWalk walk = new RevWalk(getProject().getRepository())) {
-			RevCommit commit = walk.parseCommit(ObjectId.fromString(objectId));
-			RevTree tree = walk.parseTree(commit.getTree().getId());
-
-			CanonicalTreeParser oldTreeParser = new CanonicalTreeParser();
-			try (ObjectReader oldReader = getProject().getRepository()
-					.newObjectReader()) {
-				oldTreeParser.reset(oldReader, tree.getId());
-			}
-
-			walk.dispose();
-
-			return oldTreeParser;
-		}
-	}
 }
