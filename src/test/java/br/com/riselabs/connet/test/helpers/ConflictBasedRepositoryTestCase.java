@@ -1,43 +1,68 @@
 package br.com.riselabs.connet.test.helpers;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
+import static org.junit.Assert.assertEquals;
+
 import java.io.File;
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
-import org.apache.commons.io.IOUtils;
-import org.eclipse.jgit.api.BlameCommand;
+import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
-import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.internal.storage.file.FileRepository;
+import org.eclipse.jgit.api.MergeResult.MergeStatus;
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.junit.RepositoryTestCase;
 import org.eclipse.jgit.junit.TestRepository;
 import org.eclipse.jgit.junit.TestRepository.BranchBuilder;
-import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
-import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.junit.Before;
+import org.junit.Test;
 
 import br.com.riselabs.connet.beans.JGitMergeScenario;
 
 public abstract class ConflictBasedRepositoryTestCase extends
 		RepositoryTestCase {
+	
+	public void printDBpath(){
+		System.out.println(db.getDirectory().getAbsolutePath());
+	}
+	
+	public MergeResult runMerge(JGitMergeScenario scenario)
+			throws RefAlreadyExistsException, RefNotFoundException,
+			InvalidRefNameException, CheckoutConflictException, GitAPIException {
+		Git git = Git.wrap(db);
+		CheckoutCommand ckoutCmd = git.checkout();
+		ckoutCmd.setName(scenario.getLeft().getName());
+		ckoutCmd.setStartPoint(scenario.getLeft());
+		ckoutCmd.call();
+
+		MergeCommand mergeCmd = git.merge();
+		mergeCmd.setCommit(false);
+		mergeCmd.include(scenario.getRight());
+		return mergeCmd.call();
+	}
 
 	public static void printMergeResult(MergeResult result) {
 		Map<String, int[][]> allConflicts = result.getConflicts();
+
+		// looping over the files
 		for (String path : allConflicts.keySet()) {
 			int[][] c = allConflicts.get(path);
 			System.out.println("Conflicts in file " + path);
+
+			// looping over the file conflicts
 			for (int i = 0; i < c.length; ++i) {
 				System.out.println("  Conflict #" + i);
+
+				// looping over the conflicting chunks.
 				for (int j = 0; j < (c[i].length) - 1; ++j) {
 					if (c[i][j] >= 0)
 						System.out.println("    Chunk for "
@@ -145,7 +170,8 @@ public abstract class ConflictBasedRepositoryTestCase extends
 	 * @return
 	 * @throws Exception
 	 */
-	public JGitMergeScenario setCollaborationScenarioInBareRepository() throws Exception {
+	public JGitMergeScenario setCollaborationScenarioInBareRepository()
+			throws Exception {
 		Git git = Git.wrap(db);
 
 		RevCommit mergeBaseCommit, lastMasterCommit, lastSideCommit;
