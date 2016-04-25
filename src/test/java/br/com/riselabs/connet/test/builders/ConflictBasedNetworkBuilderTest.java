@@ -7,6 +7,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import java.io.File;
 import java.util.Iterator;
@@ -16,17 +17,20 @@ import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.MergeResult.MergeStatus;
 import org.eclipse.jgit.merge.MergeStrategy;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
 import org.junit.Test;
 
+import br.com.riselabs.connet.beans.Blame;
+import br.com.riselabs.connet.beans.ChunkBlame;
 import br.com.riselabs.connet.beans.ConflictBasedNetwork;
 import br.com.riselabs.connet.beans.ConflictBasedNetwork.NetworkType;
-import br.com.riselabs.connet.beans.Blame;
 import br.com.riselabs.connet.beans.DeveloperEdge;
 import br.com.riselabs.connet.beans.DeveloperNode;
 import br.com.riselabs.connet.beans.JGitMergeScenario;
 import br.com.riselabs.connet.beans.Project;
 import br.com.riselabs.connet.builders.ConflictBasedNetworkBuilder;
+import br.com.riselabs.connet.commands.GitConflictBlame;
 import br.com.riselabs.connet.commands.RecursiveBlame;
 import br.com.riselabs.connet.test.helpers.ConflictBasedRepositoryTestCase;
 
@@ -34,7 +38,8 @@ import br.com.riselabs.connet.test.helpers.ConflictBasedRepositoryTestCase;
  * @author alcemirsantos
  *
  */
-public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTestCase {
+public class ConflictBasedNetworkBuilderTest extends
+		ConflictBasedRepositoryTestCase {
 
 	private Git git;
 	private ConflictBasedNetworkBuilder builder;
@@ -50,69 +55,109 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 	public void buildDefaultNetwork() throws Exception {
 		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("http://gitrepos.com/test", db);
-		
+
 		builder.setProject(aProject);
-		ConflictBasedNetwork connet = builder.buildConflictBasedNetwork(aScenario);
-		
+		List<File> files = builder.getFilesWithConflicts(runMerge(aScenario));
+		ConflictBasedNetwork connet = builder.build(aScenario,
+				files);
+
 		assertTrue(connet.check());
 		List<DeveloperNode> nodes = connet.getNodes();
 		List<DeveloperEdge> edges = connet.getEdges();
-		assertFalse("the scenario setted adds collaboration. nodes should not be empty.", nodes.isEmpty());
-		assertFalse("the scenario setted adds collaboration. edges should not be empty.", edges.isEmpty());
-		DeveloperNode devA = connet.getNode("Dev A", "deva@project.com");
-		DeveloperNode devB = connet.getNode("Dev B", "devb@project.com");
-		DeveloperNode devC = connet.getNode("Dev C", "devc@project.com");
-		DeveloperNode devD = connet.getNode("Dev D", "devd@project.com");
-		assertNotNull(devA);
-		assertNotNull(devB);
-		assertNotNull(devC);
-		assertNotNull(devD);
-		assertTrue(edges.contains(new DeveloperEdge(devA.getId(), devC.getId())));
-		assertTrue(edges.contains(new DeveloperEdge(devB.getId(), devA.getId())));
-		assertTrue(edges.contains(new DeveloperEdge(devD.getId(), devC.getId())));
 	}
 
 	@Test
 	public void buildFileBasedNetwork() throws Exception {
 		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
-		Project aProject = new Project("http://gitrepos.com/test", db);
-
+		Project aProject = new Project("", db);
 		builder.setType(NetworkType.FILE_BASED);
 		builder.setProject(aProject);
-		ConflictBasedNetwork connet = builder.buildConflictBasedNetwork(aScenario);
+		
+		MergeResult m = runMerge(aScenario);
+		List<File> files = builder.getFilesWithConflicts(m);
+		ConflictBasedNetwork connet = builder.build(aScenario, files);
 		
 		assertTrue(connet.check());
-		List<DeveloperNode> nodes = connet.getNodes();
-		assertTrue(nodes.size()==5);
-		assertTrue(nodes.contains(new DeveloperNode("Dev A", "deva@project.com")));
-		assertTrue(nodes.contains(new DeveloperNode("Dev B", "devb@project.com")));
-		assertTrue(nodes.contains(new DeveloperNode("Dev C", "devc@project.com")));
-		assertTrue(nodes.contains(new DeveloperNode("Dev D", "devd@project.com")));
-		assertTrue(nodes.contains(new DeveloperNode("Dev E", "deve@project.com")));
+		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
+		DeveloperNode node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deve@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devb@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devc@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devd@project.com")));
+		assertFalse(iNodes.hasNext());
 		
-		assertFalse(nodes.contains(new DeveloperNode("Dev X", "devx@project.com")));
-		assertFalse(nodes.contains(new DeveloperNode("Dev Y", "devy@project.com")));
+		Iterator<DeveloperEdge> iEdges = connet.getEdges().iterator();
+		DeveloperEdge edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 2)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 3)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(2, 3)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(2, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(3, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(5, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(5, 2)));
+		assertFalse(iEdges.hasNext());
 	}
 
 	@Test
 	public void buildChunckBasedNetwork() throws Exception {
 		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
-		Project aProject = new Project("http://gitrepos.com/test", db);
+		Project aProject = new Project("", db);
 		builder.setType(NetworkType.CHUNK_BASED);
-		
 		builder.setProject(aProject);
-		ConflictBasedNetwork connet = builder.buildConflictBasedNetwork(aScenario);
+		
+		MergeResult m = runMerge(aScenario);
+		List<File> files = builder.getFilesWithConflicts(m);
+		ConflictBasedNetwork connet = builder.build(aScenario, files);
 		
 		assertTrue(connet.check());
-		List<DeveloperNode> nodes = connet.getNodes();
-		List<DeveloperEdge> edges = connet.getEdges();
-		assertFalse("the scenario setted adds collboration. nodes should not be empty.", connet.getNodes().isEmpty());
-		assertFalse("the scenario setted adds collboration. edges should not be empty.", connet.getEdges().isEmpty());
-		assertTrue(nodes.contains(new DeveloperNode(5,"Dev E", "deve@project.com")));
+		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
+		DeveloperNode node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devb@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devc@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deve@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("devd@project.com")));
+		assertFalse(iNodes.hasNext());
+		
+		Iterator<DeveloperEdge> iEdges = connet.getEdges().iterator();
+		DeveloperEdge edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 2)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 3)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(1, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(2, 3)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(2, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(3, 4)));
+		edge = iEdges.next();
+		assertTrue(edge.equals(new DeveloperEdge(2, 5)));
+		assertFalse(iEdges.hasNext());
 	}
+	
 
 	@Test
-	public void mergeConflictScenarioIsSettedInTempRepository() throws Exception {
+	public void mergeConflictScenarioIsSettedInTempRepository()
+			throws Exception {
 		JGitMergeScenario ms = setCollaborationScenarioInTempRepository();
 
 		// asserting that files are different in both branches
@@ -132,14 +177,14 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 	}
 
 	@Test
-	public void mergeConflictScenarioInMemorySetting() throws Exception {
-		JGitMergeScenario ms = setCollaborationScenarioInTempRepository();
+	public void mergeConflictScenarioInMemoryRepository() throws Exception {
+		JGitMergeScenario ms = setCollaborationScenarioInBareRepository();
 
 		MergeResult result = git.merge().setStrategy(MergeStrategy.RECURSIVE)
 				.include("side", ms.getRight()).call();
 		assertEquals(MergeStatus.CONFLICTING, result.getMergeStatus());
 	}
-	
+
 	@Test
 	public void shouldRetriveFooFileBasedContributors() throws Exception {
 		builder.setProject(new Project("", db));
@@ -155,7 +200,7 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call());
 		List<RevCommit> commits = builder.getCommitsFrom(scenario);
-		List<DeveloperNode> list = builder.getDeveloperNodes(blames, commits, false);
+		List<DeveloperNode> list = builder.getDeveloperNodes(blames, commits);
 
 		Iterator<DeveloperNode> i = list.iterator();
 		DeveloperNode aNode = i.next();
@@ -172,10 +217,26 @@ public class ConflictBasedNetworkBuilderTest extends ConflictBasedRepositoryTest
 		assertTrue(aNode.getEmail().equals("devd@project.com"));
 		assertFalse(i.hasNext());
 	}
-	
-		assertTrue(aNode.equals(new DeveloperNode("Dev C", "devc@project.com")));
-		assertTrue(aNode.getName().equals("Dev C"));
-		assertTrue(aNode.getEmail().equals("devc@project.com"));
+
+	@Test
+	public void shouldRetriveBarChunkBasedContributors() throws Exception {
+		builder.setProject(new Project("", db));
+		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		runMerge(scenario);
+		String mergedfilepath = db.getDirectory().getParent().concat(File.separator+"Bar.java");
+		List<ChunkBlame> blames =  GitConflictBlame.getConflictingLinesBlames(new File(mergedfilepath));
+		
+		List<DeveloperNode> list = builder.getDeveloperNodes(blames);
+
+		Iterator<DeveloperNode> i = list.iterator();
+		DeveloperNode aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("devb@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("devc@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("deva@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("deve@project.com")));
 		assertFalse(i.hasNext());
 	}
 }

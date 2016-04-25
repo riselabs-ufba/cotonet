@@ -10,6 +10,7 @@ import br.com.riselabs.connet.test.beans.ConflictBasedNetworkTest;
 import br.com.riselabs.connet.test.beans.DeveloperEdgeTest;
 import br.com.riselabs.connet.test.beans.DeveloperNodeTest;
 import br.com.riselabs.connet.test.builders.ConflictBasedNetworkBuilderTest;
+import br.com.riselabs.connet.test.commands.GitConflictBlameTest;
 import br.com.riselabs.connet.test.commands.RecursiveBlameTest;
 
 /**
@@ -24,6 +25,7 @@ import br.com.riselabs.connet.test.commands.RecursiveBlameTest;
 	ConflictBasedNetworkTest.class,
 	// Commands
 	RecursiveBlameTest.class,
+	GitConflictBlameTest.class,
 	// Builders
 	ConflictBasedNetworkBuilderTest.class
 })

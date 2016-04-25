@@ -103,8 +103,8 @@ public class RecursiveBlame {
 		
 		List<Blame> result = new ArrayList<Blame>();
 		try (RevWalk rw = new RevWalk(this.repo)) {
-		    rw.markStart(rw.lookupCommit(this.beginRevision));
-		    rw.markUninteresting(rw.lookupCommit(this.endRevision));
+		    rw.markStart(rw.parseCommit(this.beginRevision));
+		    rw.markUninteresting(rw.parseCommit(this.endRevision));
 		    for (RevCommit curr; (curr = rw.next()) != null;){
 		    	result.add(new Blame(curr, blameCommit(curr)));
 		    }

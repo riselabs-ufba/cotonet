@@ -116,5 +116,14 @@ public class Project {
 		}
 		
 	}
+
+	public DeveloperNode getDevByMail(String anEmail) {
+		for (DeveloperNode node : getDevs()) {
+			if(node.getEmail().equals(anEmail)){
+				return node;
+			}
+		}
+		return null;
+	}
 	
 }
