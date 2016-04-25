@@ -95,33 +95,22 @@ public class RecursiveBlame {
 	}
 
 	public List<Blame> call() throws IOException, GitAPIException {
-		if (this.path == null) {
+		if (this.path == null
+				|| this.beginRevision == null
+				|| this.endRevision == null) {
 			return null;
 		}
-		if (this.endRevision == null) {
-			return null;
-		}
-		return executeBlame(this.beginRevision);
-	}
-
-	private List<Blame> executeBlame(RevCommit commitToBlame)
-			throws GitAPIException, MissingObjectException, IncorrectObjectTypeException, IOException {
-		List<Blame> aList = new ArrayList<Blame>();
-
-		RevWalk walk = new RevWalk(this.repo);
-		RevCommit parent = walk.parseCommit(commitToBlame.getParent(0).getId());
-		BlameResult blame = blameCommit(commitToBlame);	
 		
-		if (parent.getName().equals(this.endRevision.getName())) {
-			aList.add(new Blame(commitToBlame, blame));
-			walk.close();
-			return aList;
-		} else {
-			aList.add(new Blame(commitToBlame, blame));
-			aList.addAll(executeBlame(parent));
-			walk.close();
-			return aList;
+		List<Blame> result = new ArrayList<Blame>();
+		try (RevWalk rw = new RevWalk(this.repo)) {
+		    rw.markStart(rw.lookupCommit(this.beginRevision));
+		    rw.markUninteresting(rw.lookupCommit(this.endRevision));
+		    for (RevCommit curr; (curr = rw.next()) != null;){
+		    	result.add(new Blame(curr, blameCommit(curr)));
+		    }
 		}
+		
+		return result;
 	}
 
 	private BlameResult blameCommit(RevCommit commitToBlame)
