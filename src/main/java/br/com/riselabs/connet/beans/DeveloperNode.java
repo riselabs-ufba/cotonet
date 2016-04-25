@@ -17,6 +17,10 @@ public class DeveloperNode {
 		this(null,null,null);
 	}
 	
+	public DeveloperNode(String anEmail) {
+		this(null, null, anEmail);
+	}
+	
 	public DeveloperNode(String aName, String anEmail) {
 		this(null, aName, anEmail);
 	}
@@ -74,11 +78,6 @@ public class DeveloperNode {
 			if (other.email != null)
 				return false;
 		} else if (!email.equals(other.email))
-			return false;
-		if (name == null) {
-			if (other.name != null)
-				return false;
-		} else if (!name.equals(other.name))
 			return false;
 		return true;
 	}
