@@ -52,12 +52,10 @@ public class ConflictBasedNetwork {
 		// checking nodes
 		for (DeveloperNode dnode : nodes) {
 			// data must not be null
-			if (dnode.getId() == null || dnode.getName() == null
-					|| dnode.getEmail() == null)
+			if (dnode.getId() == null || dnode.getEmail() == null)
 				return false;
 			// data must not be empty
-			if (dnode.getId() < 0 || dnode.getName().equals("")
-					|| dnode.getEmail().equals(""))
+			if (dnode.getId() < 0 || dnode.getEmail().equals(""))
 				return false;
 			// developers must have different IDs and Emails
 			for (DeveloperNode anode : nodes) {
