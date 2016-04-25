@@ -58,11 +58,18 @@ public class DeveloperEdge {
 		if (right == null) {
 			if (other.right != null)
 				return false;
-		} 
-		if( (!right.equals(other.right) && !left.equals(other.left)) 
-				|| (!right.equals(other.left) && !left.equals(other.right))){
+		}
+		// testing bidirectionality
+		if( (right.equals(other.right) && left.equals(other.left))
+				|| (right.equals(other.left) && left.equals(other.right))){
 			return true;
 		}
+		if((right.equals(other.right) && !left.equals(other.left))
+				|| (!right.equals(other.right) && left.equals(other.left))
+				|| (!right.equals(other.right) && !left.equals(other.left))){
+			return false;
+		}
+		
 		return true;
 	}
 
