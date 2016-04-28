@@ -12,6 +12,7 @@ import org.junit.Test;
 import br.com.riselabs.connet.beans.ConflictBasedNetwork;
 import br.com.riselabs.connet.beans.DeveloperEdge;
 import br.com.riselabs.connet.beans.DeveloperNode;
+import br.com.riselabs.connet.beans.validators.ConflictBasedNetworkValidator;
 
 public class ConflictBasedNetworkTest extends RepositoryTestCase {
 
@@ -27,7 +28,7 @@ public class ConflictBasedNetworkTest extends RepositoryTestCase {
 		connet.add(new DeveloperEdge(1,2));
 		assertTrue(connet.getNodes().isEmpty());
 		assertFalse(connet.getEdges().isEmpty());
-		assertFalse(connet.check());
+		assertFalse(new ConflictBasedNetworkValidator().validate(connet));
 	}
 	
 	@Test

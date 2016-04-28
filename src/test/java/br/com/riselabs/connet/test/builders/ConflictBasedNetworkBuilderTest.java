@@ -27,6 +27,7 @@ import br.com.riselabs.connet.beans.DeveloperEdge;
 import br.com.riselabs.connet.beans.DeveloperNode;
 import br.com.riselabs.connet.beans.JGitMergeScenario;
 import br.com.riselabs.connet.beans.Project;
+import br.com.riselabs.connet.beans.validators.ConflictBasedNetworkValidator;
 import br.com.riselabs.connet.builders.ConflictBasedNetworkBuilder;
 import br.com.riselabs.connet.commands.GitConflictBlame;
 import br.com.riselabs.connet.commands.RecursiveBlame;
@@ -59,7 +60,7 @@ public class ConflictBasedNetworkBuilderTest extends
 		ConflictBasedNetwork connet = builder.build(aScenario,
 				files);
 
-		assertTrue(connet.check());
+		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
 	}
 
 	@Test
@@ -73,7 +74,7 @@ public class ConflictBasedNetworkBuilderTest extends
 		List<File> files = builder.getFilesWithConflicts(m);
 		ConflictBasedNetwork connet = builder.build(aScenario, files);
 		
-		assertTrue(connet.check());
+		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
 		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
 		DeveloperNode node = iNodes.next();
 		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
@@ -118,7 +119,7 @@ public class ConflictBasedNetworkBuilderTest extends
 		List<File> files = builder.getFilesWithConflicts(m);
 		ConflictBasedNetwork connet = builder.build(aScenario, files);
 		
-		assertTrue(connet.check());
+		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
 		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
 		DeveloperNode node = iNodes.next();
 		assertTrue(node.equals(new DeveloperNode("devb@project.com")));

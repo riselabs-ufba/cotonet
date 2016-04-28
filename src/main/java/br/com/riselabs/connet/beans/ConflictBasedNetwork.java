@@ -35,62 +35,6 @@ public class ConflictBasedNetwork {
 		setEdges(lEdges);
 	}
 
-	/**
-	 * Checks whether the network is well formed or not.
-	 * 
-	 * @return {@code flag} - with value <code>true</code> when the network is
-	 *         well formed, <code>false</code> otherwise.
-	 */
-	public boolean check() {
-		if (this.nodes == null || this.edges == null)
-			return false;
-		if (this.nodes.isEmpty() && !this.edges.isEmpty())
-			return false;
-		if (!this.nodes.isEmpty() && this.edges.isEmpty())
-			return false;
-
-		// checking nodes
-		for (DeveloperNode dnode : nodes) {
-			// data must not be null
-			if (dnode.getId() == null || dnode.getEmail() == null)
-				return false;
-			// data must not be empty
-			if (dnode.getId() < 0 || dnode.getEmail().equals(""))
-				return false;
-			// developers must have different IDs and Emails
-			for (DeveloperNode anode : nodes) {
-				if (dnode.equals(anode))
-					continue;
-				else if (dnode.getId() == anode.getId()
-						|| dnode.getEmail().equals(anode.getEmail()))
-					return false;
-			}
-		}
-		// checking edges
-		for (DeveloperEdge dedge : edges) {
-			if (dedge.getLeft() == null || dedge.getRight() == null)
-				return false;
-			if (!isThereSuchDeveloper(dedge.getLeft())
-					|| !isThereSuchDeveloper(dedge.getRight()))
-				return false;
-		}
-		return true;
-	}
-
-	/**
-	 * checks the existence of developer with such ID.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	private boolean isThereSuchDeveloper(Integer id) {
-		for (DeveloperNode n : nodes) {
-			if (n.getId() == id)
-				return true;
-		}
-		return false;
-	}
-
 	public enum NetworkType {
 		CHUNK_BASED, FILE_BASED
 	}
