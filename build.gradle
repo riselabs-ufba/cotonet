@@ -5,7 +5,7 @@ apply plugin: 'eclipse'
 group = 'br.com.riselabs'
 version = '1.0'
 
-description = """repos_crawler"""
+description = """cotonet"""
 
 sourceCompatibility = 1.8
 targetCompatibility = 1.8
@@ -43,7 +43,7 @@ jar {
     
     manifest { 
         attributes(
-        	'Main-Class': 'br.com.riselabs.crawlers.Main',
+        	'Main-Class': 'br.com.riselabs.cotonet.Main',
         	"Implementation-Title": "Gradle",
         	"Implementation-Version": version)
     }
