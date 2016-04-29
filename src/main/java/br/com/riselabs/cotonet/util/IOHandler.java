@@ -69,12 +69,12 @@ public class IOHandler {
 	 * @param aLine
 	 * @throws IOException
 	 */
-	public void writeFileLine(File file, String aLine) throws IOException {
+	public void appendLineToFile(File file, String aLine) throws IOException {
 		BufferedWriter writer = null;
-			writer = new BufferedWriter(new FileWriter(file, true));
-			writer.write(aLine + "\n");
-			// Close the writer regardless of what happens...
-			writer.close();
+		writer = new BufferedWriter(new FileWriter(file, true));
+		writer.write(aLine + "\n");
+		// Close the writer regardless of what happens...
+		writer.close();
 	}
 
 	/**
@@ -94,19 +94,19 @@ public class IOHandler {
 			throw new EmptyContentException();
 
 		for (String line : content) {
-			writeFileLine(file, line + "\n");
+			appendLineToFile(file, line);
 		}
 	}
 
 	/**
-	 * Checks whether the "repos" directory correspondent to the given name already
-	 * exists. Returns <code>null</code> if not.
+	 * Checks whether the "repos" directory correspondent to the given name
+	 * already exists. Returns <code>null</code> if not.
 	 * 
 	 * @param folderName
 	 * @return - the directory
 	 * @throws IOException
 	 */
-	public  File getReposDirectory(String folderName) throws IOException {
+	public File getReposDirectory(String folderName) throws IOException {
 		File dir = new File(Directories.getReposDir() + folderName);
 		return getDirectory(dir);
 	}
@@ -152,11 +152,12 @@ public class IOHandler {
 		aPath.mkdirs();
 		return aPath;
 	}
-	
+
 	/**
 	 * Returns the URLs from the "ghanalysis" database.
 	 * 
-	 * @return - a map <id, url> for each entry in the "repository" table of the database.
+	 * @return - a map <id, url> for each entry in the "repository" table of the
+	 *         database.
 	 */
 	public Map<Integer, String> readURLsFromDatabase() {
 		Map<Integer, String> result = new HashMap<Integer, String>();
@@ -227,11 +228,13 @@ public class IOHandler {
 		File sh = new File(Directories.getConfigDir(), "run_target-systems.sh");
 		checkAndRemove(sh);
 		writeFile(sh, content);
-		Logger.log("Codeface execution shell script written at: "+sh.getCanonicalPath());
+		Logger.log("Codeface execution shell script written at: "
+				+ sh.getCanonicalPath());
 	}
 
 	/**
-	 * Checks and removes either a file or a directory. No exceptions raised if it fails.
+	 * Checks and removes either a file or a directory. No exceptions raised if
+	 * it fails.
 	 * 
 	 * @param instance
 	 * @throws IOException
@@ -241,10 +244,6 @@ public class IOHandler {
 			System.out.println("Removing old file: " + instance.toString());
 			FileUtils.deleteQuietly(instance);
 		}
-	}
-
-	public File getFile(File f) throws IOException {
-		return getReposDirectory(f.getName());
 	}
 
 }

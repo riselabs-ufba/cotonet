@@ -4,19 +4,22 @@
 package br.com.riselabs.cotonet.test.model.handlers;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
-import br.com.riselabs.cotonet.util.IOHandler;
 import br.com.riselabs.cotonet.util.Directories;
+import br.com.riselabs.cotonet.util.IOHandler;
 
 /**
  * @author alcemir
@@ -24,12 +27,20 @@ import br.com.riselabs.cotonet.util.Directories;
  */
 public class FilesWritingTest {
 
-	private String testFilePath = Directories.getReposDir()+"test.txt";
+	private File testFile;
 	private IOHandler io;
 	
 	@Before
 	public void setup(){
 		io = new IOHandler();
+		testFile = new File(Directories.getReposDir()+"test.txt");
+	}
+	
+	@After
+	public void teardown(){
+		if (testFile.exists()) {
+			testFile.delete();
+		}
 	}
 	
 	@Test(expected=NullPointerException.class)
@@ -46,46 +57,72 @@ public class FilesWritingTest {
 	
 	@Test(expected = NullPointerException.class)
 	public void tryToWriteNullContent() throws IOException, NullPointerException, EmptyContentException{
-		File f = new File(testFilePath);
-		io.writeFile(f, null);
+		io.writeFile(testFile, null);
 	}
 	
 	@Test(expected = EmptyContentException.class)
 	public void tryToWriteEmptyFile() throws IOException, NullPointerException, EmptyContentException{
-		File f = new File(testFilePath);
-		io.writeFile(f, new ArrayList<String>());
+		io.writeFile(testFile, new ArrayList<String>());
 	}
 	
 	@Test
 	public void createdFileCorrectly() throws NullPointerException, IOException, EmptyContentException{
 		List<String> l = new ArrayList<String>();
 		l.add("a");
-		io.writeFile(new File(testFilePath), l);
-		File f = new IOHandler().getFile(new File(testFilePath));
-		assertNotNull("File shouldn't be null.", f);
+		assertFalse(testFile.exists());
+		io.writeFile(testFile, l);
+		assertTrue(testFile.exists());
 	}
 	
 	@Test
 	public void wroteFileCorrectly() throws NullPointerException, IOException, EmptyContentException{
 		// create content
-		List<String> expectedContent = new ArrayList<String>();
-		expectedContent.add("a");
-		expectedContent.add("b");
+		List<String> content = new ArrayList<String>();
+		content.add("a");
+		content.add("b");
+		assertFalse(testFile.exists());
 		
 		// write the file
-		io.writeFile(new File(testFilePath), expectedContent);
+		io.writeFile(testFile, content);
+		assertTrue(testFile.exists());
 		
 		// read the file
-		File f = new IOHandler().getFile(new File(testFilePath));
-		List<String> actualContent = io.readFile(f);
+		List<String> actualContent = io.readFile(testFile);
 		
 		// check the content
-		int count = 0;
-		for (String actualLine : actualContent) {
-			assertEquals("The line content should be the same.", expectedContent.get(count), actualLine);
-			count++;
-		}
+		Iterator<String> i =  actualContent.iterator();
+		String str = i.next();
+		assertEquals("The line content should be the same.","a", str);
+		str = i.next();
+		assertEquals("The line content should be the same.","b", str);
+		assertFalse(i.hasNext());
+	}
+	
+	@Test
+	public void appendLineToFileCorrectly() throws NullPointerException, IOException, EmptyContentException{
+		// create content
+		List<String> content = new ArrayList<String>();
+		content.add("a");
+		io.writeFile(testFile, content);
+		assertTrue(testFile.exists());
+		Iterator<String> i =  io.readFile(testFile).iterator();
+		String str = i.next();
+		assertEquals("The line content should be the same.","a", str);
+		assertFalse(i.hasNext());
 		
+		// write the file
+		io.appendLineToFile(testFile, "b");
+		
+		// read the file
+		List<String> actualContent = io.readFile(testFile);
+		
+		// check the content
+		i =  actualContent.iterator();
+		str = i.next();
+		assertEquals("The line content should be the same.","a", str);
+		str = i.next();
+		assertEquals("The line content should be the same.","b", str);
+		assertFalse(i.hasNext());
 	}
 	
 }

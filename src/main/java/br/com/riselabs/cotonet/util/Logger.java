@@ -38,7 +38,7 @@ public class Logger {
 	 */
 	public static void log(File logFile, String message) {
 		try {
-			new IOHandler().writeFileLine(logFile, message);
+			new IOHandler().appendLineToFile(logFile, message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
