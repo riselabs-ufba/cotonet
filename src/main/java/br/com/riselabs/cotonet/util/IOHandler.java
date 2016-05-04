@@ -18,6 +18,9 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
+import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.db.DBManager;
@@ -180,7 +183,7 @@ public class IOHandler {
 		return result;
 	}
 
-	public static List<MergeScenario> getMergeScenarios(Integer repositoryID) {
+	public static List<MergeScenario> getMergeScenarios(Integer repositoryID, Repository repo) throws IOException {
 		List<MergeScenario> scenarios = new ArrayList<MergeScenario>();
 		String sql = "select  " + "m.leftrevision \"left\", "
 				+ "m.baserevision \"base\", " + "m.rightrevision \"right\", "
@@ -199,9 +202,12 @@ public class IOHandler {
 		try {
 			ResultSet rs = DBManager.executeQuery(sql);
 			while (rs.next()) {
-				scenarios.add(new MergeScenario(rs.getString("basesha"), rs
-						.getString("leftsha"), rs.getString("rightsha"), rs
-						.getInt("nlcommits"), rs.getInt("nrcommits")));
+				try(RevWalk w = new RevWalk(repo)){
+					RevCommit left = w.parseCommit(repo.resolve(rs.getString("leftsha")));
+					RevCommit base = w.parseCommit(repo.resolve(rs.getString("basesha")));
+					RevCommit right = w.parseCommit(repo.resolve(rs.getString("rightsha")));
+					scenarios.add(new MergeScenario(base, left, right));
+				}
 			}
 		} catch (SQLException e) {
 			e.printStackTrace();

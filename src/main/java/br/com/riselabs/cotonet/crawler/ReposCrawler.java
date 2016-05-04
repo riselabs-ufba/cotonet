@@ -15,10 +15,7 @@ import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.InvalidTagNameException;
 import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.api.errors.TransportException;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
-import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -34,8 +31,8 @@ import br.com.riselabs.cotonet.model.dao.validators.ProjectValidator;
 import br.com.riselabs.cotonet.model.dao.validators.Validator;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
-import br.com.riselabs.cotonet.util.IOHandler;
 import br.com.riselabs.cotonet.util.Directories;
+import br.com.riselabs.cotonet.util.IOHandler;
 import br.com.riselabs.cotonet.util.Logger;
 
 public class ReposCrawler {
@@ -120,9 +117,9 @@ public class ReposCrawler {
 	}
 
 	public void createMergeBasedTags() throws IOException {
-		List<MergeScenario> scenarios = IOHandler
-				.getMergeScenarios(repositoryID);
 		Repository repository = buildRepository();
+		List<MergeScenario> scenarios = IOHandler
+				.getMergeScenarios(repositoryID, repository);
 		try (Git git = new Git(repository)) {
 			// remove existing tags
 			for (String tag : repository.getTags().keySet()) {
@@ -139,26 +136,18 @@ public class ReposCrawler {
 			String tagL = project.getName() + "L" + count;
 			String tagR = project.getName() + "R" + count;
 
-			tagsMap.put(tagB, s.getBase());
-			tagsMap.put(tagL, s.getLeft());
-			tagsMap.put(tagR, s.getRight());
+			tagsMap.put(tagB, s.getBase().getName());
+			tagsMap.put(tagL, s.getLeft().getName());
+			tagsMap.put(tagR, s.getRight().getName());
 
 			// prepare test-repository
 			try (Git git = new Git(repository)) {
 
-				// read some other commit and set the tag on it
-				ObjectId shaBase = repository.resolve(s.getBase());
-				ObjectId shaLeft = repository.resolve(s.getLeft());
-				ObjectId shaRight = repository.resolve(s.getRight());
-
 				try (RevWalk walk = new RevWalk(repository)) {
-					RevCommit commitBase = walk.parseCommit(shaBase);
-					RevCommit commitLeft = walk.parseCommit(shaLeft);
-					RevCommit commitRight = walk.parseCommit(shaRight);
 
-					git.tag().setObjectId(commitBase).setName(tagB).call();
-					git.tag().setObjectId(commitLeft).setName(tagL).call();
-					git.tag().setObjectId(commitRight).setName(tagR).call();
+					git.tag().setObjectId(s.getBase()).setName(tagB).call();
+					git.tag().setObjectId(s.getLeft()).setName(tagL).call();
+					git.tag().setObjectId(s.getRight()).setName(tagR).call();
 
 					walk.dispose();
 				} catch (ConcurrentRefUpdateException e) {
@@ -171,12 +160,6 @@ public class ReposCrawler {
 					e.printStackTrace();
 				}
 			} catch (RevisionSyntaxException e) {
-				e.printStackTrace();
-			} catch (AmbiguousObjectException e) {
-				e.printStackTrace();
-			} catch (IncorrectObjectTypeException e) {
-				e.printStackTrace();
-			} catch (IOException e) {
 				e.printStackTrace();
 			}
 			count++;

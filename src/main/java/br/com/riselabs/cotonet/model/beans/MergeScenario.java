@@ -3,53 +3,64 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
+import org.eclipse.jgit.revwalk.RevCommit;
+
 /**
- * @author Alcemir R. Santos
+ * @author alcemirsantos
  *
  */
 public class MergeScenario {
-	private String base;
-	private String left;
-	private String right;
-	private Integer numCommitsLeft;
-	private Integer numCommitsRight;
-	
-	public MergeScenario(String base, String left, String right, Integer numCommitsLeft, Integer numCommitsRight){
-		this.base = base;
-		this.left = left;
-		this.right = right;
-		this.numCommitsLeft = numCommitsLeft;
-		this.numCommitsRight = numCommitsRight;
+
+	private int projectID;
+	private RevCommit base;
+	private RevCommit left;
+	private RevCommit right;
+
+	public MergeScenario(RevCommit baseCommit, RevCommit leftParent,
+			RevCommit rightParent) {
+		this.base = baseCommit;
+		this.left = leftParent;
+		this.right = rightParent;
 	}
-	
-	public String getBase() {
+
+	public RevCommit getBase() {
 		return base;
 	}
-	public void setBase(String base) {
+
+	public void setBase(RevCommit base) {
 		this.base = base;
 	}
-	public String getLeft() {
+
+	public RevCommit getLeft() {
 		return left;
 	}
-	public void setLeft(String left) {
+
+	public void setLeft(RevCommit left) {
 		this.left = left;
 	}
-	public String getRight() {
+
+	public RevCommit getRight() {
 		return right;
 	}
-	public void setRight(String right) {
+
+	public void setRight(RevCommit right) {
 		this.right = right;
 	}
-	public Integer getNumCommitsLeft() {
-		return numCommitsLeft;
+
+	@Override
+	public String toString() {
+		return "JGitMergeScenario [base=" + base + ", left=" + left
+				+ ", right=" + right + "]";
 	}
-	public void setNumCommitsLeft(Integer numCommitsLeft) {
-		this.numCommitsLeft = numCommitsLeft;
+
+	public void setProjectID(int projectID) {
+		this.projectID = projectID;
 	}
-	public Integer getNumCommitsRight() {
-		return numCommitsRight;
+	
+	public int getProjectID(){
+		return this.projectID;
 	}
-	public void setNumCommitsRight(Integer numCommitsRight) {
-		this.numCommitsRight = numCommitsRight;
-	}
+	
+	
+
 }

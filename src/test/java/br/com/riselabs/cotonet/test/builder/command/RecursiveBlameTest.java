@@ -15,7 +15,7 @@ import org.junit.Test;
 import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
 import br.com.riselabs.cotonet.builder.commands.RecursiveBlame;
 import br.com.riselabs.cotonet.model.beans.Blame;
-import br.com.riselabs.cotonet.model.beans.JGitMergeScenario;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 
@@ -35,7 +35,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromTheRightBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
@@ -57,7 +57,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromTheLeftBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
@@ -80,7 +80,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void shouldRetriveBlamesFromBothBranch() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)

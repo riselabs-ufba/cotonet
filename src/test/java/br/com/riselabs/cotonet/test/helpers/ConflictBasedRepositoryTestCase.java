@@ -19,7 +19,7 @@ import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 
-import br.com.riselabs.cotonet.model.beans.JGitMergeScenario;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 
 public abstract class ConflictBasedRepositoryTestCase extends
 		RepositoryTestCase {
@@ -28,7 +28,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 		System.out.println(db.getDirectory().getAbsolutePath());
 	}
 	
-	public MergeResult runMerge(JGitMergeScenario scenario)
+	public MergeResult runMerge(MergeScenario scenario)
 			throws RefAlreadyExistsException, RefNotFoundException,
 			InvalidRefNameException, CheckoutConflictException, GitAPIException {
 		Git git = Git.wrap(db);
@@ -96,7 +96,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 	 * @return
 	 * @throws Exception
 	 */
-	public JGitMergeScenario setCollaborationScenarioInTempRepository()
+	public MergeScenario setCollaborationScenarioInTempRepository()
 			throws Exception {
 		Git git = Git.wrap(db);
 
@@ -152,7 +152,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 		lastSideCommit = git.commit().setMessage("s3")
 				.setAuthor(devs.get("devA")).call();
 
-		return new JGitMergeScenario(mergeBaseCommit, lastMasterCommit,
+		return new MergeScenario(mergeBaseCommit, lastMasterCommit,
 				lastSideCommit);
 	}
 
@@ -163,7 +163,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 	 * @return
 	 * @throws Exception
 	 */
-	public JGitMergeScenario setCollaborationScenarioInBareRepository()
+	public MergeScenario setCollaborationScenarioInBareRepository()
 			throws Exception {
 		Git git = Git.wrap(db);
 
@@ -220,7 +220,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 				.author(devs.get("devA")).create();
 
 		git.checkout().setName("master").setStartPoint(lastMasterCommit).call();
-		return new JGitMergeScenario(mergeBaseCommit, lastMasterCommit,
+		return new MergeScenario(mergeBaseCommit, lastMasterCommit,
 				lastSideCommit);
 	}
 

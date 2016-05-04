@@ -27,7 +27,7 @@ import br.com.riselabs.cotonet.model.beans.ChunkBlame;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
-import br.com.riselabs.cotonet.model.beans.JGitMergeScenario;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork.NetworkType;
 import br.com.riselabs.cotonet.model.dao.validators.ConflictBasedNetworkValidator;
@@ -52,7 +52,7 @@ public class ConflictBasedNetworkBuilderTest extends
 
 	@Test
 	public void buildDefaultNetwork() throws Exception {
-		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
+		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("http://gitrepos.com/test", db);
 
 		builder.setProject(aProject);
@@ -65,7 +65,7 @@ public class ConflictBasedNetworkBuilderTest extends
 
 	@Test
 	public void buildFileBasedNetwork() throws Exception {
-		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
+		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("", db);
 		builder.setType(NetworkType.FILE_BASED);
 		builder.setProject(aProject);
@@ -110,7 +110,7 @@ public class ConflictBasedNetworkBuilderTest extends
 
 	@Test
 	public void buildChunckBasedNetwork() throws Exception {
-		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
+		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("", db);
 		builder.setType(NetworkType.CHUNK_BASED);
 		builder.setProject(aProject);
@@ -155,7 +155,7 @@ public class ConflictBasedNetworkBuilderTest extends
 	@Test
 	public void mergeConflictScenarioIsSettedInTempRepository()
 			throws Exception {
-		JGitMergeScenario ms = setCollaborationScenarioInTempRepository();
+		MergeScenario ms = setCollaborationScenarioInTempRepository();
 
 		// asserting that files are different in both branches
 		assertEquals("1\n2\n3\n4-side\n5\n6\n7\n8\n",
@@ -175,7 +175,7 @@ public class ConflictBasedNetworkBuilderTest extends
 
 	@Test
 	public void mergeConflictScenarioInMemoryRepository() throws Exception {
-		JGitMergeScenario ms = setCollaborationScenarioInBareRepository();
+		MergeScenario ms = setCollaborationScenarioInBareRepository();
 
 		MergeResult result = git.merge().setStrategy(MergeStrategy.RECURSIVE)
 				.include("side", ms.getRight()).call();
@@ -185,7 +185,7 @@ public class ConflictBasedNetworkBuilderTest extends
 	@Test
 	public void shouldRetriveFooFileBasedContributors() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 		RecursiveBlame blame = new RecursiveBlame();
 
 		List<Blame> blames = blame.setRepository(db)
@@ -218,7 +218,7 @@ public class ConflictBasedNetworkBuilderTest extends
 	@Test
 	public void shouldRetriveBarChunkBasedContributors() throws Exception {
 		builder.setProject(new Project("", db));
-		JGitMergeScenario scenario = setCollaborationScenarioInTempRepository();
+		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 		runMerge(scenario);
 		String mergedfilepath = db.getDirectory().getParent().concat(File.separator+"Bar.java");
 		List<ChunkBlame> blames =  GitConflictBlame.getConflictingLinesBlames(new File(mergedfilepath));

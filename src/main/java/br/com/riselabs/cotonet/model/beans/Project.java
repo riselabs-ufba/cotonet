@@ -20,19 +20,20 @@ public class Project {
 	private String name;
 	private String url;
 	private Repository repository;
-	private Map<JGitMergeScenario, ConflictBasedNetwork> scenarioNetMap;
+	private Map<MergeScenario, ConflictBasedNetwork> scenarioNetMap;
 	private List<DeveloperNode> devs;
+	private int id;
 
 	public Project(String anURL, Repository aRepository){
 		this(getRepositorySystemName(anURL), anURL, aRepository);
 	}
 	
 	public Project(String aName, String anURL, Repository aRepository) {
-		this.setName(aName);
-		this.setUrl(anURL);
-		this.setRepository(aRepository);
-		this.setScenarioNetMap(new HashMap<JGitMergeScenario, ConflictBasedNetwork>());
-		this.setDevs(new ArrayList<DeveloperNode>());
+		setName(aName);
+		setUrl(anURL);
+		setRepository(aRepository);
+		setScenarioNetMap(new HashMap<MergeScenario, ConflictBasedNetwork>());
+		setDevs(new ArrayList<DeveloperNode>());
 	}
 	
 	public String getName() {
@@ -62,14 +63,14 @@ public class Project {
 	/**
 	 * @return the scenarioNetMap
 	 */
-	public Map<JGitMergeScenario, ConflictBasedNetwork> getScenarioNetMap() {
+	public Map<MergeScenario, ConflictBasedNetwork> getScenarioNetMap() {
 		return scenarioNetMap;
 	}
 
 	/**
 	 * @param scenarioNetMap the scenarioNetMap to set
 	 */
-	public void setScenarioNetMap(Map<JGitMergeScenario, ConflictBasedNetwork> scenarioNetMap) {
+	public void setScenarioNetMap(Map<MergeScenario, ConflictBasedNetwork> scenarioNetMap) {
 		this.scenarioNetMap = scenarioNetMap;
 	}
 	
@@ -81,7 +82,7 @@ public class Project {
 		this.devs = devs;
 	}
 
-	public Set<JGitMergeScenario> getMergeScenarios(){
+	public Set<MergeScenario> getMergeScenarios(){
 		return this.scenarioNetMap.keySet();
 	}
 	
@@ -124,6 +125,14 @@ public class Project {
 			}
 		}
 		return null;
+	}
+
+	public void setID(int anID){
+		this.id = anID;
+	}
+	
+	public int getID() {
+		return this.id;
 	}
 	
 }

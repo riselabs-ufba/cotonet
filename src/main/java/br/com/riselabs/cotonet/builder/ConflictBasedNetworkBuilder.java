@@ -48,7 +48,7 @@ import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
-import br.com.riselabs.cotonet.model.beans.JGitMergeScenario;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork.NetworkType;
 
@@ -62,7 +62,7 @@ public class ConflictBasedNetworkBuilder {
 
 	private NetworkType type;
 
-	private Map<JGitMergeScenario, List<Blame>> scenarioBlamesMap;
+	private Map<MergeScenario, List<Blame>> scenarioBlamesMap;
 
 	/**
 	 * 
@@ -99,7 +99,7 @@ public class ConflictBasedNetworkBuilder {
 	/**
 	 * @return the scenarioBlamesMap
 	 */
-	public Map<JGitMergeScenario, List<Blame>> getScenarioBlamesMap() {
+	public Map<MergeScenario, List<Blame>> getScenarioBlamesMap() {
 		return scenarioBlamesMap;
 	}
 
@@ -108,13 +108,13 @@ public class ConflictBasedNetworkBuilder {
 	 *            the scenarioBlamesMap to set
 	 */
 	public void setScenarioBlamesMap(
-			Map<JGitMergeScenario, List<Blame>> scenarioBlamesMap) {
+			Map<MergeScenario, List<Blame>> scenarioBlamesMap) {
 		this.scenarioBlamesMap = scenarioBlamesMap;
 	}
 
-	public void add(JGitMergeScenario aScenario, List<Blame> blames) {
+	public void add(MergeScenario aScenario, List<Blame> blames) {
 		if (this.scenarioBlamesMap == null) {
-			this.scenarioBlamesMap = new HashMap<JGitMergeScenario, List<Blame>>();
+			this.scenarioBlamesMap = new HashMap<MergeScenario, List<Blame>>();
 		}
 		this.scenarioBlamesMap.put(aScenario, blames);
 	}
@@ -172,7 +172,7 @@ public class ConflictBasedNetworkBuilder {
 			RevWalk walk = new RevWalk(getProject().getRepository());
 			RevCommit baseCommit = walk.parseCommit(merger.getBaseCommitId());
 
-			JGitMergeScenario scenario = new JGitMergeScenario(baseCommit,
+			MergeScenario scenario = new MergeScenario(baseCommit,
 					leftHead, rightHead);
 
 			Git git = Git.wrap(getProject().getRepository());
@@ -207,7 +207,7 @@ public class ConflictBasedNetworkBuilder {
 	 * @throws IOException
 	 * @throws GitAPIException
 	 */
-	public ConflictBasedNetwork build(JGitMergeScenario aScenario,
+	public ConflictBasedNetwork build(MergeScenario aScenario,
 			List<File> files) throws IOException, GitAPIException {
 		ConflictBasedNetwork connet = new ConflictBasedNetwork(getProject(),
 				aScenario);
@@ -427,7 +427,7 @@ public class ConflictBasedNetworkBuilder {
 		return merges;
 	}
 
-	public List<RevCommit> getCommitsFrom(JGitMergeScenario aScenario)
+	public List<RevCommit> getCommitsFrom(MergeScenario aScenario)
 			throws RevisionSyntaxException, MissingObjectException,
 			IncorrectObjectTypeException, AmbiguousObjectException,
 			IOException, GitAPIException {

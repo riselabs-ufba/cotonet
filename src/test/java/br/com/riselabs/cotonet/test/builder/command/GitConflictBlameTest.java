@@ -15,7 +15,7 @@ import org.junit.Test;
 
 import br.com.riselabs.cotonet.builder.commands.GitConflictBlame;
 import br.com.riselabs.cotonet.model.beans.ChunkBlame;
-import br.com.riselabs.cotonet.model.beans.JGitMergeScenario;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 
 /**
@@ -26,7 +26,7 @@ public class GitConflictBlameTest extends ConflictBasedRepositoryTestCase {
 
 	@Test
 	public void buildChunckBasedNetworkCommandLineBased() throws Exception {
-		JGitMergeScenario aScenario = setCollaborationScenarioInTempRepository();
+		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		runMerge(aScenario);
 		
 		String mergedfilepath = db.getDirectory().getParent().concat(File.separator+"Bar.java");

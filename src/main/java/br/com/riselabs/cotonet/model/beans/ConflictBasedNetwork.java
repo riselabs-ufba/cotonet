@@ -12,7 +12,7 @@ import java.util.List;
  */
 public class ConflictBasedNetwork {
 
-	private JGitMergeScenario scenario;
+	private MergeScenario scenario;
 	private List<DeveloperNode> nodes;
 	private List<DeveloperEdge> edges;
 
@@ -24,12 +24,12 @@ public class ConflictBasedNetwork {
 				new ArrayList<DeveloperEdge>());
 	}
 
-	public ConflictBasedNetwork(Project aProject, JGitMergeScenario aScenario) {
+	public ConflictBasedNetwork(Project aProject, MergeScenario aScenario) {
 		this(aProject, aScenario, new ArrayList<DeveloperNode>(),
 				new ArrayList<DeveloperEdge>());
 	}
 
-	public ConflictBasedNetwork(Project aProject, JGitMergeScenario aScenario,
+	public ConflictBasedNetwork(Project aProject, MergeScenario aScenario,
 			List<DeveloperNode> lNodes, List<DeveloperEdge> lEdges) {
 		setNodes(lNodes);
 		setEdges(lEdges);
@@ -55,11 +55,11 @@ public class ConflictBasedNetwork {
 		return this.edges;
 	}
 
-	public JGitMergeScenario getScenario() {
+	public MergeScenario getScenario() {
 		return scenario;
 	}
 
-	public void setScenario(JGitMergeScenario aScenario) {
+	public void setScenario(MergeScenario aScenario) {
 		this.scenario = aScenario;
 	}
 
