@@ -54,28 +54,14 @@ public class ConflictBasedNetworkBuilderTest extends
 	}
 
 	@Test
-	public void buildDefaultNetwork() throws Exception {
-		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
-		Project aProject = new Project("http://gitrepos.com/test", db);
-
-		builder.setProject(aProject);
-		List<File> files = builder.getFilesWithConflicts(runMerge(aScenario));
-		ConflictBasedNetwork connet = builder.build(aScenario,
-				files);
-
-		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
-	}
-
-	@Test
 	public void buildFileBasedNetwork() throws Exception {
 		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("", db);
-		builder.setType(NetworkType.FILE_BASED);
 		builder.setProject(aProject);
 		
 		MergeResult m = runMerge(aScenario);
 		List<File> files = builder.getFilesWithConflicts(m);
-		ConflictBasedNetwork connet = builder.build(aScenario, files);
+		ConflictBasedNetwork connet = builder.build(aScenario, files, NetworkType.FILE_BASED);
 		
 		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
 		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
@@ -115,12 +101,11 @@ public class ConflictBasedNetworkBuilderTest extends
 	public void buildChunckBasedNetwork() throws Exception {
 		MergeScenario aScenario = setCollaborationScenarioInTempRepository();
 		Project aProject = new Project("", db);
-		builder.setType(NetworkType.CHUNK_BASED);
 		builder.setProject(aProject);
 		
 		MergeResult m = runMerge(aScenario);
 		List<File> files = builder.getFilesWithConflicts(m);
-		ConflictBasedNetwork connet = builder.build(aScenario, files);
+		ConflictBasedNetwork connet = builder.build(aScenario, files, NetworkType.CHUNK_BASED);
 		
 		assertTrue(new ConflictBasedNetworkValidator().validate(connet));
 		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();

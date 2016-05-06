@@ -20,8 +20,6 @@ import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.diff.DiffEntry;
-import org.eclipse.jgit.diff.DiffFormatter;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
@@ -29,14 +27,11 @@ import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.PersonIdent;
-import org.eclipse.jgit.lib.ReflogEntry;
-import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.revwalk.filter.RevFilter;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
 
@@ -59,29 +54,17 @@ import br.com.riselabs.cotonet.model.enums.NetworkType;
 public class ConflictBasedNetworkBuilder {
 
 	private Project project;
-
-	private NetworkType type;
-
 	private Map<MergeScenario, List<Blame>> scenarioBlamesMap;
 
 	/**
 	 * 
 	 */
 	public ConflictBasedNetworkBuilder() {
-		this(null, NetworkType.CHUNK_BASED);
+		this(null);
 	}
 
 	public ConflictBasedNetworkBuilder(Project aProject) {
-		this(aProject, NetworkType.CHUNK_BASED);
-	}
-
-	public ConflictBasedNetworkBuilder(Project aProject, NetworkType aType) {
 		setProject(aProject);
-		setType(aType);
-	}
-
-	public void setType(NetworkType aType) {
-		this.type = aType;
 	}
 
 	public Project getProject() {
@@ -92,9 +75,6 @@ public class ConflictBasedNetworkBuilder {
 		this.project = project;
 	}
 
-	public NetworkType getType() {
-		return type;
-	}
 
 	/**
 	 * @return the scenarioBlamesMap
@@ -136,7 +116,7 @@ public class ConflictBasedNetworkBuilder {
 	public Project execute() throws Exception {
 		if (getProject().getRepository() == null)
 			return null;
-		return execute(this.type);
+		return execute(NetworkType.CHUNK_BASED);
 	}
 
 	/**
@@ -189,7 +169,7 @@ public class ConflictBasedNetworkBuilder {
 
 			ConflictBasedNetwork connet = null;
 			List<File> conflictingFiles = getFilesWithConflicts(mResult);
-			connet = build(scenario, conflictingFiles);
+			connet = build(scenario, conflictingFiles, aType);
 
 			getProject().add(scenario, connet);
 		}
@@ -207,7 +187,7 @@ public class ConflictBasedNetworkBuilder {
 	 * @throws GitAPIException
 	 */
 	public ConflictBasedNetwork build(MergeScenario aScenario,
-			List<File> files) throws IOException, GitAPIException {
+			List<File> files, NetworkType type) throws IOException, GitAPIException {
 		ConflictBasedNetwork connet = new ConflictBasedNetwork(getProject(),
 				aScenario);
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
@@ -217,14 +197,14 @@ public class ConflictBasedNetworkBuilder {
 			List<DeveloperNode> newNodes = null;
 			List<DeveloperEdge> newEdges = null;
 
-			if (getType() == NetworkType.CHUNK_BASED) {
+			if (type == NetworkType.CHUNK_BASED) {
 				List<ChunkBlame> blames = GitConflictBlame
 						.getConflictingLinesBlames(f);
 				// add(aScenario, blames);
 				newNodes = getDeveloperNodes(blames);
 				newEdges = buildEdges(newNodes);
 
-			} else if (getType() == NetworkType.FILE_BASED) {
+			} else if (type == NetworkType.FILE_BASED) {
 				RecursiveBlame blamer = new RecursiveBlame(getProject().getRepository());
 				List<Blame> blames = blamer.setRepository(getProject().getRepository())
 						.setBeginRevision(aScenario.getRight())
@@ -272,7 +252,7 @@ public class ConflictBasedNetworkBuilder {
 			for (String anEmail : bResult.getAuthors()) {
 				DeveloperNode newNode =  new DeveloperNode(anEmail);
 				if (!getProject().getDevs().contains(newNode)) {
-					newNode.setId(getProject().getNextID());
+					newNode.setID(getProject().getNextID());
 					getProject().add(newNode);
 				}else{
 					newNode = getProject().getDevByMail(anEmail);
@@ -298,7 +278,7 @@ public class ConflictBasedNetworkBuilder {
 				if (from.equals(to)) {
 					continue;
 				}
-				DeveloperEdge edge = new DeveloperEdge(from.getId(), to.getId());
+				DeveloperEdge edge = new DeveloperEdge(from.getID(), to.getID());
 				if (!edges.contains(edge)) {
 					edges.add(edge);
 				}
@@ -318,72 +298,9 @@ public class ConflictBasedNetworkBuilder {
 		List<File> result = new ArrayList<File>();
 		Map<String, int[][]> allConflicts = mResult.getConflicts();
 		for (String path : allConflicts.keySet()) {
-			result.add(new File(getProject().getRepository().getDirectory().getParent().concat(File.separator+path)));
+			result.add(new File(getProject().getRepository().getDirectory().getParent(), path));
 		}
 		return result;
-	}
-
-	/**
-	 * Returns the {@code git merge-base}.
-	 * 
-	 * @param sha1A
-	 * @param sha1B
-	 * @return
-	 * @throws RevisionSyntaxException
-	 * @throws MissingObjectException
-	 * @throws IncorrectObjectTypeException
-	 * @throws AmbiguousObjectException
-	 * @throws IOException
-	 */
-	public RevCommit findMergeBase(String sha1A, String sha1B)
-			throws RevisionSyntaxException, MissingObjectException,
-			IncorrectObjectTypeException, AmbiguousObjectException, IOException {
-		// solution from
-		// http://stackoverflow.com/questions/26434452/how-is-a-merge-base-done-in-jgit?rq=1
-		RevWalk walk = new RevWalk(getProject().getRepository());
-		walk.setRevFilter(RevFilter.MERGE_BASE);
-		walk.markStart(walk.lookupCommit(getProject().getRepository().resolve(
-				sha1A)));
-		walk.markStart(walk.lookupCommit(getProject().getRepository().resolve(
-				sha1B)));
-		RevCommit mergeBase = walk.next();
-		walk.close();
-		return mergeBase;
-	}
-
-	/**
-	 * Returns the {@code git merge-base --fork-point}.
-	 * 
-	 * @param repository
-	 * @param base
-	 * @param tip
-	 * @return
-	 * @throws IOException
-	 */
-	public RevCommit findForkPoint(Repository repository, String base,
-			String tip) throws IOException {
-		// solution from https://gist.github.com/robinst/997da20d09a82d85a3e9
-		try (RevWalk walk = new RevWalk(repository)) {
-			RevCommit tipCommit = walk.lookupCommit(getProject()
-					.getRepository().resolve(tip));
-			List<ReflogEntry> reflog = getProject().getRepository()
-					.getReflogReader(base).getReverseEntries();
-			if (reflog.isEmpty()) {
-				return null;
-			}
-			// The `<=` is deliberate because we want to check both new and old
-			// IDs for the oldest entry
-			for (int i = 0; i <= reflog.size(); i++) {
-				ObjectId id = i < reflog.size() ? reflog.get(i).getNewId()
-						: reflog.get(i - 1).getOldId();
-				RevCommit commit = walk.lookupCommit(id);
-				if (walk.isMergedInto(commit, tipCommit)) {
-					walk.parseBody(commit);
-					return commit;
-				}
-			}
-		}
-		return null;
 	}
 
 	/**
@@ -473,7 +390,6 @@ public class ConflictBasedNetworkBuilder {
 	 * 
 	 * @return all commits which are merges
 	 */
-	@Deprecated
 	public List<RevCommit> getMergeCommits() {
 		return getMergeCommits(null, null);
 	}
@@ -511,7 +427,7 @@ public class ConflictBasedNetworkBuilder {
 					dev.setName(person.getName());
 					dev.setEmail(person.getEmailAddress());
 					if (!getProject().getDevs().contains(dev)) {
-						dev.setId(getProject().getNextID());
+						dev.setID(getProject().getNextID());
 						getProject().add(dev);
 					}else{
 						dev = getProject().getDevByMail(person.getEmailAddress());
@@ -554,27 +470,6 @@ public class ConflictBasedNetworkBuilder {
 
 				return IOUtils.readLines(
 						new ByteArrayInputStream(stream.toByteArray())).size();
-			}
-		}
-	}
-
-	/**
-	 * Prints only changed lines
-	 * 
-	 * @param diff
-	 */
-	@Deprecated
-	public void printDiff(List<DiffEntry> diff) {
-		for (DiffEntry entry : diff) {
-			System.out.println("Entry: " + entry + ", from: "
-					+ entry.getOldId() + ", to: " + entry.getNewId());
-
-			try (DiffFormatter formatter = new DiffFormatter(System.out)) {
-				formatter.setRepository(getProject().getRepository());
-				formatter.setContext(0);
-				formatter.format(entry);
-			} catch (IOException e) {
-				e.printStackTrace();
 			}
 		}
 	}
