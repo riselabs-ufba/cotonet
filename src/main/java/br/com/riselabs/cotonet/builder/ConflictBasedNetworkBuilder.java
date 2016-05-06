@@ -172,7 +172,7 @@ public class ConflictBasedNetworkBuilder {
 			RevCommit baseCommit = walk.parseCommit(merger.getBaseCommitId());
 			walk.close();
 
-			MergeScenario scenario = new MergeScenario(baseCommit,
+			MergeScenario scenario = new MergeScenario(getProject().getID(), baseCommit,
 					leftHead, rightHead);
 
 			Git git = Git.wrap(getProject().getRepository());

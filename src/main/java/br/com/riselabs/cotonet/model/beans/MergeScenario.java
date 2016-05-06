@@ -11,18 +11,44 @@ import org.eclipse.jgit.revwalk.RevCommit;
  */
 public class MergeScenario {
 
-	private int projectID;
+	private Integer id;
+	private Integer projectID;
 	private RevCommit base;
+	private String SHA1Base;
 	private RevCommit left;
+	private String SHA1Left;
 	private RevCommit right;
-
-	public MergeScenario(RevCommit baseCommit, RevCommit leftParent,
-			RevCommit rightParent) {
-		this.base = baseCommit;
-		this.left = leftParent;
-		this.right = rightParent;
+	private String SHA1Right;
+	
+	public MergeScenario() {
+		this(null, null, null, null, null);
 	}
 
+	public MergeScenario(Integer projectID, RevCommit baseCommit, RevCommit leftParent,
+			RevCommit rightParent) {
+		setProjectID(projectID);
+		setBase(baseCommit);
+		setLeft(leftParent);
+		setRight(rightParent);
+	}
+
+	public MergeScenario(Integer id, Integer projectID, String sha1Base,
+			String sha1Left, String sha1Right) {
+		setID(id);
+		setProjectID(projectID);
+		setSHA1Base(sha1Base);
+		setSHA1Left(sha1Left);
+		setSHA1Right(sha1Right);
+	}
+
+	public void setID(Integer id) {
+		this.id = id;
+	}
+	
+	public Integer getID(){
+		return this.id;
+	}
+	
 	public RevCommit getBase() {
 		return base;
 	}
@@ -46,18 +72,42 @@ public class MergeScenario {
 	public void setRight(RevCommit right) {
 		this.right = right;
 	}
+	
+	public String getSHA1Base() {
+		return SHA1Base;
+	}
+
+	public void setSHA1Base(String sHA1Base) {
+		SHA1Base = sHA1Base;
+	}
+
+	public String getSHA1Left() {
+		return SHA1Left;
+	}
+
+	public void setSHA1Left(String sHA1Left) {
+		SHA1Left = sHA1Left;
+	}
+
+	public String getSHA1Right() {
+		return SHA1Right;
+	}
+
+	public void setSHA1Right(String sHA1Right) {
+		SHA1Right = sHA1Right;
+	}
 
 	@Override
 	public String toString() {
-		return "JGitMergeScenario [base=" + base + ", left=" + left
+		return "MergeScenario [base=" + base + ", left=" + left
 				+ ", right=" + right + "]";
 	}
 
-	public void setProjectID(int projectID) {
+	public void setProjectID(Integer projectID) {
 		this.projectID = projectID;
 	}
 	
-	public int getProjectID(){
+	public Integer getProjectID(){
 		return this.projectID;
 	}
 	
