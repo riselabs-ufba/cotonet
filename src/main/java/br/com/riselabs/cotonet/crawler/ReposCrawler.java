@@ -23,7 +23,6 @@ import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
-import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.DAOImpl;
@@ -167,7 +166,7 @@ public class ReposCrawler {
 
 	}
 
-	public List<ConflictBasedNetwork> buildNetworks() throws Exception {
+	public Project buildNetworks() throws Exception {
 		ConflictBasedNetworkBuilder builder = new ConflictBasedNetworkBuilder(
 				project);
 		return builder.execute();

@@ -133,7 +133,7 @@ public class ConflictBasedNetworkBuilder {
 	 *         -<code>null</code> when the repository is not set.
 	 * @throws Exception
 	 */
-	public List<ConflictBasedNetwork> execute() throws Exception {
+	public Project execute() throws Exception {
 		if (getProject().getRepository() == null)
 			return null;
 		return execute(this.type);
@@ -150,10 +150,9 @@ public class ConflictBasedNetworkBuilder {
 	 *         -<code>null</code> when the repository is not set.
 	 * @throws Exception
 	 */
-	public List<ConflictBasedNetwork> execute(NetworkType aType)
+	public Project execute(NetworkType aType)
 			throws Exception {
 
-		List<ConflictBasedNetwork> result = new ArrayList<ConflictBasedNetwork>();
 		List<RevCommit> allMerges = getMergeCommits();
 
 		for (RevCommit mergeCommit : allMerges) {
@@ -171,6 +170,7 @@ public class ConflictBasedNetworkBuilder {
 
 			RevWalk walk = new RevWalk(getProject().getRepository());
 			RevCommit baseCommit = walk.parseCommit(merger.getBaseCommitId());
+			walk.close();
 
 			MergeScenario scenario = new MergeScenario(baseCommit,
 					leftHead, rightHead);
@@ -191,10 +191,9 @@ public class ConflictBasedNetworkBuilder {
 			List<File> conflictingFiles = getFilesWithConflicts(mResult);
 			connet = build(scenario, conflictingFiles);
 
-			result.add(connet);
-			walk.close();
+			getProject().add(scenario, connet);
 		}
-		return result;
+		return getProject();
 	}
 
 	/**
@@ -401,23 +400,12 @@ public class ConflictBasedNetworkBuilder {
 	public List<RevCommit> getMergeCommits(String start, String end) {
 		List<RevCommit> merges = new LinkedList<>();
 		Iterable<RevCommit> log;
-		boolean addCommits = start == null;
 		try {
 			Git git = Git.wrap(getProject().getRepository());
 			log = git.log().call();
 			for (RevCommit commit : log) {
-				if (!addCommits) {
-					if (commit.getName().equals(start)) {
-						addCommits = true;
-					} else {
-						continue;
-					}
-				}
-				if (commit.getParentCount() > 1) {
+				if (commit.getParentCount() == 2) {
 					merges.add(commit);
-				}
-				if (end != null && commit.getName().equals(end)) {
-					break;
 				}
 			}
 		} catch (GitAPIException e) {

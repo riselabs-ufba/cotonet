@@ -3,6 +3,7 @@
  */
 package br.com.riselabs.cotonet.model.dao;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.util.ArrayList;
 import java.util.List;
@@ -20,13 +21,13 @@ public class DAOImpl<T> implements DAO<T> {
 	private Class<T> clazz;
 	private Validator<T> validator;
 	
-	public DAOImpl(Class<T> clazz, Validator<T> val) throws ClassNotFoundException{
+	public DAOImpl(Class<T> clazz, Validator<T> val) throws ClassNotFoundException, IOException{
 		this.validator = val;
 		this.clazz = clazz;
 		db = DBConnection.getConnection();
 	}
 	
-	public DAOImpl(Class<T> clazz) throws ClassNotFoundException{
+	public DAOImpl(Class<T> clazz) throws ClassNotFoundException, IOException{
 		this(clazz, new DefaultValidator<T>());
 	}
 	

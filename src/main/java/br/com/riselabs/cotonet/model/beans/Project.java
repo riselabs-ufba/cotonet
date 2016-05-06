@@ -22,13 +22,22 @@ public class Project {
 	private Repository repository;
 	private Map<MergeScenario, ConflictBasedNetwork> scenarioNetMap;
 	private List<DeveloperNode> devs;
-	private int id;
+	private Integer id;
 
-	public Project(String anURL, Repository aRepository){
-		this(getRepositorySystemName(anURL), anURL, aRepository);
+	public Project() {
+		this(null, null, null, null);
 	}
 	
-	public Project(String aName, String anURL, Repository aRepository) {
+	public Project(String anURL){
+		this(null, getRepositorySystemName(anURL), anURL, null);
+	}
+	
+	public Project(String anURL, Repository aRepository){
+		this(null, getRepositorySystemName(anURL), anURL, aRepository);
+	}
+	
+	public Project(Integer id, String aName, String anURL, Repository aRepository) {
+		setID(id);
 		setName(aName);
 		setUrl(anURL);
 		setRepository(aRepository);
@@ -36,6 +45,7 @@ public class Project {
 		setDevs(new ArrayList<DeveloperNode>());
 	}
 	
+
 	public String getName() {
 		return name;
 	}
@@ -127,12 +137,16 @@ public class Project {
 		return null;
 	}
 
-	public void setID(int anID){
+	public void setID(Integer anID){
 		this.id = anID;
 	}
 	
-	public int getID() {
+	public Integer getID() {
 		return this.id;
+	}
+
+	public void add(MergeScenario scenario, ConflictBasedNetwork connet) {
+		this.scenarioNetMap.put(scenario, connet);
 	}
 	
 }
