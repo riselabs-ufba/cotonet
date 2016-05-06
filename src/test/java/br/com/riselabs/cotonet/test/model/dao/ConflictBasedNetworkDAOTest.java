@@ -129,6 +129,38 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 		assertEquals(NetworkType.FILE_BASED, conet.getType());
 	}
 	
+	@Test
+	public void getNetworkFileBasedWithNullScenario(){
+		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
+		conet.setMergeScenarioID(msdao.get(ms).getID());
+		conet.setType(NetworkType.FILE_BASED);
+		assertEquals(NetworkType.FILE_BASED, conet.getType());
+		assertTrue(conet.getMergeScenarioID()==1);
+		dao.save(conet);
+		
+		conet.setID(1);
+		conet.setMergeScenarioID(null);
+		conet = dao.get(conet);
+		assertTrue(conet.getID()==1);
+		assertTrue(conet.getMergeScenarioID()==1);
+		assertEquals(NetworkType.FILE_BASED, conet.getType());
+	}
+	
+	@Test
+	public void getNetworkChunkBasedWithNullScenario(){
+		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
+		conet.setMergeScenarioID(msdao.get(ms).getID());
+		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
+		assertTrue(conet.getMergeScenarioID()==1);
+		dao.save(conet);
+		
+		conet.setID(1);
+		conet.setMergeScenarioID(null);
+		conet = dao.get(conet);
+		assertTrue(conet.getID()==1);
+		assertTrue(conet.getMergeScenarioID()==1);
+		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
+	}
 	protected RevCommit commit(final RevCommit... parents) throws Exception {
 		return util.commit(parents);
 	}

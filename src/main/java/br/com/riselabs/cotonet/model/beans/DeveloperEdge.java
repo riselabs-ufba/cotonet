@@ -8,13 +8,48 @@ package br.com.riselabs.cotonet.model.beans;
  *
  */
 public class DeveloperEdge {
+	
+	private Integer id;
+	private Integer networkID;
 
-	public Integer left;
-	public Integer right;
+	private Integer left;
+	private Integer right;
+	private Integer weight;
 
-	public DeveloperEdge(Integer aDevNodeID, Integer anotherDevNodeID) {
-		this.left = aDevNodeID;
-		this.right = anotherDevNodeID;
+	public DeveloperEdge() {
+		this(null, null, null, null);
+	}
+	
+	public DeveloperEdge(Integer id) {
+		this(id, null, null, null);
+	}
+	
+	public DeveloperEdge(Integer left, Integer right) {
+		this(null, null, left, right);
+	}
+
+	public DeveloperEdge(Integer id, Integer networkID, Integer left, Integer right) {
+		setID(id);
+		setNetworkID(networkID);
+		setLeft(left);
+		setRight(right);
+		setWeight(1);
+	}
+	
+	public Integer getID() {
+		return this.id;
+	}
+
+	public void setID(Integer left) {
+		this.id = left;
+	}
+	
+	public Integer getNetworkID() {
+		return this.networkID;
+	}
+
+	public void setNetworkID(Integer left) {
+		this.networkID = left;
 	}
 
 	public Integer getLeft() {
@@ -76,5 +111,13 @@ public class DeveloperEdge {
 	@Override
 	public String toString() {
 		return "Edge(" + this.left + ", " + this.right + ")";
+	}
+
+	public void setWeight(int w){
+		this.weight = w;
+	}
+	
+	public int getWeight() {
+		return this.weight;
 	}
 }

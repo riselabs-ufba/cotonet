@@ -91,15 +91,15 @@ public class DBManagerTest extends DBTestCase {
 			ClassNotFoundException, IOException {
 		conn = DBConnection.getConnection();
 		PreparedStatement statement = conn
-				.prepareStatement("insert into `cotonet-test`.`developers` (name, email1) values (?,?), (?,?);");
-		statement.setString(1, "Dev A");
-		statement.setString(2, "deva@project.com");
-		statement.setString(3, "Dev B");
-		statement.setString(4, "devb@project.com");
+				.prepareStatement("insert into `cotonet-test`.`systems` (name, url) values (?,?), (?,?);");
+		statement.setString(1, "test");
+		statement.setString(2, "http://project.com/test");
+		statement.setString(3, "test2");
+		statement.setString(4, "http://project.com/test2");
 		boolean hasInserted = DBManager.executeUpdate(statement);
 		assertTrue(hasInserted);
 		statement = conn
-				.prepareStatement("select count(*) \"count\" from `cotonet-test`.`developers`;");
+				.prepareStatement("select count(*) \"count\" from `cotonet-test`.`systems`;");
 		ResultSet rs = DBManager.executeQuery(statement);
 		rs.first();
 		assertEquals("there should be 0 entries", 2, rs.getShort("count"));

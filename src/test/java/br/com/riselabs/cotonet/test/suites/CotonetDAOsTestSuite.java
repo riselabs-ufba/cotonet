@@ -4,6 +4,7 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
 import br.com.riselabs.cotonet.test.model.dao.ConflictBasedNetworkDAOTest;
+import br.com.riselabs.cotonet.test.model.dao.DeveloperEdgeDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.DeveloperNodeDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.MergeScenarioDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.ProjectDAOTest;
@@ -13,6 +14,7 @@ import br.com.riselabs.cotonet.test.model.dao.ProjectDAOTest;
 	ProjectDAOTest.class,
 	ConflictBasedNetworkDAOTest.class,
 	DeveloperNodeDAOTest.class,
+	DeveloperEdgeDAOTest.class,
 	MergeScenarioDAOTest.class
 })
 /**

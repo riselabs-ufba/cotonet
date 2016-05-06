@@ -44,9 +44,9 @@ public class ConflictBasedNetwork {
 	}
 	
 	public ConflictBasedNetwork(Integer id, Integer mergeScenarioID, NetworkType aType) {
+		this(null, null, new ArrayList<>(), new  ArrayList<>(), aType);
 		setID(id);
 		setMergeScenarioID(mergeScenarioID);
-		setType(aType);
 	}
 
 

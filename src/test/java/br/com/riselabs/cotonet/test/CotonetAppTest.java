@@ -5,6 +5,7 @@ import org.junit.runners.Suite;
 
 import br.com.riselabs.cotonet.test.suites.CotonetBuilderTestSuite;
 import br.com.riselabs.cotonet.test.suites.CotonetCrawlerTestSuite;
+import br.com.riselabs.cotonet.test.suites.CotonetDAOsTestSuite;
 
 /**
  * @author alcemirsantos
@@ -15,9 +16,11 @@ import br.com.riselabs.cotonet.test.suites.CotonetCrawlerTestSuite;
 	// Crawler
 	CotonetCrawlerTestSuite.class,
 	// Builders
-	CotonetBuilderTestSuite.class
+	CotonetBuilderTestSuite.class,
+	// DAOs
+	CotonetDAOsTestSuite.class
 })
-public class ReposCrawlerAppTest {
+public class CotonetAppTest {
 
 	
 }

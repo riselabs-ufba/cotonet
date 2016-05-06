@@ -8,7 +8,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
-import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.ConflictBasedNetworkValidator;
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
@@ -71,7 +70,11 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 			conn = conn==null?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `networks` where (`type`=? and `merge_scenario_id`=?) or `id`=?;");
 			ps.setString(1, conet.getType().toString());
-			ps.setInt(2, conet.getMergeScenarioID());
+			if (conet.getMergeScenarioID()==null){
+				ps.setInt(2, Integer.MAX_VALUE);
+			}else{
+				ps.setInt(2, conet.getMergeScenarioID());
+			}
 			if (conet.getID()==null) {
 				ps.setInt(3, Integer.MAX_VALUE);
 			}else{
