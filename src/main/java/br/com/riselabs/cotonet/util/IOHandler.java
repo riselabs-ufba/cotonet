@@ -207,7 +207,7 @@ public class IOHandler {
 					RevCommit left = w.parseCommit(repo.resolve(rs.getString("leftsha")));
 					RevCommit base = w.parseCommit(repo.resolve(rs.getString("basesha")));
 					RevCommit right = w.parseCommit(repo.resolve(rs.getString("rightsha")));
-					scenarios.add(new MergeScenario(base, left, right));
+					scenarios.add(new MergeScenario(repositoryID, base, left, right));
 				}
 			}
 		} catch (SQLException e) {

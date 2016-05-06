@@ -17,6 +17,7 @@ import org.eclipse.jgit.api.MergeResult.MergeStatus;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
@@ -223,5 +224,32 @@ public class ConflictBasedNetworkBuilderTest extends
 		aNode = i.next();
 		assertTrue(aNode.equals(new DeveloperNode("deve@project.com")));
 		assertFalse(i.hasNext());
+	}
+	
+	
+	@Test
+	@Ignore
+	public void saveFileBasedNetwork() throws Exception {
+		setResolvedMergeConflictScenario();
+		Project aProject = new Project("http://github.com/test", db);
+		ConflictBasedNetworkBuilder builder = new ConflictBasedNetworkBuilder();
+		builder.setProject(aProject);
+		aProject = builder.execute(NetworkType.FILE_BASED);
+		
+		ProjectDAO dao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
+		assertTrue(dao.save(aProject));
+	}
+
+	@Test
+	@Ignore
+	public void saveChunckBasedNetwork() throws Exception {
+		setResolvedMergeConflictScenario();
+		Project aProject = new Project("http://github.com/test", db);
+		ConflictBasedNetworkBuilder builder = new ConflictBasedNetworkBuilder();
+		builder.setProject(aProject);
+		aProject = builder.execute();
+		
+		ProjectDAO dao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
+		assertTrue(dao.save(aProject));
 	}
 }

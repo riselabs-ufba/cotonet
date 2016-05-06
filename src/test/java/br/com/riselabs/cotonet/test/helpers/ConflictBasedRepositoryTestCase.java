@@ -23,11 +23,11 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 
 public abstract class ConflictBasedRepositoryTestCase extends
 		RepositoryTestCase {
-	
-	public void printDBpath(){
+
+	public void printDBpath() {
 		System.out.println(db.getDirectory().getAbsolutePath());
 	}
-	
+
 	public MergeResult runMerge(MergeScenario scenario)
 			throws RefAlreadyExistsException, RefNotFoundException,
 			InvalidRefNameException, CheckoutConflictException, GitAPIException {
@@ -152,7 +152,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 		lastSideCommit = git.commit().setMessage("s3")
 				.setAuthor(devs.get("devA")).call();
 
-		return new MergeScenario(mergeBaseCommit, lastMasterCommit,
+		return new MergeScenario(null, mergeBaseCommit, lastMasterCommit,
 				lastSideCommit);
 	}
 
@@ -183,13 +183,11 @@ public abstract class ConflictBasedRepositoryTestCase extends
 				.author(devs.get("devX")).create();
 
 		// Dev E changes Foo
-		RevCommit masterCommit1 = master.commit()
-				.add("Foo.java", "1\n2\n3\n4\n5-master\n6\n7\n8\n")
+		master.commit().add("Foo.java", "1\n2\n3\n4\n5-master\n6\n7\n8\n")
 				.message("m1").author(devs.get("devE")).create();
 
 		// Dev C changes Foo
-		RevCommit masterCommit2 = master.commit()
-				.add("Foo.java", "1\n2\n3\n4-master\n5\n6\n7\n8\n")
+		master.commit().add("Foo.java", "1\n2\n3\n4-master\n5\n6\n7\n8\n")
 				.add("Bar.java", "1\n2\n3-master\n4-master\n").message("m2")
 				.author(devs.get("devC")).create();
 
@@ -205,13 +203,12 @@ public abstract class ConflictBasedRepositoryTestCase extends
 		BranchBuilder side = db_t.branch("side");
 
 		// Dev D changes Foo
-		RevCommit sideCommit1 = side.commit().parent(mergeBaseCommit)
+		side.commit().parent(mergeBaseCommit)
 				.add("Foo.java", "1\n2\n3\n4-side\n5\n6\n7\n8\n").message("s1")
 				.author(devs.get("devD")).create();
 
 		// Dev E changes Bar
-		RevCommit sideCommit2 = side.commit()
-				.add("Bar.java", "1\n2\n3\n4\n5\n").message("s2")
+		side.commit().add("Bar.java", "1\n2\n3\n4\n5\n").message("s2")
 				.author(devs.get("devE")).create();
 
 		// Dev A changes Bar
@@ -220,8 +217,45 @@ public abstract class ConflictBasedRepositoryTestCase extends
 				.author(devs.get("devA")).create();
 
 		git.checkout().setName("master").setStartPoint(lastMasterCommit).call();
-		return new MergeScenario(mergeBaseCommit, lastMasterCommit,
+		return new MergeScenario(null, mergeBaseCommit, lastMasterCommit,
 				lastSideCommit);
 	}
 
+	/**
+	 * Merges the scenario created by
+	 * {@code #setCollaborationScenarioInBareRepository()} or
+	 * {@code #setCollaborationScenarioInTempRepository()} .
+	 * 
+	 * @throws Exception
+	 */
+	public void setResolvedMergeConflictSceario() throws Exception {
+		MergeScenario ms = setCollaborationScenarioInTempRepository();
+		TestRepository<Repository> db_t = new TestRepository<Repository>(db);
+		BranchBuilder master = db_t.branch("master");
+
+		// Dev Y changes Bar
+		master.commit().parent(ms.getLeft()).parent(ms.getRight())
+				.add("Bar.java", "1\n2\n3-merged\n4-merged\n5\n")
+				.add("Foo.java", "1\n2\n3\n4-merged\n5\n6\n7\n8\n")
+				.message("merge s3 into m3").author(devs.get("devY")).create();
+	}
+	
+	/**
+	 * Merges the scenario created by
+	 * {@code #setCollaborationScenarioInBareRepository()} or
+	 * {@code #setCollaborationScenarioInTempRepository()} .
+	 * 
+	 * @throws Exception
+	 */
+	public void setResolvedMergeConflictScenario() throws Exception {
+		MergeScenario ms = setCollaborationScenarioInTempRepository();
+		Git git = Git.wrap(db);
+		checkoutBranch("refs/heads/master");
+		// Dev Y changes Bar
+		git.merge().include(ms.getRight()).call();
+		writeTrashFile("Bar.java", "1\n2\n3-merged\n4-merged\n5\n");
+		writeTrashFile("Foo.java", "1\n2\n3\n4-merged\n5\n6\n7\n8\n");
+		git.add().addFilepattern("Bar.java").addFilepattern("Foo.java").call();
+		git.commit().setMessage("merge s3 into m3").setAuthor(devs.get("devY")).call();
+	}
 }
