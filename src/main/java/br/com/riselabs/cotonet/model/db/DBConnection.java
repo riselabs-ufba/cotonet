@@ -1,13 +1,13 @@
 package br.com.riselabs.cotonet.model.db;
 
-import java.io.File;
-import java.sql.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-
-import br.com.riselabs.cotonet.util.IOHandler;
-import br.com.riselabs.cotonet.util.Directories;
+import java.io.IOException;
+import java.io.InputStream;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.Properties;
 
 /**
  * 
@@ -15,58 +15,9 @@ import br.com.riselabs.cotonet.util.Directories;
  *
  */
 public class DBConnection {
-
-	public static Map<String, String> readCredentials(){
-		List<String> lines = new IOHandler().readFile(new File(Directories.getAppHome()+"/db.credentials"));
-		String user = "";
-		String pass = "";
-		for (String line : lines) {
-			if (line.contains("user")){
-				user = line.split(":")[1].replace(" ", "");
-			}
-			if (line.contains("password")) {
-				pass = line.split(":")[1].replace(" ", "");
-			}
-		}
-		Map<String, String> m = new HashMap<String, String>();
-		m.put("user", user);
-		m.put("password", pass);
-		return m; 
-	}
 	
-	public static void main(String[] argv) {
-
-		System.out
-				.println("-------- MySQL JDBC Connection Testing ------------");
-
-		try {
-			Class.forName("com.mysql.jdbc.Driver");
-		} catch (ClassNotFoundException e) {
-			System.out.println("Where is your MySQL JDBC Driver?");
-			e.printStackTrace();
-			return;
-		}
-
-		System.out.println("MySQL JDBC Driver Registered!");
-		Connection connection = null;
-
-		Map<String, String> m = readCredentials();
-		try {
-			connection = DriverManager.getConnection(
-					"jdbc:mysql://localhost/ghanalysis", m.get("user"), m.get("password"));
-
-		} catch (SQLException e) {
-			System.out.println("Connection Failed! Check output console");
-			e.printStackTrace();
-			return;
-		}
-
-		if (connection != null) {
-			System.out.println("You made it, take control your database now!");
-		} else {
-			System.out.println("Failed to make connection!");
-		}
-	}
+	private static Properties prop = new Properties();
+	private static InputStream input = null;
 
 	public DBConnection() {
 	}
@@ -80,8 +31,9 @@ public class DBConnection {
 	 * 
 	 * @return
 	 * @throws ClassNotFoundException
+	 * @throws IOException 
 	 */
-	public static Connection getConnection() throws ClassNotFoundException {
+	public static Connection getConnection() throws ClassNotFoundException, IOException {
 		return getConnection(TypeConnection.MYSQL);
 	}
 
@@ -91,9 +43,18 @@ public class DBConnection {
 	 * @param type
 	 * @return
 	 * @throws ClassNotFoundException
+	 * @throws IOException 
 	 */
 	public static Connection getConnection(TypeConnection type)
-			throws ClassNotFoundException {
+			throws ClassNotFoundException, IOException {
+		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+		input = classloader.getResourceAsStream("db.properties");
+		prop.load(input);
+		
+		String db = prop.getProperty("database.name");
+		String user = prop.getProperty("database.user");
+		String pass = prop.getProperty("database.password");
+		
 		// Variável de conexão
 		Connection conn = null;
 		try {
@@ -102,17 +63,16 @@ public class DBConnection {
 				// Carregando o driver
 				Class.forName("org.sqlite.JDBC");
 				// Estabelecendo conexão
-				conn = DriverManager.getConnection("jdbc:sqlite:" +"simules-test.db");
+				conn = DriverManager.getConnection("jdbc:sqlite:" +db);
 				break;
 			case MYSQL:
 			default:
 				// This will load the MySQL driver, each DB has its own driver
 				String dbClass = "com.mysql.jdbc.Driver";
 				Class.forName(dbClass).newInstance();
-				String dbURL = "jdbc:mysql://localhost/ghanalysis?autoReconnect=true&useSSL=false";
-				Map<String, String> m = readCredentials();
+				String dbURL = "jdbc:mysql://localhost/"+db+"?autoReconnect=true&useSSL=false";
 				// Setup the connection with the DB
-				conn = DriverManager.getConnection(dbURL, m.get("user"), m.get("password"));
+				conn = DriverManager.getConnection(dbURL, user, pass);
 				break;
 			}
 		} catch (ClassNotFoundException e) {
@@ -124,10 +84,8 @@ public class DBConnection {
 			String errorMsg = "Conncection error.";
 			throw new ClassNotFoundException(errorMsg, e);
 		} catch (InstantiationException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		} catch (IllegalAccessException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		// Retornando a conexão

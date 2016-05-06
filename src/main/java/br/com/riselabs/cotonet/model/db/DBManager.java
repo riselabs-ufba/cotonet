@@ -1,5 +1,6 @@
 package br.com.riselabs.cotonet.model.db;
 
+import java.io.IOException;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -16,12 +17,14 @@ import java.sql.Statement;
 public class DBManager {
 
 	 /**
-	 * Executa uma query de seleção eviada por um XxxxxxDAO.java
+	 * Executes a SELECT from a given XxxxxxDAO.java
+	 * 
 	 * @param sql
 	 * @throws SQLException 
 	 * @throws ClassNotFoundException 
+	 * @throws IOException 
 	 */
-	  public static ResultSet executeQuery(String sql) throws SQLException, ClassNotFoundException {
+	  public static ResultSet executeQuery(String sql) throws SQLException, ClassNotFoundException, IOException {
 		  ResultSet rs = null;
 		  Connection dbConnection = DBConnection.getConnection();
 		  PreparedStatement stm = dbConnection.prepareStatement(sql);
@@ -43,13 +46,16 @@ public class DBManager {
 	  }
 	
 	/**
+	 *  Executes a SELECT from a given XxxxxxDAO.java
+	 *  
 	 * @param result
 	 * @param dbConnection
 	 * @param query
 	 * @return
 	 * @throws ClassNotFoundException 
+	 * @throws IOException 
 	 */
-	public static ResultSet executeQuery(PreparedStatement query) throws ClassNotFoundException {
+	public static ResultSet executeQuery(PreparedStatement query) throws ClassNotFoundException, IOException {
 		Connection dbConnection = DBConnection.getConnection();
 		ResultSet result= null;
 		
@@ -70,13 +76,14 @@ public class DBManager {
 	}
 
 	/**
-	 * Executa uma query de inserção, remoção ou atualização eviada por um XxxxxxDAO.java
+	 * Executes an INSERT, UPDATE, or DELETE query from a XxxxxxDAO.java
 	 * 
 	 * @param query
 	 * @throws SQLException 
 	 * @throws SQLException,ClassNotFoundException 
+	 * @throws IOException 
 	 */
-	  public static void executeUpdate(String query) throws SQLException, ClassNotFoundException {
+	  public static void executeUpdate(String query) throws SQLException, ClassNotFoundException, IOException {
 		  Connection dbConnection = DBConnection.getConnection();
 		  Statement stm = dbConnection.createStatement();
 		  try {
@@ -88,16 +95,19 @@ public class DBManager {
 	  }
 	  
 	  /**
-		 * Executa uma query de inserção, remoção ou atualização eviada por um XxxxxxDAO.java
+		 * Executes an INSERT, UPDATE, or DELETE query from a XxxxxxDAO.java
 		 * 
 		 * @param updateStmt
+	 * @return 
 		 * @throws SQLException 
 		 * @throws ClassNotFoundException 
+	 * @throws IOException 
 		 */
-	  public static void executeUpdate(PreparedStatement updateStmt) throws SQLException, ClassNotFoundException {
+	  public static boolean executeUpdate(PreparedStatement updateStmt) throws SQLException, ClassNotFoundException, IOException {
 		  Connection dbConnection = DBConnection.getConnection();
+		  int result = 0;
 		  try{
-			  updateStmt.executeUpdate();
+			  result = updateStmt.executeUpdate();
 		  }catch (SQLException e ) {
 			  e.printStackTrace();
 			  if (dbConnection != null) {
@@ -109,5 +119,6 @@ public class DBManager {
 				  }
 			  }
 		  }
+		  return result>0?true:false;
 		}	
 }

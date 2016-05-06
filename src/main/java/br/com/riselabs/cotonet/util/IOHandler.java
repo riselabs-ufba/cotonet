@@ -161,8 +161,9 @@ public class IOHandler {
 	 * 
 	 * @return - a map <id, url> for each entry in the "repository" table of the
 	 *         database.
+	 * @throws IOException 
 	 */
-	public Map<Integer, String> readURLsFromDatabase() {
+	public Map<Integer, String> readURLsFromDatabase() throws IOException {
 		Map<Integer, String> result = new HashMap<Integer, String>();
 		try {
 			ResultSet rs = DBManager
