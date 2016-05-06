@@ -5,5 +5,7 @@ target
 .gradle
 /bin/
 /build/
-*.bak
+.settings/
+*.DS_Store
+*.mwb.bak
 *.prefs
