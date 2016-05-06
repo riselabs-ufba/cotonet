@@ -83,13 +83,25 @@ public class ProjectDAOTest extends ConflictBasedRepositoryTestCase{
 	}	
 	
 	@Test
-	public void getProject(){
+	public void getProjectByURL(){
 		Project p = new Project("http://hub.com/test", null);
 		dao.save(p);
 		
 		Project returnedProject =  dao.get(p);
 		assertNotNull(returnedProject);
 		assertTrue(returnedProject.getID()==1);
+		assertEquals("http://hub.com/test", returnedProject.getUrl());
+	}
+	
+	@Test
+	public void getProjectByID(){
+		Project p = new Project("http://hub.com/test", null);
+		dao.save(p);
+		
+		Project returnedProject =  dao.get(new Project(1, null, null, null));
+		assertNotNull(returnedProject);
+		assertTrue(returnedProject.getID()==1);
+		assertEquals("http://hub.com/test", returnedProject.getUrl());
 	}
 	
 }
