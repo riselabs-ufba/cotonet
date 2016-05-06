@@ -6,6 +6,8 @@ package br.com.riselabs.cotonet.model.beans;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.riselabs.cotonet.model.enums.NetworkType;
+
 /**
  * @author alcemirsantos
  *
@@ -34,9 +36,6 @@ public class ConflictBasedNetwork {
 		setNodes(lNodes);
 		setEdges(lEdges);
 	}
-
-	public enum NetworkType {
-		CHUNK_BASED, FILE_BASED
 	}
 
 	public void setNodes(List<DeveloperNode> lNodes) {

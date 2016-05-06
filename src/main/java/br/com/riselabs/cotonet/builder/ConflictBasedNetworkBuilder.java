@@ -50,7 +50,7 @@ import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
-import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork.NetworkType;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 
 /**
  * @author alcemirsantos

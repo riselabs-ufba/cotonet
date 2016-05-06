@@ -29,8 +29,11 @@ import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
-import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork.NetworkType;
+import br.com.riselabs.cotonet.model.dao.DAOFactory;
+import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
+import br.com.riselabs.cotonet.model.dao.ProjectDAO;
 import br.com.riselabs.cotonet.model.dao.validators.ConflictBasedNetworkValidator;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 
 /**
