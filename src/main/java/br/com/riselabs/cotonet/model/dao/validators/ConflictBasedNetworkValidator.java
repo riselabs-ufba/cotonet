@@ -25,26 +25,29 @@ public class ConflictBasedNetworkValidator implements
 		if (obj != null) {
 			this.theNetwork = obj;
 		}
-		if (obj.getNodes() == null || obj.getEdges() == null)
+		if (obj.getNodes() == null 
+				|| obj.getEdges() == null 
+				|| obj.getMergeScenarioID() == null)
 			return false;
 		if (obj.getNodes().isEmpty() && !obj.getEdges().isEmpty())
 			return false;
 		if (!obj.getNodes().isEmpty() && obj.getEdges().isEmpty())
 			return false;
 
+		
 		// checking nodes
 		for (DeveloperNode dnode : obj.getNodes()) {
 			// data must not be null
-			if (dnode.getId() == null || dnode.getEmail() == null)
+			if (dnode.getID() == null || dnode.getEmail() == null)
 				return false;
 			// data must not be empty
-			if (dnode.getId() < 0 || dnode.getEmail().equals(""))
+			if (dnode.getID() < 0 || dnode.getEmail().equals(""))
 				return false;
 			// developers must have different IDs and Emails
 			for (DeveloperNode anode : obj.getNodes()) {
 				if (dnode.equals(anode))
 					continue;
-				else if (dnode.getId() == anode.getId()
+				else if (dnode.getID() == anode.getID()
 						|| dnode.getEmail().equals(anode.getEmail()))
 					return false;
 			}
@@ -68,7 +71,7 @@ public class ConflictBasedNetworkValidator implements
 	 */
 	private boolean isThereSuchDeveloper(Integer id) {
 		for (DeveloperNode n : this.theNetwork.getNodes()) {
-			if (n.getId() == id)
+			if (n.getID() == id)
 				return true;
 		}
 		return false;

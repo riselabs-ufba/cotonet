@@ -76,7 +76,7 @@ ENGINE = InnoDB;
 DROP TABLE IF EXISTS `cotonet-test`.`networks` ;
 
 CREATE TABLE IF NOT EXISTS `cotonet-test`.`networks` (
-  `id` INT UNSIGNED NOT NULL,
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `merge_scenario_id` INT UNSIGNED NOT NULL,
   `type` CHAR(1) NOT NULL,
   PRIMARY KEY (`id`),

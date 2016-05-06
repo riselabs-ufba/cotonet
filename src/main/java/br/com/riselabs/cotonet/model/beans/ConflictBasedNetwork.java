@@ -14,28 +14,48 @@ import br.com.riselabs.cotonet.model.enums.NetworkType;
  */
 public class ConflictBasedNetwork {
 
+	private Integer id;
+	private Integer mergeScenarioID;
 	private MergeScenario scenario;
+	private NetworkType type;
+	
 	private List<DeveloperNode> nodes;
 	private List<DeveloperEdge> edges;
-
+	
 	/**
 	 * Empty network constructor
 	 */
 	public ConflictBasedNetwork() {
 		this(null, null, new ArrayList<DeveloperNode>(),
-				new ArrayList<DeveloperEdge>());
+				new ArrayList<DeveloperEdge>(), NetworkType.CHUNK_BASED);
 	}
 
 	public ConflictBasedNetwork(Project aProject, MergeScenario aScenario) {
 		this(aProject, aScenario, new ArrayList<DeveloperNode>(),
-				new ArrayList<DeveloperEdge>());
+				new ArrayList<DeveloperEdge>(),NetworkType.CHUNK_BASED);
 	}
 
 	public ConflictBasedNetwork(Project aProject, MergeScenario aScenario,
-			List<DeveloperNode> lNodes, List<DeveloperEdge> lEdges) {
+			List<DeveloperNode> lNodes, List<DeveloperEdge> lEdges, NetworkType aType) {
+		setScenario(aScenario);
 		setNodes(lNodes);
 		setEdges(lEdges);
+		setType(aType);
 	}
+	
+	public ConflictBasedNetwork(Integer id, Integer mergeScenarioID, NetworkType aType) {
+		setID(id);
+		setMergeScenarioID(mergeScenarioID);
+		setType(aType);
+	}
+
+
+	public void setType(NetworkType aType) {
+		this.type = aType;
+	}
+	
+	public NetworkType getType(){
+		return this.type;
 	}
 
 	public void setNodes(List<DeveloperNode> lNodes) {
@@ -99,5 +119,19 @@ public class ConflictBasedNetwork {
 			this.edges = new ArrayList<DeveloperEdge>();
 		}
 		this.edges.add(developerEdge);
+	}
+
+	public void setID(Integer id){
+		this.id = id;
+	}
+	public Integer getID() {
+		return this.id;
+	}
+	
+	public void setMergeScenarioID(Integer id){
+		this.mergeScenarioID = id;
+	}
+	public Integer getMergeScenarioID() {
+		return this.mergeScenarioID;
 	}
 }
