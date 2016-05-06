@@ -10,6 +10,7 @@ package br.com.riselabs.cotonet.model.beans;
 public class DeveloperNode {
 
 	private Integer id;
+	private Integer systemID;
 	private String name;
 	private String email;
 	
@@ -25,17 +26,22 @@ public class DeveloperNode {
 		this(null, aName, anEmail);
 	}
 
-	public DeveloperNode(Integer anID, String aName, String anEmail) {
-		setId(anID);
+	public DeveloperNode(Integer systemID, String aName, String anEmail) {
+		this(null, systemID, aName, anEmail);
+	}
+	
+	public DeveloperNode(Integer id, Integer systemID, String aName, String anEmail) {
+		setID(id);
+		setSystemID(systemID);
 		setName(aName);
 		setEmail(anEmail);
 	}
 
-	public Integer getId() {
+	public Integer getID() {
 		return id;
 	}
 
-	public void setId(Integer id) {
+	public void setID(Integer id) {
 		this.id = id;
 	}
 
@@ -85,5 +91,13 @@ public class DeveloperNode {
 	@Override
 	public String toString() {
 		return this.name + "(#" + this.id + "): " + this.email;
+	}
+
+	public Integer getSystemID() {
+		return this.systemID;
+	}
+	
+	public void setSystemID(Integer systemID){
+		this.systemID = systemID;
 	}
 }
