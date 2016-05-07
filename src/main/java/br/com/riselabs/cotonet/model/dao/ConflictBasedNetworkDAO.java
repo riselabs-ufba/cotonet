@@ -17,13 +17,7 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 
 	private Connection conn;
 
-	public ConflictBasedNetworkDAO() {
-		try{
-			conn =  DBConnection.getConnection();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public ConflictBasedNetworkDAO() { }
 	
 	@Override
 	public boolean save(ConflictBasedNetwork conet)
@@ -33,7 +27,7 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 		if (validator.validate(conet)) {
 			PreparedStatement ps;
 			try {
-				conn = conn==null?DBConnection.getConnection():conn;
+				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				ps = conn
 						.prepareStatement("insert into `networks` (`merge_scenario_id`, `type`) values (?,?);");
 				ps.setInt(1, conet.getMergeScenarioID());
@@ -41,10 +35,14 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 				hasSaved = DBManager.executeUpdate(ps);
 					
 			} catch (SQLException | ClassNotFoundException | IOException e) {
+				DBConnection.closeConnection(conn);
 				e.printStackTrace();
 			}
 		}else{
 			throw new IllegalArgumentException("The conflict based network was invalid.");
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
 	}
@@ -67,7 +65,7 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 	public ConflictBasedNetwork get(ConflictBasedNetwork conet)
 			throws IllegalArgumentException {
 		try {
-			conn = conn==null?DBConnection.getConnection():conn;
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `networks` where (`type`=? and `merge_scenario_id`=?) or `id`=?;");
 			ps.setString(1, conet.getType().toString());
 			if (conet.getMergeScenarioID()==null){
@@ -91,10 +89,14 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 					type = NetworkType.CHUNK_BASED;
 				}
 				ConflictBasedNetwork retrieved =  new ConflictBasedNetwork(id, mergeScenarioID, type);
+				DBConnection.closeConnection(conn);
 				return retrieved;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}

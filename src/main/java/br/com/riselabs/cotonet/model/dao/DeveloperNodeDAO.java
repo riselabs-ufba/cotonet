@@ -40,13 +40,7 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 	private Connection conn;
 
-	public DeveloperNodeDAO () {
-		try {
-			conn = DBConnection.getConnection();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public DeveloperNodeDAO () { }
 	
 	@Override
 	public boolean save(DeveloperNode node) throws IllegalArgumentException {
@@ -54,7 +48,7 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 		boolean hasSaved = false;
 		if (validator.validate(node)) {
 			try {
-				conn = conn==null?DBConnection.getConnection():conn;
+				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				PreparedStatement ps = conn
 						.prepareStatement("insert into `developers` (`name`, `email1`, `system_id`) values (?,?,?);");
 				ps.setString(1, node.getName());
@@ -67,6 +61,9 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 		} else {
 			throw new IllegalArgumentException("The developer node was not valid.");
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
 	}
@@ -87,7 +84,7 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 	public DeveloperNode get(DeveloperNode node)
 			throws IllegalArgumentException {
 		try {
-			conn = conn==null?DBConnection.getConnection():conn;
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `developers` where `email1`=? or `id`=?;");
 			ps.setString(1, node.getEmail());
 			if (node.getID()==null) {
@@ -102,10 +99,14 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 				String name = rs.getString("name");
 				String email = rs.getString("email1");
 				DeveloperNode nodeResult = new DeveloperNode(id, systemid, name, email);
+				DBConnection.closeConnection(conn);
 				return nodeResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}

@@ -40,13 +40,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 
 	Connection conn;
 	
-	public MergeScenarioDAO() {
-		try {
-			conn = DBConnection.getConnection();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public MergeScenarioDAO() {	}
 	
 	@Override
 	public boolean save(MergeScenario ms)
@@ -56,6 +50,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 		if (validator.validate(ms)) {
 			PreparedStatement ps;
 			try {
+				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				ps = conn
 						.prepareStatement("insert into `merge_scenarios` (`system_id`, `commit_base`,`commit_left`,`commit_right`) values (?,?,?,?);");
 				ps.setInt(1, ms.getProjectID());
@@ -69,6 +64,9 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 		}else {
 			throw new IllegalArgumentException("The merge scenario was invalid.");
 		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
 		return hasSaved;
 	}
 
@@ -76,11 +74,15 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 	public void delete(MergeScenario object)
 			throws IllegalArgumentException {
 		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("delete from `merge_cenarios` whrere `id`=?;");
 			ps.setInt(1, object.getID());
 			DBManager.executeUpdate(ps);
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 	}
 
@@ -94,7 +96,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 	public MergeScenario get(MergeScenario ms)
 			throws IllegalArgumentException {
 		try {
-			conn = conn==null?DBConnection.getConnection():conn;
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `merge_scenarios` where (`commit_base`=? and `commit_left`=? and `commit_right`=?) or `id`=?;");
 			if(ms.getBase()==null &&  ms.getLeft() == null && ms.getRight() == null){
 				if(ms.getSHA1Base()==null &&  ms.getSHA1Left() == null && ms.getSHA1Right() == null){
@@ -124,10 +126,14 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 				String base = rs.getString("commit_base");
 				String right = rs.getString("commit_right");
 				MergeScenario pResult = new MergeScenario(id, systemID, base, left, right);
+				DBConnection.closeConnection(conn);
 				return pResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}

@@ -28,7 +28,6 @@ import java.sql.SQLException;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
-import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperEdgeValidator;
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
@@ -41,36 +40,34 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
 	private Connection conn;
 
-	public DeveloperEdgeDAO() {
-		try {
-			conn = DBConnection.getConnection();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public DeveloperEdgeDAO() { }
 	
 	@Override
 	public boolean save(DeveloperEdge edge) throws IllegalArgumentException {
 		DeveloperEdgeValidator validator =  new DeveloperEdgeValidator();
-		int hasSaved = 0;
+		boolean hasSaved = false;
 		if (validator.validate(edge)) {
 			PreparedStatement ps;
 			try {
-				conn = conn==null?DBConnection.getConnection():conn;
+				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				ps = conn
 						.prepareStatement("insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
 				ps.setInt(1, edge.getNetworkID());
 				ps.setInt(2, edge.getLeft());
 				ps.setInt(3, edge.getRight());
 				ps.setInt(4, edge.getWeight());
-				hasSaved = ps.executeUpdate();
+				hasSaved = DBManager.executeUpdate(ps);
 			} catch (SQLException | ClassNotFoundException | IOException e) {
+				DBConnection.closeConnection(conn);
 				e.printStackTrace();
 			}
 		}else{
 			throw new IllegalArgumentException("The developer edge was invalid.");
 		}
-		return hasSaved>=0?true:false;
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
+		return hasSaved;
 	}
 
 	@Override
@@ -89,7 +86,7 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 	public DeveloperEdge get(DeveloperEdge edge)
 			throws IllegalArgumentException {
 		try {
-			conn = conn==null?DBConnection.getConnection():conn;
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `edges` where (`network_id`=? and `dev_a`=? and `dev_b`=?) or `id`=?;");
 			
 			if (edge.getNetworkID()==null) {
@@ -119,10 +116,14 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 				Integer left = rs.getInt("dev_a");
 				Integer right = rs.getInt("dev_b");
 				DeveloperEdge nodeResult = new DeveloperEdge(id, networkid, left, right);
+				DBConnection.closeConnection(conn);
 				return nodeResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}

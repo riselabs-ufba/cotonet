@@ -40,13 +40,8 @@ public class ProjectDAO implements DAO<Project> {
 
 	private Connection conn;
 
-	public ProjectDAO(){
-		try {
-			conn = DBConnection.getConnection();
-		} catch (ClassNotFoundException | IOException e) {
-			e.printStackTrace();
-		}
-	}
+	public ProjectDAO(){ }
+	
 	/**
 	 * Inserts a <code>{@link Project}</code> in the database.
 	 * 
@@ -59,7 +54,7 @@ public class ProjectDAO implements DAO<Project> {
 		boolean hasSaved = false;
 		if (validator.validate(p)) {
 			try {
-				conn = conn==null?DBConnection.getConnection():conn;
+				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				PreparedStatement ps = conn
 						.prepareStatement("insert into `systems` (`name`, `url`) values (?,?);");
 				ps.setString(1, p.getName());
@@ -72,19 +67,25 @@ public class ProjectDAO implements DAO<Project> {
 		} else {
 			throw new IllegalArgumentException("The project was not valid.");
 		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
 		return hasSaved;
 	}
 
 	@Override
 	public void delete(Project p) throws IllegalArgumentException {
 		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("delete from `systems` whrere `id`=?;");
 			ps.setInt(1, p.getID());
 			DBManager.executeUpdate(ps);
 		} catch (Exception e) {
-			// TODO: handle exception
+			e.printStackTrace();
 		}
-
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
 	}
 
 	@Override
@@ -96,7 +97,7 @@ public class ProjectDAO implements DAO<Project> {
 	@Override
 	public Project get(Project p) throws IllegalArgumentException {
 		try {
-			conn = conn==null?DBConnection.getConnection():conn;
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 			PreparedStatement ps = conn.prepareStatement("select * from `systems` where `url`=? or `id`=?;");
 			ps.setString(1, p.getUrl());
 			if (p.getID() == null) {
@@ -111,10 +112,14 @@ public class ProjectDAO implements DAO<Project> {
 				String name = rs.getString("name");
 				String url = rs.getString("url");
 				Project pResult = new Project(id, name, url, null);
+				DBConnection.closeConnection(conn);
 				return pResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}
