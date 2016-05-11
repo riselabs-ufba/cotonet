@@ -5,7 +5,7 @@ import org.junit.runners.Suite;
 
 import br.com.riselabs.cotonet.test.suites.CotonetBuilderTestSuite;
 import br.com.riselabs.cotonet.test.suites.CotonetCrawlerTestSuite;
-import br.com.riselabs.cotonet.test.suites.CotonetDAOsTestSuite;
+import br.com.riselabs.cotonet.test.suites.CotonetModelTestSuite;
 
 /**
  * @author alcemirsantos
@@ -18,7 +18,7 @@ import br.com.riselabs.cotonet.test.suites.CotonetDAOsTestSuite;
 	// Builders
 	CotonetBuilderTestSuite.class,
 	// DAOs
-	CotonetDAOsTestSuite.class
+	CotonetModelTestSuite.class
 })
 public class CotonetAppTest {
 
