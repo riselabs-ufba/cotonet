@@ -15,7 +15,7 @@ import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 
-import br.com.riselabs.cotonet.crawler.threads.CrawlerThread;
+import br.com.riselabs.cotonet.crawler.RepositoryCrawler;
 import br.com.riselabs.cotonet.crawler.threads.RCThreadPoolExecutor;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
@@ -78,7 +78,7 @@ public class Main {
 			// the "l" option is required
 			if (!cmd.hasOption("l")) {
 				System.out
-						.println("ReposCrawler ended without retrive any repository.\n\n"
+						.println("COTONET ended without retrive any repository.\n\n"
 								+ "You should use 'h' if you are looking for help. Otherwise,"
 								+ " the 'l' option is mandatory.");
 				System.exit(1);
@@ -90,7 +90,7 @@ public class Main {
 				// Ends execution if file not found.
 				if (!reposListFile.exists()) {
 					System.out
-							.println("ReposCrawler ended without retrive any repository.\n\n"
+							.println("COTONET ended without retrive any repository.\n\n"
 									+ "The file containig the repository's URL of the target systems was not found. "
 									+ "Check wether the file \""
 									+ urlsFilePath
@@ -103,13 +103,13 @@ public class Main {
 				// user is running to rewrite the auxiliary files
 				if (skipCloning) {
 					run(reposListFile, skipCloning);
-					Logger.log("ReposCrawler finished. Files rewritten.");
+					Logger.log("COTONET finished. Files rewritten.");
 					System.exit(0);
 				}
 
 				run(reposListFile,skipCloning);
-				Logger.log("ReposCrawler finished. Files rewritten.");
-				System.exit(0);
+				
+				Logger.log("COTONET finished. Files rewritten.");
 			}
 
 		} catch (ParseException e) {
@@ -123,14 +123,15 @@ public class Main {
 		IOHandler io = new IOHandler();
 		// reponsable to coordinate the threads for each system
 		RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
-
 		List<String> systems = io.readFile(reposListFile);
 		
-		int threadCount = 1;
 		for (String url : systems) {
-			pool.runTask(new CrawlerThread(threadCount, url, skip));
+			try {
+				pool.runTask(new RepositoryCrawler(url, skip));
+			} catch (IOException e) {
+				Logger.logStackTrace(e);
+			}
 			Logger.log("Repository scheduled: " + url);
-			threadCount++;
 		}
 
 		pool.shutDown();

@@ -31,33 +31,110 @@ import br.com.riselabs.cotonet.util.Directories;
 import br.com.riselabs.cotonet.util.IOHandler;
 import br.com.riselabs.cotonet.util.Logger;
 
-public class ReposCrawler {
+/**
+ * This Runnable class executes three activities: </br>- it clones the
+ * repository; </br>- it persists the tags mapping file; </br>- it creates the
+ * <code>codeface</code> configuration file.
+ * 
+ * @author alcemirsantos
+ *
+ */
+public class RepositoryCrawler implements Runnable{
 
-	private static Project project;
-	private static File repositoryDir;
+	private Project project;
+	// TODO put this variable `tagsMap' in other place
+	private Map<String, String> tagsMap;
+	
 	private Integer repositoryID;
-	private Map<String, String> tagsMap = new HashMap<String, String>();
-	private boolean skipCloning = false;
+	private File repositoryDir;
+	private boolean mustClone;
+	
+	private File log;
 
-	public ReposCrawler( String systemURL, boolean skipCloning) throws IOException, InvalidRemoteException, TransportException, GitAPIException {
-		project =  new Project(systemURL, null);
-		this.skipCloning  = skipCloning;
+	public RepositoryCrawler(String systemURL, boolean mustClone) throws IOException{
+		setProject(new Project(systemURL));
+		setCloning(mustClone);
+		setLogFile(new File(Directories.getLogDir(), "thread-" + getProject().getName() + ".log"));
+		setRepositoryDir(new IOHandler().makeSystemDirectory(project.getName()));
+		tagsMap = new HashMap<String, String>();
 	}
 
-	public ReposCrawler( String systemURL, 
-			Repository repository) throws IOException {
-		project = new Project(systemURL, repository);
-		repositoryDir = new IOHandler().makeSystemDirectory(project.getName());
+	public Project getProject() {
+		return project;
+	}
+	
+	public void setProject(Project project) {
+		this.project =  project;
+	}
+	
+	public void setCloning(boolean mustClone) {
+		this.mustClone =  mustClone;
 	}
 
-	public List<String> getTags() {
-		return new ArrayList<String>(tagsMap.keySet());
+	public void setLogFile(File f){
+		this.log = f;
 	}
-
+	
+	public void setRepositoryDir(File directory){
+		this.repositoryDir = directory;
+	}
+	
+	@Deprecated
 	public void setRepositoryID(Integer key) {
 		this.repositoryID = key;
 	}
-
+	
+	@Deprecated
+	public List<String> getTags() {
+		return new ArrayList<String>(tagsMap.keySet());
+	}
+	
+	/**
+	 * Returns the list of TAGs from the given repository.
+	 * 
+	 * @param repository
+	 * @return
+	 * @throws IOException
+	 * @throws GitAPIException
+	 */
+	public List<String> getTags(Repository repository) throws IOException,
+			GitAPIException {
+		List<String> tags = new ArrayList<String>();
+		try (Git git = new Git(repository)) {
+			List<Ref> call = git.tagList().call();
+			for (Ref ref : call) {
+				tags.add(ref.getName());
+			}
+		}
+		return tags;
+	}
+	
+	@Override
+	public void run() {
+		String logLine = "ThreadID: " + getProject().getName();
+		try {
+			Logger.log(log, "[Cloning Start]" + logLine);
+			// cloning or reading
+			Repository repo;
+			if (mustClone) {
+				repo = buildRepository();
+			}else{
+				repo = cloneRepository();
+			}
+			project.setRepository(repo);
+			// building networks
+			buildNetworks();
+			// persisting aux files
+			createTagToSHA1MappingFile();
+			createCodefaceConfFile();
+			Logger.log(log, "[Cloning Finished]" + logLine);
+		} catch (Exception  e) {
+			Logger.log(log, "[Cloning Failed]" + logLine);
+			Logger.logStackTrace(log, e);
+		}
+		System.gc();
+	}
+	
 	/**
 	 * Clones the repository of a given URL. Returns an object that represents
 	 * the repository.
@@ -69,7 +146,7 @@ public class ReposCrawler {
 	 * @throws TransportException
 	 * @throws GitAPIException
 	 */
-	private static Repository cloneRepository() throws IOException, InvalidRemoteException,
+	private Repository cloneRepository() throws IOException, InvalidRemoteException,
 			TransportException, GitAPIException {
 		Logger.log("Starting the cloning of \"" + project.getName());
 
@@ -81,7 +158,7 @@ public class ReposCrawler {
 		return result.getRepository();
 	}
 
-	private static Repository buildRepository() throws IOException {
+	private Repository buildRepository() throws IOException {
 		// now open the resulting repository with a FileRepositoryBuilder
 		FileRepositoryBuilder builder = new FileRepositoryBuilder();
 		builder.setWorkTree(repositoryDir);
@@ -92,27 +169,8 @@ public class ReposCrawler {
 		return repository;
 	}
 
-	/**
-	 * Returns the list of TAGs from the given repository.
-	 * 
-	 * @param repository
-	 * @return
-	 * @throws IOException
-	 * @throws GitAPIException
-	 */
-	public List<String> getTagsList(Repository repository) throws IOException,
-			GitAPIException {
-		List<String> tags = new ArrayList<String>();
-		try (Git git = new Git(repository)) {
-			List<Ref> call = git.tagList().call();
-			for (Ref ref : call) {
-				tags.add(ref.getName());
-			}
-		}
-		return tags;
-	}
-
-	public void createMergeBasedTags() throws IOException {
+	@Deprecated
+	private void createMergeBasedTags() throws IOException {
 		Repository repository = buildRepository();
 		List<MergeScenario> scenarios = IOHandler
 				.getMergeScenarios(repositoryID, repository);
@@ -169,10 +227,6 @@ public class ReposCrawler {
 		return builder.execute();
 	}
 
-	public Project getProject() {
-		return project;
-	}
-
 	/**
 	 * Writes a file with mapping from each tag created to its SHA1.
 	 * 
@@ -180,7 +234,7 @@ public class ReposCrawler {
 	 * @throws IOException
 	 * @throws EmptyContentException
 	 */
-	public void writeTagToSHA1MappingFile() throws NullPointerException,
+	public void createTagToSHA1MappingFile() throws NullPointerException,
 			IOException, EmptyContentException {
 		List<String> lines = new ArrayList<String>();
 		RevWalk revWalk = new RevWalk(getProject().getRepository());
@@ -210,7 +264,7 @@ public class ReposCrawler {
 	 * @throws EmptyContentException
 	 * @throws InvalidNumberOfTagsException
 	 */
-	public void writeCodefaceConfFile() throws IOException,
+	public void createCodefaceConfFile() throws IOException,
 			NullPointerException, EmptyContentException,
 			InvalidNumberOfTagsException {
 		String releases = getTupletsString(getProject().getMergeScenarios()
@@ -282,19 +336,4 @@ public class ReposCrawler {
 		}
 	}
 
-	public void run() throws Exception {
-		// cloning or reading
-		Repository repo;
-		if (skipCloning) {
-			repo = buildRepository();
-		}else{
-			repo = cloneRepository();
-		}
-		project.setRepository(repo);
-		// building networks
-		buildNetworks();
-		// persisting
-		writeTagToSHA1MappingFile();
-		writeCodefaceConfFile();
-	}
 }
