@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
@@ -88,8 +89,30 @@ public class MergeScenarioDAO implements DAO<MergeScenario>{
 
 	@Override
 	public List<MergeScenario> list() throws IllegalArgumentException {
-		// TODO Auto-generated method stub
-		return null;
+		List<MergeScenario> result =  new ArrayList<MergeScenario>();
+		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			PreparedStatement ps;
+				ps = conn.prepareStatement("select * from `merge_scenarios`;");
+			ResultSet rs = DBManager.executeQuery(ps);
+			
+			while (rs.next()){
+				MergeScenario ms =  new MergeScenario();
+				ms.setID(rs.getInt("id"));
+				ms.setProjectID(rs.getInt("system_id"));
+				ms.setSHA1Base(rs.getString("commit_base"));
+				ms.setSHA1Left(rs.getString("commit_left"));
+				ms.setSHA1Right(rs.getString("commit_right"));
+				result.add(ms);
+			}
+			
+		} catch (SQLException | IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
+		return result;
 	}
 
 	@Override

@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
@@ -78,8 +79,30 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
 	@Override
 	public List<DeveloperEdge> list() throws IllegalArgumentException {
-		// TODO Auto-generated method stub
-		return null;
+		List<DeveloperEdge> result =  new ArrayList<DeveloperEdge>();
+		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			PreparedStatement ps;
+				ps = conn.prepareStatement("select * from `edges`;");
+			ResultSet rs = DBManager.executeQuery(ps);
+			
+			while (rs.next()){
+				DeveloperEdge edge =  new DeveloperEdge();
+				edge.setID(rs.getInt("id"));
+				edge.setNetworkID(rs.getInt("network_id"));
+				edge.setLeft(rs.getInt("dev_a"));
+				edge.setRight(rs.getInt("dev_b"));
+				edge.setWeight(rs.getInt("weight"));
+				result.add(edge);
+			}
+			
+		} catch (SQLException | IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
+		return result;
 	}
 
 	@Override

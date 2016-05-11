@@ -25,9 +25,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
-import br.com.riselabs.cotonet.model.dao.DAOImpl;
-import br.com.riselabs.cotonet.model.dao.validators.ProjectValidator;
-import br.com.riselabs.cotonet.model.dao.validators.Validator;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 import br.com.riselabs.cotonet.util.Directories;
@@ -265,9 +262,9 @@ public class ReposCrawler {
 
 	public String getTupletsString(int numScenarios)
 			throws InvalidNumberOfTagsException {
-		if (numScenarios % 3 != 0) {
-			throw new InvalidNumberOfTagsException(numScenarios);
-		}
+//		if (numScenarios % 3 != 0) {
+//			throw new InvalidNumberOfTagsException(numScenarios);
+//		}
 		List<String> tuples = new ArrayList<String>();
 		String systemName = getProject().getName();
 		for (int i = 1; i <= numScenarios; i++) {
@@ -299,8 +296,5 @@ public class ReposCrawler {
 		// persisting
 		writeTagToSHA1MappingFile();
 		writeCodefaceConfFile();
-		Validator<Project> validator = new ProjectValidator();
-		DAOImpl<Project> dao = new DAOImpl<Project>(Project.class, validator);
-		dao.save(getProject());
 	}
 }

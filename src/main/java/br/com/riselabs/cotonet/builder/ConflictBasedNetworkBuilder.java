@@ -45,6 +45,13 @@ import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.dao.ConflictBasedNetworkDAO;
+import br.com.riselabs.cotonet.model.dao.DAOFactory;
+import br.com.riselabs.cotonet.model.dao.DeveloperEdgeDAO;
+import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
+import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
+import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 
 /**
@@ -132,7 +139,10 @@ public class ConflictBasedNetworkBuilder {
 	 */
 	public Project execute(NetworkType aType)
 			throws Exception {
-
+		ProjectDAO pdao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
+		pdao.save(getProject());
+		getProject().setID(pdao.get(getProject()).getID());
+		
 		List<RevCommit> allMerges = getMergeCommits();
 
 		for (RevCommit mergeCommit : allMerges) {
@@ -172,8 +182,57 @@ public class ConflictBasedNetworkBuilder {
 			connet = build(scenario, conflictingFiles, aType);
 
 			getProject().add(scenario, connet);
+			persistEntry(scenario, connet);
+			
 		}
 		return getProject();
+	}
+
+	private void persistEntry(MergeScenario scenario,
+			ConflictBasedNetwork connet) {
+		// save merge scenario
+					MergeScenarioDAO msdao = (MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO);
+					msdao.save(scenario);
+					scenario.setID(msdao.get(scenario).getID());
+					
+					// save networks
+					ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory.getDAO(CotonetBean.CONFLICT_NETWORK);
+					connet.setMergeScenarioID(scenario.getID());
+					cndao.save(connet);
+					connet.setID(cndao.get(connet).getID());
+					
+					// save edges
+					DeveloperEdgeDAO edao = (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
+					for (DeveloperEdge edge : connet.getEdges()) {
+						boolean leftupdated = false, rightupdated = false;
+						for (DeveloperNode node : getProject().getDevs()) {
+							if (leftupdated && rightupdated) {
+								break;
+							}
+							if (node.getID()==edge.getLeft() && !leftupdated){
+								edge.setLeft(getNodeIDFromDB(node));
+								leftupdated = true;
+							}else if(node.getID()==edge.getRight() && !rightupdated){
+								edge.setRight(getNodeIDFromDB(node));
+								rightupdated = true;
+							}
+						}
+						edge.setNetworkID(connet.getID());
+						edao.save(edge);
+					}
+		
+	}
+
+	private Integer getNodeIDFromDB(DeveloperNode node) {
+		// save developers
+		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
+		if(ddao.get(node)==null){
+			node.setSystemID(getProject().getID());
+			ddao.save(node);
+		}
+		node.setID(null);
+		node.setID(ddao.get(node).getID());
+		return node.getID();
 	}
 
 	/**

@@ -5,6 +5,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
@@ -57,8 +58,28 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 	@Override
 	public List<ConflictBasedNetwork> list()
 			throws IllegalArgumentException {
-		// TODO Auto-generated method stub
-		return null;
+		List<ConflictBasedNetwork> result =  new ArrayList<ConflictBasedNetwork>();
+		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			PreparedStatement ps;
+				ps = conn.prepareStatement("select * from `networks`;");
+			ResultSet rs = DBManager.executeQuery(ps);
+			
+			while (rs.next()){
+				ConflictBasedNetwork connet =  new ConflictBasedNetwork();
+				connet.setID(rs.getInt("id"));
+				connet.setType(rs.getString("type").equals("C")?NetworkType.CHUNK_BASED:NetworkType.FILE_BASED);
+				connet.setMergeScenarioID(rs.getInt("merge_scenario_id"));
+				result.add(connet);
+			}
+			
+		} catch (SQLException | IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
+		return result;
 	}
 
 	@Override

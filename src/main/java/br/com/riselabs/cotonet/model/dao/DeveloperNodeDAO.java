@@ -25,6 +25,7 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.ArrayList;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -51,6 +52,9 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
 				PreparedStatement ps = conn
 						.prepareStatement("insert into `developers` (`name`, `email1`, `system_id`) values (?,?,?);");
+				if(node.getName()==null){
+					node.setName(node.getEmail().trim().split("@")[0]);
+				}
 				ps.setString(1, node.getName());
 				ps.setString(2, node.getEmail());
 				ps.setInt(3, node.getSystemID());
@@ -76,8 +80,30 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 	@Override
 	public List<DeveloperNode> list() throws IllegalArgumentException {
-		// TODO Auto-generated method stub
-		return null;
+		List<DeveloperNode> result =  new ArrayList<DeveloperNode>();
+		try {
+			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			PreparedStatement ps;
+				ps = conn.prepareStatement("select * from `developers`;");
+			ResultSet rs = DBManager.executeQuery(ps);
+			
+			while (rs.next()){
+				DeveloperNode node =  new DeveloperNode();
+				node.setID(rs.getInt("id"));
+				node.setName(rs.getString("name"));
+				node.setEmail(rs.getString("email1"));
+//				edge.setRight(rs.getInt("email2"));
+				node.setSystemID(rs.getInt("system_id"));
+				result.add(node);
+			}
+			
+		} catch (SQLException | IOException | ClassNotFoundException e) {
+			e.printStackTrace();
+		}
+		if(conn!=null){ 
+			DBConnection.closeConnection(conn);
+		}
+		return result;
 	}
 
 	@Override
