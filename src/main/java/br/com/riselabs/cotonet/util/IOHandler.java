@@ -110,7 +110,7 @@ public class IOHandler {
 	 * @throws IOException
 	 */
 	public File getReposDirectory(String folderName) throws IOException {
-		File dir = new File(Directories.getReposDir() + folderName);
+		File dir = new File(Directories.getReposDir(), folderName);
 		return getDirectory(dir);
 	}
 
@@ -137,24 +137,13 @@ public class IOHandler {
 	 * @throws IOException
 	 */
 	public File makeSystemDirectory(String sytemName) throws IOException {
-		File systemDir = new File(Directories.getReposDir() + sytemName);
+		File systemDir = new File(Directories.getReposDir(), sytemName);
 		checkAndRemove(systemDir);
-		makeDirectory(systemDir);
+		systemDir.mkdirs();
 		System.gc();
 		return systemDir;
 	}
 
-	/**
-	 * rewrite the repo repository.
-	 * 
-	 * @param folderName
-	 * @return
-	 * @throws IOException
-	 */
-	public File makeDirectory(File aPath) throws IOException {
-		aPath.mkdirs();
-		return aPath;
-	}
 
 	/**
 	 * Returns the URLs from the "ghanalysis" database.

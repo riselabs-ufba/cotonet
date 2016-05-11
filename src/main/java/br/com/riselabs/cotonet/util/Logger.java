@@ -12,10 +12,10 @@ import java.io.StringWriter;
  * @author alcemirsantos
  *
  */
-public class Logger {
+public abstract class Logger {
 	
 	private static File log = new File(Directories.getLogDir(),
-			"repos_crawler.log");;
+			"cotonet.log");;
 
 	
 	/**
@@ -23,7 +23,6 @@ public class Logger {
 	 * @param message
 	 */
 	public static void log(String message) {
-		System.out.println(message);
 		log(log, message);
 	}
 	
@@ -37,7 +36,11 @@ public class Logger {
 	 * @param message
 	 */
 	public static void log(File logFile, String message) {
+		if (!new File(logFile.getParent()).exists()) {
+			new File(logFile.getParent()).mkdirs();
+		}
 		try {
+			logFile.createNewFile();
 			new IOHandler().appendLineToFile(logFile, message);
 		} catch (IOException e) {
 			e.printStackTrace();
