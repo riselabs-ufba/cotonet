@@ -16,34 +16,19 @@ package br.com.riselabs.cotonet.builder.commands;
  limitations under the License.
  */
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
-import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.BlameCommand;
-import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.lib.ObjectId;
-import org.eclipse.jgit.lib.ObjectLoader;
-import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
-import org.eclipse.jgit.treewalk.TreeWalk;
-import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
-import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 
 /**
  * Simple snippet which shows how to get a diff showing who changed which line
@@ -57,8 +42,6 @@ public class RecursiveBlame {
 	private RevCommit beginRevision;
 	private RevCommit endRevision;
 	private String path;
-	private Integer beginLine;
-	private Integer endLine;
 
 	public RecursiveBlame() {
 		this(null);
@@ -85,12 +68,6 @@ public class RecursiveBlame {
 
 	public RecursiveBlame setFilePath(String filepath) {
 		this.path = filepath;
-		return this;
-	}
-
-	public RecursiveBlame setLineRange(Integer beginLine, Integer endLine) {
-		this.beginLine = beginLine - 1;
-		this.endLine = endLine;
 		return this;
 	}
 

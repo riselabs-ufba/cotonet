@@ -32,9 +32,7 @@ import java.sql.SQLException;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
-import org.junit.experimental.theories.DataPoints;
 
-import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;

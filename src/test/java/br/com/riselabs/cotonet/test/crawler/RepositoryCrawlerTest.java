@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 
 import br.com.riselabs.cotonet.crawler.ReposCrawler;
@@ -39,12 +40,14 @@ public class RepositoryCrawlerTest {
 	}
 	
 	@Test(expected = InvalidNumberOfTagsException.class)
+	@Ignore
 	public void getTupletsWithNoTags() throws InvalidNumberOfTagsException{
 		List<String> tags=new ArrayList<String>();
 		crawler.getTupletsString(tags.size());
 	}
 	
 	@Test(expected = InvalidNumberOfTagsException.class)
+	@Ignore
 	public void getTupletsWithInvalidNumberOfTags() throws InvalidNumberOfTagsException{
 		
 		List<String> tags=new ArrayList<String>();
