@@ -1,5 +1,5 @@
 ![#cotonet](https://github.com/riselabs-ufba/cotonet/blob/master/img/cotonet.png "cotonet logo")
-
+==========
 
 ## What?
 A tool to build conflict-based networks.
@@ -19,4 +19,4 @@ The networks are created in considering two different approaches based either in
 
 ## Main Contributors:
 
-* [**Alcemir R. Santos**](http://github.com/alcemirsantos): _Ph.D._ student at the Federak University of Bahia (UFBA).
+* [**Alcemir R. Santos**](http://github.com/alcemirsantos): _Ph.D._ student at the Federal University of Bahia (UFBA).
