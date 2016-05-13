@@ -1,5 +1,5 @@
 ![#cotonet](https://github.com/riselabs-ufba/cotonet/blob/master/img/cotonet.png "cotonet logo")
-
+==========
 
 ## What?
 A tool to build conflict-based networks.
