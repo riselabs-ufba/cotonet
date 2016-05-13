@@ -4,6 +4,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
 import org.eclipse.jgit.junit.RepositoryTestCase;
 import org.junit.Before;
@@ -13,6 +14,7 @@ import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.ConflictBasedNetworkValidator;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 
 public class ConflictBasedNetworkTest extends RepositoryTestCase {
 
@@ -28,7 +30,27 @@ public class ConflictBasedNetworkTest extends RepositoryTestCase {
 		connet.add(new DeveloperEdge(1,2));
 		assertTrue(connet.getNodes().isEmpty());
 		assertFalse(connet.getEdges().isEmpty());
-		assertFalse(new ConflictBasedNetworkValidator().validate(connet));
+		try {
+			new ConflictBasedNetworkValidator().validate(connet);
+		} catch (InvalidCotonetBeanException e) {
+			assertTrue( e.getCause() instanceof IllegalArgumentException);
+		}finally{
+			fail("should have thrown invalid bean exception");
+		}
+	}
+	
+	@Test
+	public void checkWithNodeButEmptyEdges() {
+		connet.add(new DeveloperNode("test@mail"));
+		assertFalse(connet.getNodes().isEmpty());
+		assertTrue(connet.getEdges().isEmpty());
+		try {
+			new ConflictBasedNetworkValidator().validate(connet);
+		} catch (InvalidCotonetBeanException e) {
+			assertTrue( e.getCause() instanceof IllegalArgumentException);
+		}finally{
+			fail("should have thrown invalid bean exception");
+		}
 	}
 	
 	@Test
