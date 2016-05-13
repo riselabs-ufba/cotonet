@@ -32,6 +32,8 @@ import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperNodeValidator;
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -41,66 +43,66 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 	private Connection conn;
 
-	public DeveloperNodeDAO () { }
-	
+	public DeveloperNodeDAO() {
+	}
+
 	@Override
-	public boolean save(DeveloperNode node) throws IllegalArgumentException {
+	public boolean save(DeveloperNode node) throws InvalidCotonetBeanException {
 		DeveloperNodeValidator validator = new DeveloperNodeValidator();
 		boolean hasSaved = false;
-		if (validator.validate(node)) {
-			try {
-				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-				PreparedStatement ps = conn
-						.prepareStatement("insert into `developers` (`name`, `email1`, `system_id`) values (?,?,?);");
-				if(node.getName()==null){
-					node.setName(node.getEmail().trim().split("@")[0]);
-				}
-				ps.setString(1, node.getName());
-				ps.setString(2, node.getEmail());
-				ps.setInt(3, node.getSystemID());
-				hasSaved = DBManager.executeUpdate(ps);
-			} catch (SQLException | ClassNotFoundException | IOException e) {
-				e.printStackTrace();
+		validator.validate(node);
+		try {
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("insert into `developers` (`name`, `email1`, `system_id`) values (?,?,?);");
+			if (node.getName() == null) {
+				node.setName(node.getEmail().trim().split("@")[0]);
 			}
-
-		} else {
-			throw new IllegalArgumentException("The developer node was not valid.");
+			ps.setString(1, node.getName());
+			ps.setString(2, node.getEmail());
+			ps.setInt(3, node.getSystemID());
+			hasSaved = DBManager.executeUpdate(ps);
+		} catch (SQLException | ClassNotFoundException | IOException e) {
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
 	}
 
 	@Override
-	public void delete(DeveloperNode object) throws IllegalArgumentException {
+	public void delete(DeveloperNode object) throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public List<DeveloperNode> list() throws IllegalArgumentException {
-		List<DeveloperNode> result =  new ArrayList<DeveloperNode>();
+	public List<DeveloperNode> list() throws InvalidCotonetBeanException {
+		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
 			PreparedStatement ps;
-				ps = conn.prepareStatement("select * from `developers`;");
+			ps = conn.prepareStatement("select * from `developers`;");
 			ResultSet rs = DBManager.executeQuery(ps);
-			
-			while (rs.next()){
-				DeveloperNode node =  new DeveloperNode();
+
+			while (rs.next()) {
+				DeveloperNode node = new DeveloperNode();
 				node.setID(rs.getInt("id"));
 				node.setName(rs.getString("name"));
 				node.setEmail(rs.getString("email1"));
-//				edge.setRight(rs.getInt("email2"));
+				// edge.setRight(rs.getInt("email2"));
 				node.setSystemID(rs.getInt("system_id"));
 				result.add(node);
 			}
-			
+
 		} catch (SQLException | IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return result;
@@ -108,30 +110,33 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 	@Override
 	public DeveloperNode get(DeveloperNode node)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-			PreparedStatement ps = conn.prepareStatement("select * from `developers` where `email1`=? or `id`=?;");
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("select * from `developers` where `email1`=? or `id`=?;");
 			ps.setString(1, node.getEmail());
-			if (node.getID()==null) {
+			if (node.getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(2, node.getID());
 			}
 			ResultSet rs = DBManager.executeQuery(ps);
-			if(rs.next()){
+			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer systemid = rs.getInt("system_id");
 				String name = rs.getString("name");
 				String email = rs.getString("email1");
-				DeveloperNode nodeResult = new DeveloperNode(id, systemid, name, email);
+				DeveloperNode nodeResult = new DeveloperNode(id, systemid,
+						name, email);
 				DBConnection.closeConnection(conn);
 				return nodeResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return null;
@@ -139,7 +144,7 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 	@Override
 	public List<DeveloperNode> search(DeveloperNode object)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
 	}

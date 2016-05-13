@@ -13,36 +13,37 @@ import br.com.riselabs.cotonet.model.dao.validators.ConflictBasedNetworkValidato
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
+import br.com.riselabs.cotonet.util.Logger;
 
-public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
+public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork> {
 
 	private Connection conn;
 
-	public ConflictBasedNetworkDAO() { }
-	
+	public ConflictBasedNetworkDAO() {
+	}
+
 	@Override
 	public boolean save(ConflictBasedNetwork conet)
-			throws IllegalArgumentException {
-		ConflictBasedNetworkValidator validator =  new ConflictBasedNetworkValidator();
+			throws InvalidCotonetBeanException {
+		ConflictBasedNetworkValidator validator = new ConflictBasedNetworkValidator();
 		boolean hasSaved = false;
-		if (validator.validate(conet)) {
-			PreparedStatement ps;
-			try {
-				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-				ps = conn
-						.prepareStatement("insert into `networks` (`merge_scenario_id`, `type`) values (?,?);");
-				ps.setInt(1, conet.getMergeScenarioID());
-				ps.setString(2, conet.getType().toString());
-				hasSaved = DBManager.executeUpdate(ps);
-					
-			} catch (SQLException | ClassNotFoundException | IOException e) {
-				DBConnection.closeConnection(conn);
-				e.printStackTrace();
-			}
-		}else{
-			throw new IllegalArgumentException("The conflict based network was invalid.");
+		validator.validate(conet);
+		PreparedStatement ps;
+		try {
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			ps = conn
+					.prepareStatement("insert into `networks` (`merge_scenario_id`, `type`) values (?,?);");
+			ps.setInt(1, conet.getMergeScenarioID());
+			ps.setString(2, conet.getType().toString());
+			hasSaved = DBManager.executeUpdate(ps);
+
+		} catch (SQLException | ClassNotFoundException | IOException e) {
+			DBConnection.closeConnection(conn);
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
@@ -50,33 +51,34 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 
 	@Override
 	public void delete(ConflictBasedNetwork object)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public List<ConflictBasedNetwork> list()
-			throws IllegalArgumentException {
-		List<ConflictBasedNetwork> result =  new ArrayList<ConflictBasedNetwork>();
+	public List<ConflictBasedNetwork> list() throws InvalidCotonetBeanException {
+		List<ConflictBasedNetwork> result = new ArrayList<ConflictBasedNetwork>();
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
 			PreparedStatement ps;
-				ps = conn.prepareStatement("select * from `networks`;");
+			ps = conn.prepareStatement("select * from `networks`;");
 			ResultSet rs = DBManager.executeQuery(ps);
-			
-			while (rs.next()){
-				ConflictBasedNetwork connet =  new ConflictBasedNetwork();
+
+			while (rs.next()) {
+				ConflictBasedNetwork connet = new ConflictBasedNetwork();
 				connet.setID(rs.getInt("id"));
-				connet.setType(rs.getString("type").equals("C")?NetworkType.CHUNK_BASED:NetworkType.FILE_BASED);
+				connet.setType(rs.getString("type").equals("C") ? NetworkType.CHUNK_BASED
+						: NetworkType.FILE_BASED);
 				connet.setMergeScenarioID(rs.getInt("merge_scenario_id"));
 				result.add(connet);
 			}
-			
+
 		} catch (SQLException | IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return result;
@@ -84,39 +86,42 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 
 	@Override
 	public ConflictBasedNetwork get(ConflictBasedNetwork conet)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-			PreparedStatement ps = conn.prepareStatement("select * from `networks` where (`type`=? and `merge_scenario_id`=?) or `id`=?;");
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("select * from `networks` where (`type`=? and `merge_scenario_id`=?) or `id`=?;");
 			ps.setString(1, conet.getType().toString());
-			if (conet.getMergeScenarioID()==null){
+			if (conet.getMergeScenarioID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(2, conet.getMergeScenarioID());
 			}
-			if (conet.getID()==null) {
+			if (conet.getID() == null) {
 				ps.setInt(3, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(3, conet.getID());
 			}
 			ResultSet rs = DBManager.executeQuery(ps);
-			if(rs.next()){
+			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer mergeScenarioID = rs.getInt("merge_scenario_id");
 				NetworkType type = null;
-				if(rs.getString("type").equals("F")){
+				if (rs.getString("type").equals("F")) {
 					type = NetworkType.FILE_BASED;
-				}else if (rs.getString("type").equals("C")) {
+				} else if (rs.getString("type").equals("C")) {
 					type = NetworkType.CHUNK_BASED;
 				}
-				ConflictBasedNetwork retrieved =  new ConflictBasedNetwork(id, mergeScenarioID, type);
+				ConflictBasedNetwork retrieved = new ConflictBasedNetwork(id,
+						mergeScenarioID, type);
 				DBConnection.closeConnection(conn);
 				return retrieved;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return null;
@@ -124,9 +129,9 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork>{
 
 	@Override
 	public List<ConflictBasedNetwork> search(ConflictBasedNetwork object)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 }

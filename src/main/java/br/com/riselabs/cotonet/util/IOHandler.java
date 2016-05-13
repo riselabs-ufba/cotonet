@@ -7,6 +7,7 @@ import java.io.FileInputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -240,6 +241,23 @@ public class IOHandler {
 			System.out.println("Removing old file: " + instance.toString());
 			FileUtils.deleteQuietly(instance);
 		}
+	}
+
+	/**
+	 * Creates a file and all the inexistent parent folders.
+	 * @param directory
+	 * @param filename
+	 * @return
+	 * @throws IOException
+	 */
+	public File createFile(File directory, String filename) throws IOException {
+		File f;
+		if (!directory.exists()){
+			directory.mkdirs();
+		}
+		f = new File(directory, filename);
+		f.createNewFile();
+		return f;
 	}
 
 }

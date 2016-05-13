@@ -32,6 +32,8 @@ import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperEdgeValidator;
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -41,53 +43,53 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
 	private Connection conn;
 
-	public DeveloperEdgeDAO() { }
-	
+	public DeveloperEdgeDAO() {
+	}
+
 	@Override
-	public boolean save(DeveloperEdge edge) throws IllegalArgumentException {
-		DeveloperEdgeValidator validator =  new DeveloperEdgeValidator();
+	public boolean save(DeveloperEdge edge) throws InvalidCotonetBeanException {
+		DeveloperEdgeValidator validator = new DeveloperEdgeValidator();
 		boolean hasSaved = false;
-		if (validator.validate(edge)) {
-			PreparedStatement ps;
-			try {
-				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-				ps = conn
-						.prepareStatement("insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
-				ps.setInt(1, edge.getNetworkID());
-				ps.setInt(2, edge.getLeft());
-				ps.setInt(3, edge.getRight());
-				ps.setInt(4, edge.getWeight());
-				hasSaved = DBManager.executeUpdate(ps);
-			} catch (SQLException | ClassNotFoundException | IOException e) {
-				DBConnection.closeConnection(conn);
-				e.printStackTrace();
-			}
-		}else{
-			throw new IllegalArgumentException("The developer edge was invalid.");
+		validator.validate(edge);
+		PreparedStatement ps;
+		try {
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			ps = conn
+					.prepareStatement("insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
+			ps.setInt(1, edge.getNetworkID());
+			ps.setInt(2, edge.getLeft());
+			ps.setInt(3, edge.getRight());
+			ps.setInt(4, edge.getWeight());
+			hasSaved = DBManager.executeUpdate(ps);
+		} catch (SQLException | ClassNotFoundException | IOException e) {
+			DBConnection.closeConnection(conn);
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
 	}
 
 	@Override
-	public void delete(DeveloperEdge object) throws IllegalArgumentException {
+	public void delete(DeveloperEdge object) throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	@Override
-	public List<DeveloperEdge> list() throws IllegalArgumentException {
-		List<DeveloperEdge> result =  new ArrayList<DeveloperEdge>();
+	public List<DeveloperEdge> list() throws InvalidCotonetBeanException {
+		List<DeveloperEdge> result = new ArrayList<DeveloperEdge>();
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
 			PreparedStatement ps;
-				ps = conn.prepareStatement("select * from `edges`;");
+			ps = conn.prepareStatement("select * from `edges`;");
 			ResultSet rs = DBManager.executeQuery(ps);
-			
-			while (rs.next()){
-				DeveloperEdge edge =  new DeveloperEdge();
+
+			while (rs.next()) {
+				DeveloperEdge edge = new DeveloperEdge();
 				edge.setID(rs.getInt("id"));
 				edge.setNetworkID(rs.getInt("network_id"));
 				edge.setLeft(rs.getInt("dev_a"));
@@ -95,11 +97,11 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 				edge.setWeight(rs.getInt("weight"));
 				result.add(edge);
 			}
-			
+
 		} catch (SQLException | IOException | ClassNotFoundException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return result;
@@ -107,45 +109,48 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
 	@Override
 	public DeveloperEdge get(DeveloperEdge edge)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-			PreparedStatement ps = conn.prepareStatement("select * from `edges` where (`network_id`=? and `dev_a`=? and `dev_b`=?) or `id`=?;");
-			
-			if (edge.getNetworkID()==null) {
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("select * from `edges` where (`network_id`=? and `dev_a`=? and `dev_b`=?) or `id`=?;");
+
+			if (edge.getNetworkID() == null) {
 				ps.setInt(1, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(1, edge.getNetworkID());
 			}
-			if (edge.getLeft()==null) {
+			if (edge.getLeft() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(2, edge.getLeft());
 			}
-			if (edge.getRight()==null) {
+			if (edge.getRight() == null) {
 				ps.setInt(3, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(3, edge.getRight());
 			}
-			if (edge.getID()==null) {
+			if (edge.getID() == null) {
 				ps.setInt(4, Integer.MAX_VALUE);
-			}else{
+			} else {
 				ps.setInt(4, edge.getID());
 			}
 			ResultSet rs = DBManager.executeQuery(ps);
-			if(rs.next()){
+			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer networkid = rs.getInt("network_id");
 				Integer left = rs.getInt("dev_a");
 				Integer right = rs.getInt("dev_b");
-				DeveloperEdge nodeResult = new DeveloperEdge(id, networkid, left, right);
+				DeveloperEdge nodeResult = new DeveloperEdge(id, networkid,
+						left, right);
 				DBConnection.closeConnection(conn);
 				return nodeResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return null;
@@ -153,7 +158,7 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
 	@Override
 	public List<DeveloperEdge> search(DeveloperEdge object)
-			throws IllegalArgumentException {
+			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
 	}

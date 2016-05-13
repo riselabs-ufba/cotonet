@@ -36,12 +36,10 @@ public abstract class Logger {
 	 * @param message
 	 */
 	public static void log(File logFile, String message) {
-		if (!new File(logFile.getParent()).exists()) {
-			new File(logFile.getParent()).mkdirs();
-		}
+		IOHandler io = new IOHandler();
 		try {
-			logFile.createNewFile();
-			new IOHandler().appendLineToFile(logFile, message);
+			logFile = io.createFile(logFile.getParentFile(),logFile.getName());
+			io.appendLineToFile(logFile, message);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

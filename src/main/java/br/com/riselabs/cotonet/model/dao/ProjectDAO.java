@@ -31,6 +31,8 @@ import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.validators.ProjectValidator;
 import br.com.riselabs.cotonet.model.db.DBConnection;
 import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -40,8 +42,9 @@ public class ProjectDAO implements DAO<Project> {
 
 	private Connection conn;
 
-	public ProjectDAO(){ }
-	
+	public ProjectDAO() {
+	}
+
 	/**
 	 * Inserts a <code>{@link Project}</code> in the database.
 	 * 
@@ -49,65 +52,67 @@ public class ProjectDAO implements DAO<Project> {
 	 *         {@code false} otherwise.
 	 */
 	@Override
-	public boolean save(Project p) throws IllegalArgumentException {
+	public boolean save(Project p) throws InvalidCotonetBeanException {
 		ProjectValidator validator = new ProjectValidator();
 		boolean hasSaved = false;
-		if (validator.validate(p)) {
-			try {
-				conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-				PreparedStatement ps = conn
-						.prepareStatement("insert into `systems` (`name`, `url`) values (?,?);");
-				ps.setString(1, p.getName());
-				ps.setString(2, p.getUrl());
-				hasSaved = DBManager.executeUpdate(ps);
-			} catch (SQLException | ClassNotFoundException | IOException e) {
-				e.printStackTrace();
-			}
-
-		} else {
-			throw new IllegalArgumentException("The project was not valid.");
+		validator.validate(p);
+		try {
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("insert into `systems` (`name`, `url`) values (?,?);");
+			ps.setString(1, p.getName());
+			ps.setString(2, p.getUrl());
+			hasSaved = DBManager.executeUpdate(ps);
+		} catch (SQLException | ClassNotFoundException | IOException e) {
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return hasSaved;
 	}
 
 	@Override
-	public void delete(Project p) throws IllegalArgumentException {
+	public void delete(Project p) throws InvalidCotonetBeanException {
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-			PreparedStatement ps = conn.prepareStatement("delete from `systems` whrere `id`=?;");
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("delete from `systems` whrere `id`=?;");
 			ps.setInt(1, p.getID());
 			DBManager.executeUpdate(ps);
 		} catch (Exception e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 	}
 
 	@Override
-	public List<Project> list() throws IllegalArgumentException {
+	public List<Project> list() throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
-	public Project get(Project p) throws IllegalArgumentException {
+	public Project get(Project p) throws InvalidCotonetBeanException {
 		try {
-			conn = (conn==null || conn.isClosed())?DBConnection.getConnection():conn;
-			PreparedStatement ps = conn.prepareStatement("select * from `systems` where `url`=? or `id`=?;");
+			conn = (conn == null || conn.isClosed()) ? DBConnection
+					.getConnection() : conn;
+			PreparedStatement ps = conn
+					.prepareStatement("select * from `systems` where `url`=? or `id`=?;");
 			ps.setString(1, p.getUrl());
 			if (p.getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
-			}else {
+			} else {
 				ps.setInt(2, p.getID());
 			}
-			
+
 			ResultSet rs = DBManager.executeQuery(ps);
-			if(rs.next()){
+			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				String name = rs.getString("name");
 				String url = rs.getString("url");
@@ -116,16 +121,17 @@ public class ProjectDAO implements DAO<Project> {
 				return pResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
-			e.printStackTrace();
+			Logger.logStackTrace(e);
 		}
-		if(conn!=null){ 
+		if (conn != null) {
 			DBConnection.closeConnection(conn);
 		}
 		return null;
 	}
 
 	@Override
-	public List<Project> search(Project object) throws IllegalArgumentException {
+	public List<Project> search(Project object)
+			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
 	}
