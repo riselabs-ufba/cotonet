@@ -48,6 +48,7 @@ import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
@@ -82,8 +83,8 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 		DBTestCase.resetTestDB();
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void saveEmptyEdge(){
+	@Test(expected=InvalidCotonetBeanException.class)
+	public void saveEmptyEdge() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge();
 		assertNull(edge.getLeft());
 		assertNull(edge.getRight());
@@ -92,8 +93,8 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(edge);
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void saveEdgeWithInexistentDevelopers(){
+	@Test(expected=InvalidCotonetBeanException.class)
+	public void saveEdgeWithInexistentDevelopers() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(34, 25);
 		assertTrue(edge.getLeft()==34);
 		assertTrue(edge.getRight()==25);
@@ -102,8 +103,8 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(edge);
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void saveEdgeWithLeftInexistentDeveloper(){
+	@Test(expected=InvalidCotonetBeanException.class)
+	public void saveEdgeWithLeftInexistentDeveloper() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(34, 2);
 		assertTrue(edge.getLeft()==34);
 		assertTrue(edge.getRight()==2);
@@ -112,8 +113,8 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(edge);
 	}
 	
-	@Test(expected=IllegalArgumentException.class)
-	public void saveEdgeWithRightInexistentDeveloper(){
+	@Test(expected=InvalidCotonetBeanException.class)
+	public void saveEdgeWithRightInexistentDeveloper() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(1, 25);
 		assertTrue(edge.getLeft()==1);
 		assertTrue(edge.getRight()==25);
@@ -123,7 +124,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void saveEdgeSuccessfully(){
+	public void saveEdgeSuccessfully() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(1, 2);
 		assertTrue(edge.getLeft()==1);
 		assertTrue(edge.getRight()==2);
@@ -134,7 +135,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void getEdgeWithNoID(){
+	public void getEdgeWithNoID() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(1, 2);
 		edge.setNetworkID(1);
 		dao.save(edge);
@@ -144,7 +145,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void getEdgeByID(){
+	public void getEdgeByID() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge(1, 2);
 		edge.setNetworkID(1);
 		dao.save(edge);

@@ -28,6 +28,7 @@ import br.com.riselabs.cotonet.model.dao.DAOFactory;
 import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 
 /**
  * @author Alcemir R. Santos
@@ -36,17 +37,23 @@ import br.com.riselabs.cotonet.model.enums.NetworkType;
 public class DeveloperEdgeValidator implements Validator<DeveloperEdge> {
 
 	@Override
-	public boolean validate(DeveloperEdge edge) {
+	public boolean validate(DeveloperEdge edge) throws InvalidCotonetBeanException {
 		if (edge == null || edge.getLeft() == null || edge.getRight() == null
 				|| edge.getNetworkID() == null) {
-			return false;
+			throw new InvalidCotonetBeanException(
+					DeveloperEdge.class, 
+					"Either the object itself, the `LeftID', the `RightID', or the `NetworkID' are <null>.",
+					new NullPointerException());
 		}
 		DeveloperNodeDAO dndao = (DeveloperNodeDAO) DAOFactory
 				.getDAO(CotonetBean.NODE);
 		if (dndao.get(new DeveloperNode(edge.getLeft(), null, null, null)) == null
 				|| dndao.get(new DeveloperNode(edge.getRight(), null, null,
 						null)) == null) {
-			return false;
+			throw new InvalidCotonetBeanException(
+					DeveloperEdge.class, 
+					"Either the `LeftID' or the `RightID' node are inexistent in the database.",
+					new NullPointerException());
 		}
 		ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory
 				.getDAO(CotonetBean.CONFLICT_NETWORK);
@@ -58,7 +65,10 @@ public class DeveloperEdgeValidator implements Validator<DeveloperEdge> {
 						null, NetworkType.CHUNK_BASED)) == null) && (cndao
 						.get(new ConflictBasedNetwork(edge.getNetworkID(),
 								null, NetworkType.FILE_BASED)) != null))) {
-			return false;
+			throw new InvalidCotonetBeanException(
+					DeveloperEdge.class, 
+					"There is no network with the given `NetworkID' in the database.",
+					new IllegalArgumentException());
 		}
 
 		return true;

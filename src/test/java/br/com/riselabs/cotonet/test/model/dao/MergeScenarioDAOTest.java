@@ -43,6 +43,7 @@ import br.com.riselabs.cotonet.model.dao.DAOFactory;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
@@ -73,8 +74,8 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		DBTestCase.resetTestDB();
 	}
 
-	@Test(expected = IllegalArgumentException.class)
-	public void saveEmptyMergeScenario() {
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEmptyMergeScenario() throws InvalidCotonetBeanException {
 		MergeScenario ms = new MergeScenario();
 		assertNull(ms.getID());
 		assertNull(ms.getProjectID());
@@ -87,7 +88,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		dao.save(ms);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutSystemID() throws Exception {
 		
 		MergeScenario ms = new MergeScenario(null, commit(), commit(), commit());
@@ -102,7 +103,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		dao.save(ms);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutBaseCommit() throws Exception {
 		MergeScenario ms = new MergeScenario(1, null, commit(), commit());
 		assertNull(ms.getID());
@@ -116,7 +117,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		assertTrue(dao.save(ms));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutLeftCommit() throws Exception {
 		MergeScenario ms = new MergeScenario(1, commit(), null, commit());
 		assertNull(ms.getID());
@@ -130,7 +131,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		assertTrue(dao.save(ms));
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
+	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutRightCommit() throws Exception {
 		MergeScenario ms = new MergeScenario(1, commit(), commit(), null);
 		assertNull(ms.getID());

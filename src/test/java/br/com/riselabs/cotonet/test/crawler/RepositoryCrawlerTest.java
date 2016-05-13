@@ -10,16 +10,16 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import br.com.riselabs.cotonet.crawler.ReposCrawler;
+import br.com.riselabs.cotonet.crawler.RepositoryCrawler;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 
 public class RepositoryCrawlerTest {
 
-	private ReposCrawler crawler;
+	private RepositoryCrawler crawler;
 
 	@Before
 	public void setup() throws IOException{
-		crawler =  new ReposCrawler( "", null);
+		crawler =  new RepositoryCrawler("", false);
 	}
 	
 	@Test

@@ -45,6 +45,7 @@ import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
@@ -81,8 +82,8 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 		DBTestCase.resetTestDB();
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveNetworkWithoutMergeScenarioID(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveNetworkWithoutMergeScenarioID() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork();
 		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
 		assertNull(conet.getMergeScenarioID());
@@ -90,7 +91,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 	}
 	
 	@Test
-	public void saveNetworkSuccessfuly(){
+	public void saveNetworkSuccessfuly() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
 		conet.setMergeScenarioID(msdao.get(ms).getID());
 		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
@@ -99,7 +100,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 	}
 
 	@Test
-	public void getNetworkChunkBased(){
+	public void getNetworkChunkBased() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
 		conet.setMergeScenarioID(msdao.get(ms).getID());
 		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
@@ -114,7 +115,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 	}
 	
 	@Test
-	public void getNetworkFileBased(){
+	public void getNetworkFileBased() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
 		conet.setMergeScenarioID(msdao.get(ms).getID());
 		conet.setType(NetworkType.FILE_BASED);
@@ -130,7 +131,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 	}
 	
 	@Test
-	public void getNetworkFileBasedWithNullScenario(){
+	public void getNetworkFileBasedWithNullScenario() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
 		conet.setMergeScenarioID(msdao.get(ms).getID());
 		conet.setType(NetworkType.FILE_BASED);
@@ -147,7 +148,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 	}
 	
 	@Test
-	public void getNetworkChunkBasedWithNullScenario(){
+	public void getNetworkChunkBasedWithNullScenario() throws InvalidCotonetBeanException{
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(p, ms);
 		conet.setMergeScenarioID(msdao.get(ms).getID());
 		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
@@ -161,6 +162,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 		assertTrue(conet.getMergeScenarioID()==1);
 		assertEquals(NetworkType.CHUNK_BASED, conet.getType());
 	}
+	
 	protected RevCommit commit(final RevCommit... parents) throws Exception {
 		return util.commit(parents);
 	}

@@ -47,12 +47,13 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.ConflictBasedNetworkDAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;
+import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.DeveloperEdgeDAO;
 import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
-import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 
 /**
  * @author alcemirsantos
@@ -63,9 +64,6 @@ public class ConflictBasedNetworkBuilder {
 	private Project project;
 	private Map<MergeScenario, List<Blame>> scenarioBlamesMap;
 
-	/**
-	 * 
-	 */
 	public ConflictBasedNetworkBuilder() {
 		this(null);
 	}
@@ -81,7 +79,6 @@ public class ConflictBasedNetworkBuilder {
 	public void setProject(Project project) {
 		this.project = project;
 	}
-
 
 	/**
 	 * @return the scenarioBlamesMap
@@ -137,12 +134,11 @@ public class ConflictBasedNetworkBuilder {
 	 *         -<code>null</code> when the repository is not set.
 	 * @throws Exception
 	 */
-	public Project execute(NetworkType aType)
-			throws Exception {
+	public Project execute(NetworkType aType) throws Exception {
 		ProjectDAO pdao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
 		pdao.save(getProject());
 		getProject().setID(pdao.get(getProject()).getID());
-		
+
 		List<RevCommit> allMerges = getMergeCommits();
 
 		for (RevCommit mergeCommit : allMerges) {
@@ -189,44 +185,48 @@ public class ConflictBasedNetworkBuilder {
 	}
 
 	private void persistEntry(MergeScenario scenario,
-			ConflictBasedNetwork connet) {
+			ConflictBasedNetwork connet) throws InvalidCotonetBeanException {
 		// save merge scenario
-					MergeScenarioDAO msdao = (MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO);
-					msdao.save(scenario);
-					scenario.setID(msdao.get(scenario).getID());
-					
-					// save networks
-					ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory.getDAO(CotonetBean.CONFLICT_NETWORK);
-					connet.setMergeScenarioID(scenario.getID());
-					cndao.save(connet);
-					connet.setID(cndao.get(connet).getID());
-					
-					// save edges
-					DeveloperEdgeDAO edao = (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
-					for (DeveloperEdge edge : connet.getEdges()) {
-						boolean leftupdated = false, rightupdated = false;
-						for (DeveloperNode node : getProject().getDevs()) {
-							if (leftupdated && rightupdated) {
-								break;
-							}
-							if (node.getID()==edge.getLeft() && !leftupdated){
-								edge.setLeft(getNodeIDFromDB(node));
-								leftupdated = true;
-							}else if(node.getID()==edge.getRight() && !rightupdated){
-								edge.setRight(getNodeIDFromDB(node));
-								rightupdated = true;
-							}
-						}
-						edge.setNetworkID(connet.getID());
-						edao.save(edge);
-					}
-		
+		MergeScenarioDAO msdao = (MergeScenarioDAO) DAOFactory
+				.getDAO(CotonetBean.MERGE_SCENARIO);
+		msdao.save(scenario);
+		scenario.setID(msdao.get(scenario).getID());
+
+		// save networks
+		ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory
+				.getDAO(CotonetBean.CONFLICT_NETWORK);
+		connet.setMergeScenarioID(scenario.getID());
+		cndao.save(connet);
+		connet.setID(cndao.get(connet).getID());
+
+		// save edges
+		DeveloperEdgeDAO edao = (DeveloperEdgeDAO) DAOFactory
+				.getDAO(CotonetBean.EDGE);
+		for (DeveloperEdge edge : connet.getEdges()) {
+			boolean leftupdated = false, rightupdated = false;
+			for (DeveloperNode node : getProject().getDevs()) {
+				if (leftupdated && rightupdated) {
+					break;
+				}
+				if (node.getID() == edge.getLeft() && !leftupdated) {
+					edge.setLeft(getNodeIDFromDB(node));
+					leftupdated = true;
+				} else if (node.getID() == edge.getRight() && !rightupdated) {
+					edge.setRight(getNodeIDFromDB(node));
+					rightupdated = true;
+				}
+			}
+			edge.setNetworkID(connet.getID());
+			edao.save(edge);
+		}
+
 	}
 
-	private Integer getNodeIDFromDB(DeveloperNode node) {
+	private Integer getNodeIDFromDB(DeveloperNode node) throws InvalidCotonetBeanException {
 		// save developers
-		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
-		if(ddao.get(node)==null){
+		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory
+				.getDAO(CotonetBean.NODE);
+		if (ddao.get(node) == null) {
 			node.setSystemID(getProject().getID());
 			ddao.save(node);
 		}
@@ -246,7 +246,8 @@ public class ConflictBasedNetworkBuilder {
 	 * @throws GitAPIException
 	 */
 	public ConflictBasedNetwork build(MergeScenario aScenario,
-			List<File> files, NetworkType type) throws IOException, GitAPIException {
+			List<File> files, NetworkType type) throws IOException,
+			GitAPIException {
 		ConflictBasedNetwork connet = new ConflictBasedNetwork(getProject(),
 				aScenario);
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
@@ -264,15 +265,18 @@ public class ConflictBasedNetworkBuilder {
 				newEdges = buildEdges(newNodes);
 
 			} else if (type == NetworkType.FILE_BASED) {
-				RecursiveBlame blamer = new RecursiveBlame(getProject().getRepository());
-				List<Blame> blames = blamer.setRepository(getProject().getRepository())
+				RecursiveBlame blamer = new RecursiveBlame(getProject()
+						.getRepository());
+				List<Blame> blames = blamer
+						.setRepository(getProject().getRepository())
 						.setBeginRevision(aScenario.getRight())
-						.setEndRevision(aScenario.getBase()).setFilePath(f.getName())
-						.call();
-				blames.addAll(blamer.setRepository(getProject().getRepository())
+						.setEndRevision(aScenario.getBase())
+						.setFilePath(f.getName()).call();
+				blames.addAll(blamer
+						.setRepository(getProject().getRepository())
 						.setBeginRevision(aScenario.getLeft())
-						.setEndRevision(aScenario.getBase()).setFilePath(f.getName())
-						.call());
+						.setEndRevision(aScenario.getBase())
+						.setFilePath(f.getName()).call());
 
 				add(aScenario, blames);
 
@@ -309,11 +313,11 @@ public class ConflictBasedNetworkBuilder {
 		for (ChunkBlame blame : blames) {
 			CommandLineBlameResult bResult = blame.getResult();
 			for (String anEmail : bResult.getAuthors()) {
-				DeveloperNode newNode =  new DeveloperNode(anEmail);
+				DeveloperNode newNode = new DeveloperNode(anEmail);
 				if (!getProject().getDevs().contains(newNode)) {
 					newNode.setID(getProject().getNextID());
 					getProject().add(newNode);
-				}else{
+				} else {
 					newNode = getProject().getDevByMail(anEmail);
 				}
 				if (!result.contains(newNode)) {
@@ -357,7 +361,8 @@ public class ConflictBasedNetworkBuilder {
 		List<File> result = new ArrayList<File>();
 		Map<String, int[][]> allConflicts = mResult.getConflicts();
 		for (String path : allConflicts.keySet()) {
-			result.add(new File(getProject().getRepository().getDirectory().getParent(), path));
+			result.add(new File(getProject().getRepository().getDirectory()
+					.getParent(), path));
 		}
 		return result;
 	}
@@ -397,8 +402,7 @@ public class ConflictBasedNetworkBuilder {
 			IOException, GitAPIException {
 		List<RevCommit> commits = between(aScenario.getLeft(),
 				aScenario.getBase());
-		commits.addAll(between(aScenario.getRight(), aScenario
-				.getBase()));
+		commits.addAll(between(aScenario.getRight(), aScenario.getBase()));
 		return commits;
 	}
 
@@ -432,11 +436,11 @@ public class ConflictBasedNetworkBuilder {
 			IncorrectObjectTypeException, IOException {
 		List<RevCommit> result = new ArrayList<RevCommit>();
 		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
-		    rw.markStart(rw.parseCommit(begin));
-		    rw.markUninteresting(rw.parseCommit(end));
-		    for (RevCommit curr; (curr = rw.next()) != null;){
-		    	result.add(curr);
-		    }
+			rw.markStart(rw.parseCommit(begin));
+			rw.markUninteresting(rw.parseCommit(end));
+			for (RevCommit curr; (curr = rw.next()) != null;) {
+				result.add(curr);
+			}
 		}
 		return result;
 	}
@@ -488,8 +492,9 @@ public class ConflictBasedNetworkBuilder {
 					if (!getProject().getDevs().contains(dev)) {
 						dev.setID(getProject().getNextID());
 						getProject().add(dev);
-					}else{
-						dev = getProject().getDevByMail(person.getEmailAddress());
+					} else {
+						dev = getProject().getDevByMail(
+								person.getEmailAddress());
 					}
 					if (!devs.contains(dev)) {
 						devs.add(dev);

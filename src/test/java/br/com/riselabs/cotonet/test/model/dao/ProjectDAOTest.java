@@ -37,6 +37,7 @@ import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
@@ -58,8 +59,8 @@ public class ProjectDAOTest extends ConflictBasedRepositoryTestCase{
 		DBTestCase.resetTestDB();
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveEmptyProject(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEmptyProject() throws InvalidCotonetBeanException{
 		Project p =  new Project();
 		assertNull(p.getName());
 		assertNull(p.getUrl());
@@ -67,8 +68,8 @@ public class ProjectDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(p);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveEmptyURL(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEmptyURL() throws InvalidCotonetBeanException{
 		Project p =  new Project("");
 		assertEquals("", p.getName());
 		assertEquals("", p.getUrl());
@@ -77,13 +78,13 @@ public class ProjectDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void saveSuccesfully(){
+	public void saveSuccesfully() throws InvalidCotonetBeanException{
 		Project p = new Project("http://hub.com/test", null);
 		assertTrue(dao.save(p));
 	}	
 	
 	@Test
-	public void getProjectByURL(){
+	public void getProjectByURL() throws InvalidCotonetBeanException{
 		Project p = new Project("http://hub.com/test", null);
 		dao.save(p);
 		
@@ -94,7 +95,7 @@ public class ProjectDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void getProjectByID(){
+	public void getProjectByID() throws InvalidCotonetBeanException{
 		Project p = new Project("http://hub.com/test", null);
 		dao.save(p);
 		

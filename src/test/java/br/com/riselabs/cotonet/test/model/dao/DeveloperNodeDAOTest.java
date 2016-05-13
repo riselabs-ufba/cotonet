@@ -25,10 +25,6 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-import java.io.IOException;
-import java.net.URISyntaxException;
-import java.sql.SQLException;
-
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
@@ -39,6 +35,7 @@ import br.com.riselabs.cotonet.model.dao.DAOFactory;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
@@ -51,7 +48,7 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 	private DeveloperNodeDAO dao;
 	
 	@Before
-	public void setup() throws ClassNotFoundException, URISyntaxException, SQLException, IOException{
+	public void setup() throws Exception{
 		DBTestCase.resetTestDB();
 		dao =  (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
 		Project p =  new Project("http://github.com/test", null);
@@ -59,12 +56,12 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@After
-	public void teardown() throws ClassNotFoundException, URISyntaxException, SQLException, IOException{
+	public void teardown() throws Exception{
 		DBTestCase.resetTestDB();
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveEmptyNode(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEmptyNode() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(); 
 		assertNull(node.getName());
 		assertNull(node.getEmail());
@@ -72,8 +69,8 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(node);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveWithoutEmail(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveWithoutEmail() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(1, "dev", null); 
 		assertTrue(node.getSystemID()==1);
 		assertEquals("dev", node.getName());
@@ -81,8 +78,8 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(node);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveWithEmptyEmail(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveWithEmptyEmail() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(1, "dev", ""); 
 		assertTrue(node.getSystemID()==1);
 		assertEquals("dev", node.getName());
@@ -90,8 +87,8 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(node);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveWithoutSystemID(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveWithoutSystemID() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(null, "dev", "dev@gmail.com"); 
 		assertNull(node.getSystemID());
 		assertEquals("dev", node.getName());
@@ -99,8 +96,8 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 		dao.save(node);
 	}
 	
-	@Test(expected = IllegalArgumentException.class)
-	public void saveWithInvalidSystemID(){
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveWithInvalidSystemID() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(200, "dev", "dev@gmail.com"); 
 		assertTrue(node.getSystemID()==200);
 		assertEquals("dev", node.getName());
@@ -109,13 +106,13 @@ public class DeveloperNodeDAOTest extends ConflictBasedRepositoryTestCase{
 	}
 	
 	@Test
-	public void saveSuccesfully(){
+	public void saveSuccesfully() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(1, "dev", "dev@project.com");
 		assertTrue(dao.save(node));
 	}	
 	
 	@Test
-	public void getDeveloper(){
+	public void getDeveloper() throws InvalidCotonetBeanException{
 		DeveloperNode node = new DeveloperNode(1, "dev", "dev@project.com");
 		assertTrue(dao.save(node));
 		

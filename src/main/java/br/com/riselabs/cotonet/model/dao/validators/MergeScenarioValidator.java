@@ -23,8 +23,9 @@ package br.com.riselabs.cotonet.model.dao.validators;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;
-import br.com.riselabs.cotonet.model.dao.ProjectDAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
+import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 
 /**
  * @author Alcemir R. Santos
@@ -33,19 +34,25 @@ import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 public class MergeScenarioValidator implements Validator<MergeScenario> {
 
 	@Override
-	public boolean validate(MergeScenario ms) {
+	public boolean validate(MergeScenario ms) throws InvalidCotonetBeanException {
 		if(ms == null
 				|| ms.getRight() == null
 				|| ms.getBase() == null
 				|| ms.getLeft() == null
 				|| ms.getProjectID() == null){
-			return false;
+			throw new InvalidCotonetBeanException(
+					MergeScenario.class, 
+					"Either the object itself, the `Left Commit', the `Right Commit', the `Base Commit', or the `SystemID' are <null>.",
+					new NullPointerException());
 		}
 		ProjectDAO pdao =  (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
 		Project p = new Project(); 
 		p.setID(ms.getProjectID());
 		if(pdao.get(p) == null){
-			return false;
+			throw new InvalidCotonetBeanException(
+					MergeScenario.class, 
+					"There is no such `SystemID' in the database.",
+					new NullPointerException());
 		}
 		return true;
 	}
