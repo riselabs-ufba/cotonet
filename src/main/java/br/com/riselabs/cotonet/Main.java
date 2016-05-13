@@ -65,7 +65,7 @@ public class Main {
 		options.addOption("h", "help", false, "Print this help page");
 
 		File reposListFile = null;
-		Boolean skipCloning = false;
+		Boolean skipCloneAndNetworks = false;
 		try {
 			CommandLine cmd = parser.parse(options, args);
 
@@ -98,17 +98,11 @@ public class Main {
 					System.exit(1);
 				}
 
-				skipCloning = (cmd.hasOption("rw") || cmd.hasOption("rwt")) ? true : false;
+				skipCloneAndNetworks = (cmd.hasOption("rw") || cmd.hasOption("rwt")) ? true:false;
 
-				// user is running to rewrite the auxiliary files
-				if (skipCloning) {
-					run(reposListFile, skipCloning);
-					Logger.log("COTONET finished. Files rewritten.");
-					System.exit(0);
-				}
-
-				run(reposListFile,skipCloning);
-				
+				MainThread m = new MainThread(reposListFile,skipCloneAndNetworks);
+				m.start();
+				m.join();
 				Logger.log("COTONET finished. Files rewritten.");
 			}
 
@@ -119,23 +113,35 @@ public class Main {
 		}
 	}
 
-	private static void run(File reposListFile, boolean skip) {
-		IOHandler io = new IOHandler();
-		// reponsable to coordinate the threads for each system
-		RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
-		List<String> systems = io.readFile(reposListFile);
+	static class MainThread extends Thread{
+		private File list;
+		private boolean skip;
 		
-		for (String url : systems) {
-			try {
-				pool.runTask(new RepositoryCrawler(url, skip));
-			} catch (IOException e) {
-				Logger.logStackTrace(e);
-			}
-			Logger.log("Repository scheduled: " + url);
+		public  MainThread(File reposListFile, boolean skipCloneAndNetworks) {
+			this.list = reposListFile;
+			this.skip = skipCloneAndNetworks;
 		}
-
-		pool.shutDown();
-	}
+			
+		public void run(){
+				IOHandler io = new IOHandler();
+				// reponsable to coordinate the threads for each system
+				RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
+				List<String> systems = io.readFile(list);
+				
+				for (String url : systems) {
+					try {
+						pool.runTask(new RepositoryCrawler(url, skip));
+					} catch (IOException e) {
+						Logger.logStackTrace(e);
+					}
+					Logger.log("Repository scheduled: " + url);
+				}
+				
+				pool.shutDown();
+			}
+			
+		}
+	
 
 
 }

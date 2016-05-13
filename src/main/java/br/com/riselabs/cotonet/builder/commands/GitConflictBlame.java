@@ -48,7 +48,7 @@ public class GitConflictBlame {
     // we need this to disable the pager
     private static final String[] BLAME_ENV = {"GIT_PAGER=cat"};
 
-    public static HashMap<String, HashMap<String, List<List<Integer>>>> blameChunks(File conflictFile) throws IOException {
+    public static HashMap<String, HashMap<String, List<List<Integer>>>> blameChunks(File conflictFile) throws IOException, InterruptedException {
         /*
          * Track location by using the following encoding for the values:
          * -1 = out of conflict
@@ -67,7 +67,8 @@ public class GitConflictBlame {
         Runtime run = Runtime.getRuntime();
         Process pr = run.exec(BLAME_CMD + " " + conflictFile,
                 BLAME_ENV, conflictFile.getParentFile());
-
+        pr.waitFor();
+        
         // parse output
         BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
         String line;
@@ -227,7 +228,7 @@ public class GitConflictBlame {
         return blames;
     }
 
-    public static HashMap<String, HashMap<String, List<Integer>>> blameFile(File conflictFile) throws IOException {
+    public static HashMap<String, HashMap<String, List<Integer>>> blameFile(File conflictFile) throws IOException, InterruptedException {
         HashMap<String, HashMap<String, List<List<Integer>>>> chunkResult = blameChunks(conflictFile);
         HashMap<String, HashMap<String, List<Integer>>> fileResult = new HashMap<>();
 

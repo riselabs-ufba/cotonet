@@ -18,6 +18,7 @@ import org.eclipse.jgit.api.CheckoutCommand;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.MergeCommand;
 import org.eclipse.jgit.api.MergeResult;
+import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.errors.AmbiguousObjectException;
@@ -158,10 +159,15 @@ public class ConflictBasedNetworkBuilder {
 			RevCommit baseCommit = walk.parseCommit(merger.getBaseCommitId());
 			walk.close();
 
-			MergeScenario scenario = new MergeScenario(getProject().getID(), baseCommit,
-					leftHead, rightHead);
+			MergeScenario scenario = new MergeScenario(getProject().getID(),
+					baseCommit, leftHead, rightHead);
 
 			Git git = Git.wrap(getProject().getRepository());
+			// this is for the cases of restarting after exception in a conflict
+			// scenario analysis
+			git.reset().setRef(scenario.getLeft().getName())
+					.setMode(ResetType.HARD).call();
+
 			CheckoutCommand ckoutCmd = git.checkout();
 			ckoutCmd.setName(scenario.getLeft().getName());
 			ckoutCmd.setStartPoint(scenario.getLeft());
@@ -179,7 +185,10 @@ public class ConflictBasedNetworkBuilder {
 
 			getProject().add(scenario, connet);
 			persistEntry(scenario, connet);
-			
+
+			// workaround to "run merge --abort"
+			git.reset().setRef(scenario.getLeft().getName())
+					.setMode(ResetType.HARD).call();
 		}
 		return getProject();
 	}
