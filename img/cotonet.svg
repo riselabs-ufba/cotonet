@@ -21,6 +21,18 @@
   <defs
      id="defs4293">
     <linearGradient
+       id="linearGradient4488"
+       inkscape:collect="always">
+      <stop
+         id="stop4490"
+         offset="0"
+         style="stop-color:#000000;stop-opacity:1;" />
+      <stop
+         id="stop4492"
+         offset="1"
+         style="stop-color:#000000;stop-opacity:0;" />
+    </linearGradient>
+    <linearGradient
        id="linearGradient4234"
        osb:paint="solid">
       <stop
@@ -122,10 +134,20 @@
        y2="638.58425" />
     <linearGradient
        inkscape:collect="always"
-       xlink:href="#linearGradient4857"
+       xlink:href="#linearGradient4488"
        id="linearGradient4209"
        gradientUnits="userSpaceOnUse"
        gradientTransform="matrix(1.2100823,0,0,1.2100823,94.426442,104.76706)"
+       x1="154.66455"
+       y1="638.58425"
+       x2="851.42853"
+       y2="646.21484" />
+    <linearGradient
+       inkscape:collect="always"
+       xlink:href="#linearGradient4857"
+       id="linearGradient4211"
+       gradientUnits="userSpaceOnUse"
+       gradientTransform="matrix(1.2100822,0,0,1.2100822,-167.23156,102.08216)"
        x1="154.66455"
        y1="638.58425"
        x2="852.38432"
@@ -133,9 +155,9 @@
     <linearGradient
        inkscape:collect="always"
        xlink:href="#linearGradient4857"
-       id="linearGradient4211"
+       id="linearGradient4451"
        gradientUnits="userSpaceOnUse"
-       gradientTransform="matrix(1.2100822,0,0,1.2100822,-167.23156,102.08216)"
+       gradientTransform="matrix(1.2100822,0,0,1.2100822,-65.821728,165.50881)"
        x1="154.66455"
        y1="638.58425"
        x2="852.38432"
@@ -148,9 +170,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="9.1596597"
-     inkscape:cx="973.64914"
-     inkscape:cy="198.45685"
+     inkscape:zoom="0.80960718"
+     inkscape:cx="591.95582"
+     inkscape:cy="137.42671"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -385,7 +407,7 @@
        inkscape:export-ydpi="35.873894" />
     <text
        xml:space="preserve"
-       style="font-style:normal;font-weight:normal;font-size:188.54376221px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:url(#linearGradient4209);stroke-width:6.0504117;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       style="font-style:normal;font-weight:normal;font-size:188.54376221px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:#000000;stroke-width:6.0504117;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
        x="279.51779"
        y="941.79993"
        id="text4195"
@@ -427,16 +449,6 @@
        inkscape:connection-start="#g4311"
        inkscape:export-xdpi="35.873894"
        inkscape:export-ydpi="35.873894" />
-    <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:2.74984789;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="M 944.17592,835.17875 981.5503,789.79187"
-       id="path4276"
-       inkscape:connector-type="polyline"
-       inkscape:connector-curvature="0"
-       inkscape:connection-end="#g4298"
-       inkscape:export-xdpi="35.873894"
-       inkscape:export-ydpi="35.873894"
-       sodipodi:nodetypes="cc" />
     <g
        id="g4311"
        transform="matrix(0.92086395,0,0,0.91238763,65.48827,69.767675)"
@@ -485,13 +497,39 @@
        inkscape:export-xdpi="35.873894"
        inkscape:export-ydpi="35.873894" />
     <path
-       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 981.5503,789.79187 24.7173,79.02712"
-       id="path4202"
-       inkscape:connector-type="polyline"
-       inkscape:connector-curvature="0"
-       inkscape:connection-start="#g4298"
-       inkscape:connection-end="#g4311" />
+       style="opacity:0;fill:none;fill-opacity:1;stroke:#ff0000;stroke-width:3;stroke-linecap:round;stroke-linejoin:bevel;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       id="path4409"
+       sodipodi:type="arc"
+       sodipodi:cx="489.10114"
+       sodipodi:cy="544.04639"
+       sodipodi:rx="490.84793"
+       sodipodi:ry="237.56342"
+       sodipodi:start="3.1868839"
+       sodipodi:end="3.1834631"
+       sodipodi:open="true"
+       d="M -1.2434443,533.29052 A 490.84793,237.56342 0 0 1 510.9053,306.71747 490.84793,237.56342 0 0 1 979.48301,554.39632 490.84793,237.56342 0 0 1 468.13572,781.393 490.84793,237.56342 0 0 1 -1.3165973,534.10241" />
+    <text
+       inkscape:export-ydpi="35.873894"
+       inkscape:export-xdpi="35.873894"
+       transform="scale(0.9759652,1.0246267)"
+       sodipodi:linespacing="125%"
+       id="text4445"
+       y="921.30225"
+       x="105.50802"
+       style="font-style:normal;font-weight:normal;font-size:34.26993942px;line-height:125%;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#999999;fill-opacity:1;stroke:none;stroke-width:1;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:800;font-stretch:normal;font-size:34.26993942px;font-family:'Hiragino Kaku Gothic Std';-inkscape-font-specification:'Hiragino Kaku Gothic Std Ultra-Bold';fill:#999999;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
+         y="921.30225"
+         x="105.50802"
+         id="tspan4447"
+         sodipodi:role="line">from merge contlicts to developer networks<tspan
+   id="tspan4449"
+   style="font-style:normal;font-variant:normal;font-weight:800;font-stretch:normal;font-size:34.26993942px;font-family:'Hiragino Kaku Gothic Std';-inkscape-font-specification:'Hiragino Kaku Gothic Std Ultra-Bold';fill:#999999;stroke:none;stroke-width:1;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1" /></tspan></text>
+    <path
+       style="fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;stroke-miterlimit:4;stroke-dasharray:none"
+       d="m 943.70319,834.88688 37.55598,-45.85323 26.20183,81.22572 z"
+       id="path4486"
+       inkscape:connector-curvature="0" />
     <g
        id="g4298"
        transform="matrix(0.92086395,0,0,0.91238763,53.793893,82.905582)"
@@ -528,14 +566,6 @@
            sodipodi:open="true" />
       </g>
     </g>
-    <path
-       style="display:inline;fill:none;fill-rule:evenodd;stroke:#000000;stroke-width:3;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1"
-       d="m 953.16879,840.05089 53.09881,28.7681"
-       id="path4204"
-       inkscape:connector-type="polyline"
-       inkscape:connector-curvature="0"
-       inkscape:connection-end="#g4311"
-       inkscape:connection-start="#path4260" />
     <path
        transform="matrix(-0.93271825,-0.36060598,-0.36644066,0.93044142,0,0)"
        d="m -1201.5002,437.74231 a 16.950407,17.169262 0 0 1 17.686,-16.37503 16.950407,17.169262 0 0 1 16.1814,17.90036 16.950407,17.169262 0 0 1 -17.6584,16.40554 16.950407,17.169262 0 0 1 -16.2115,-17.8724"
