@@ -200,8 +200,10 @@ public class ConflictBasedNetworkBuilder {
 			List<File> conflictingFiles = getFilesWithConflicts(mResult);
 			connet = build(scenario, conflictingFiles, aType);
 
-			getProject().add(scenario, connet);
-			persistEntry(scenario, connet);
+			if (!connet.getEdges().isEmpty()) {
+				getProject().add(scenario, connet);
+				persistEntry(scenario, connet);
+			}
 
 			// workaround to "run merge --abort"
 			git.reset().setRef(scenario.getLeft().getName())
@@ -252,13 +254,16 @@ public class ConflictBasedNetworkBuilder {
 		// save developers
 		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory
 				.getDAO(CotonetBean.NODE);
-		if (ddao.get(node) == null) {
+		DeveloperNode aux;
+		node.setID(null);
+		if ((aux = ddao.get(node) )== null) {
 			node.setSystemID(getProject().getID());
 			ddao.save(node);
+			aux = node;
+		}else{
+			aux = node;
 		}
-		node.setID(null);
-		node.setID(ddao.get(node).getID());
-		return node.getID();
+		return ddao.get(aux).getID();
 	}
 
 	/**
@@ -270,10 +275,11 @@ public class ConflictBasedNetworkBuilder {
 	 *         {@code NetworkType#FILE_BASED}.
 	 * @throws IOException
 	 * @throws GitAPIException
+	 * @throws InterruptedException 
 	 */
 	public ConflictBasedNetwork build(MergeScenario aScenario,
 			List<File> files, NetworkType type) throws IOException,
-			GitAPIException {
+			GitAPIException, InterruptedException {
 		ConflictBasedNetwork connet = new ConflictBasedNetwork(getProject(),
 				aScenario);
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
@@ -362,6 +368,10 @@ public class ConflictBasedNetworkBuilder {
 	 */
 	private List<DeveloperEdge> buildEdges(List<DeveloperNode> nodes) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+		if(nodes.size()==1){
+			edges.add(new DeveloperEdge(nodes.get(0).getID(), nodes.get(0).getID()));
+			return edges;
+		}
 		for (DeveloperNode from : nodes) {
 			for (DeveloperNode to : nodes) {
 				if (from.equals(to)) {

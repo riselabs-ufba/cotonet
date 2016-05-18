@@ -150,7 +150,7 @@ public class GitConflictBlame {
         return result;
     }
     
-    public static List<ChunkBlame> getConflictingLinesBlames(File conflictFile) throws IOException {
+    public static List<ChunkBlame> getConflictingLinesBlames(File conflictFile) throws IOException, InterruptedException {
         /*
          * Track location by using the following encoding for the values:
          * -1 = out of conflict
@@ -166,7 +166,7 @@ public class GitConflictBlame {
         Runtime run = Runtime.getRuntime();
         Process pr = run.exec(BLAME_CMD + " " + conflictFile,
                 BLAME_ENV, conflictFile.getParentFile());
-
+       	if(pr.isAlive()) pr.waitFor();
         // parse output
         BufferedReader buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
         String line;

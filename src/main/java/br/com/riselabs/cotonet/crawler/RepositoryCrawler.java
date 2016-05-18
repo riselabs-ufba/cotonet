@@ -361,7 +361,7 @@ public class RepositoryCrawler implements Runnable {
 				.getName() + ".conf");
 		IOHandler io = new IOHandler();
 		io.checkAndRemove(systemDir);
-		// makeDirectory(systemDir);
+		systemDir = io.createFile(systemDir.getParentFile(), systemDir.getName());
 		io.writeFile(systemDir, content);
 	}
 

@@ -45,10 +45,6 @@ public class CommandLineBlameResult {
 		this.lineContentMap = aLineToContentMap;
 	}
 	
-	public void add(int lineNumber, String author){
-		
-	}
-
 	/**
 	 * may return null if the value does not exist.
 	 * 
