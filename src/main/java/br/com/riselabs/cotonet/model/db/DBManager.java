@@ -44,7 +44,7 @@ public class DBManager {
 	 * @throws ClassNotFoundException 
 	 * @throws IOException 
 	 */
-	  public static ResultSet executeQuery(String sql) throws SQLException, ClassNotFoundException, IOException {
+	  public static synchronized ResultSet executeQuery(String sql) throws SQLException, ClassNotFoundException, IOException {
 		  ResultSet rs = null;
 		  Connection dbConnection = DBConnection.getConnection();
 		  PreparedStatement stm = dbConnection.prepareStatement(sql);
@@ -75,7 +75,7 @@ public class DBManager {
 	 * @throws ClassNotFoundException 
 	 * @throws IOException 
 	 */
-	public static ResultSet executeQuery(PreparedStatement query) throws ClassNotFoundException, IOException {
+	public static synchronized ResultSet executeQuery(PreparedStatement query) throws ClassNotFoundException, IOException {
 		Connection dbConnection = DBConnection.getConnection();
 		ResultSet result= null;
 		
@@ -103,7 +103,7 @@ public class DBManager {
 	 * @throws SQLException,ClassNotFoundException 
 	 * @throws IOException 
 	 */
-	  public static void executeUpdate(String query) throws SQLException, ClassNotFoundException, IOException {
+	  public static synchronized void executeUpdate(String query) throws SQLException, ClassNotFoundException, IOException {
 		  Connection dbConnection = DBConnection.getConnection();
 		  Statement stm = dbConnection.createStatement();
 		  try {
@@ -123,7 +123,7 @@ public class DBManager {
 		 * @throws ClassNotFoundException 
 	 * @throws IOException 
 		 */
-	  public static boolean executeUpdate(PreparedStatement updateStmt) throws SQLException, ClassNotFoundException, IOException {
+	  public static synchronized boolean executeUpdate(PreparedStatement updateStmt) throws SQLException, ClassNotFoundException, IOException {
 		  Connection dbConnection = DBConnection.getConnection();
 		  int result = 0;
 		  try{

@@ -39,7 +39,7 @@ public abstract class Logger {
 	 * Logs a message in the system log.
 	 * @param message
 	 */
-	public static void log(String message) {
+	public static synchronized void log(String message) {
 		log(log, message);
 	}
 	
@@ -77,7 +77,7 @@ public abstract class Logger {
 	 * 
 	 * @param anException
 	 */
-	public static void logStackTrace(Exception anException) {
+	public static synchronized void logStackTrace(Exception anException) {
 		log(log, getStackTrace(anException));
 	}
 	
