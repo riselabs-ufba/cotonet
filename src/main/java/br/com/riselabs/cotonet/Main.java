@@ -34,6 +34,7 @@ import org.apache.commons.cli.ParseException;
 
 import br.com.riselabs.cotonet.crawler.RepositoryCrawler;
 import br.com.riselabs.cotonet.crawler.threads.RCThreadPoolExecutor;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 import br.com.riselabs.cotonet.util.IOHandler;
@@ -147,7 +148,8 @@ public class Main {
 				
 				for (String url : systems) {
 					try {
-						pool.runTask(new RepositoryCrawler(url, skip));
+						pool.runTask(new RepositoryCrawler(url, skip, NetworkType.CHUNK_BASED));
+//						pool.runTask(new RepositoryCrawler(url, skip, NetworkType.FILE_BASED));
 					} catch (IOException e) {
 						Logger.logStackTrace(e);
 					}
@@ -158,7 +160,5 @@ public class Main {
 			}
 			
 		}
-	
-
 
 }

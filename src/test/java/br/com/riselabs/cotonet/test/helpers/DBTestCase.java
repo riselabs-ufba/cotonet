@@ -42,7 +42,7 @@ public abstract class DBTestCase {
 
 
 	public static void resetTestDB() throws URISyntaxException, SQLException, ClassNotFoundException, IOException {
-		conn = (conn==null)?DBConnection.getConnection():conn;
+		conn = (conn==null)?DBConnection.INSTANCE.getConnection():conn;
 		ClassLoader classloader = Thread.currentThread()
 				.getContextClassLoader();
 		File f = new File(classloader.getResource(testDBFileName).toURI());

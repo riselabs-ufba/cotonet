@@ -21,7 +21,6 @@
 package br.com.riselabs.cotonet.model.dao;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -40,8 +39,6 @@ import br.com.riselabs.cotonet.util.Logger;
  */
 public class ProjectDAO implements DAO<Project> {
 
-	private Connection conn;
-
 	public ProjectDAO() {
 	}
 
@@ -57,19 +54,15 @@ public class ProjectDAO implements DAO<Project> {
 		boolean hasSaved = false;
 		validator.validate(p);
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps = conn
-					.prepareStatement("insert into `systems` (`name`, `url`) values (?,?);");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"insert into `systems` (`name`, `url`) values (?,?);");
 			ps.setString(1, p.getName());
 			ps.setString(2, p.getUrl());
 			hasSaved = DBManager.executeUpdate(ps);
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			Logger.logStackTrace(e);
-		}
-
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 		return hasSaved;
 	}
@@ -77,17 +70,14 @@ public class ProjectDAO implements DAO<Project> {
 	@Override
 	public void delete(Project p) throws InvalidCotonetBeanException {
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps = conn
-					.prepareStatement("delete from `systems` whrere `id`=?;");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"delete from `systems` whrere `id`=?;");
 			ps.setInt(1, p.getID());
 			DBManager.executeUpdate(ps);
 		} catch (Exception e) {
 			Logger.logStackTrace(e);
-		}
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 	}
 
@@ -100,10 +90,8 @@ public class ProjectDAO implements DAO<Project> {
 	@Override
 	public Project get(Project p) throws InvalidCotonetBeanException {
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps = conn
-					.prepareStatement("select * from `systems` where `url`=? or `id`=?;");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"select * from `systems` where `url`=? or `id`=?;");
 			ps.setString(1, p.getUrl());
 			if (p.getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
@@ -117,14 +105,12 @@ public class ProjectDAO implements DAO<Project> {
 				String name = rs.getString("name");
 				String url = rs.getString("url");
 				Project pResult = new Project(id, name, url, null);
-				DBConnection.closeConnection(conn);
 				return pResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			Logger.logStackTrace(e);
-		}
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 		return null;
 	}

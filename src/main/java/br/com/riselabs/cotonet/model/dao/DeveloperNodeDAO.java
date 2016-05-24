@@ -21,7 +21,6 @@
 package br.com.riselabs.cotonet.model.dao;
 
 import java.io.IOException;
-import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -41,8 +40,6 @@ import br.com.riselabs.cotonet.util.Logger;
  */
 public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
-	private Connection conn;
-
 	public DeveloperNodeDAO() {
 	}
 
@@ -52,10 +49,10 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 		boolean hasSaved = false;
 		validator.validate(node);
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps = conn
-					.prepareStatement("insert into `developers` (`name`, `email1`, `system_id`) values (?,?,?);");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"insert into `developers` "
+					+ "(`name`, `email1`, `system_id`)"
+					+ " values (?,?,?);");
 			if (node.getName() == null) {
 				node.setName(node.getEmail().trim().split("@")[0]);
 			}
@@ -65,10 +62,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 			hasSaved = DBManager.executeUpdate(ps);
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			Logger.logStackTrace(e);
-		}
-
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 		return hasSaved;
 	}
@@ -83,10 +78,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 	public List<DeveloperNode> list() throws InvalidCotonetBeanException {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps;
-			ps = conn.prepareStatement("select * from `developers`;");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"select * from `developers`;");
 			ResultSet rs = DBManager.executeQuery(ps);
 
 			while (rs.next()) {
@@ -101,9 +94,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 
 		} catch (SQLException | IOException | ClassNotFoundException e) {
 			Logger.logStackTrace(e);
-		}
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 		return result;
 	}
@@ -112,10 +104,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 	public DeveloperNode get(DeveloperNode node)
 			throws InvalidCotonetBeanException {
 		try {
-			conn = (conn == null || conn.isClosed()) ? DBConnection
-					.getConnection() : conn;
-			PreparedStatement ps = conn
-					.prepareStatement("select * from `developers` where `email1`=? or `id`=?;");
+			PreparedStatement ps = DBManager.getPreparedStatement(
+					"select * from `developers` where `email1`=? or `id`=?;");
 			ps.setString(1, node.getEmail());
 			if (node.getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
@@ -130,14 +120,12 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 				String email = rs.getString("email1");
 				DeveloperNode nodeResult = new DeveloperNode(id, systemid,
 						name, email);
-				DBConnection.closeConnection(conn);
 				return nodeResult;
 			}
 		} catch (SQLException | ClassNotFoundException | IOException e) {
 			Logger.logStackTrace(e);
-		}
-		if (conn != null) {
-			DBConnection.closeConnection(conn);
+		}finally{
+			DBConnection.INSTANCE.closeConnection();
 		}
 		return null;
 	}

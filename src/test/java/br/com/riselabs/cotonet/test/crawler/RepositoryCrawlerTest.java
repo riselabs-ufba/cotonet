@@ -31,6 +31,7 @@ import org.junit.Ignore;
 import org.junit.Test;
 
 import br.com.riselabs.cotonet.crawler.RepositoryCrawler;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 
 /**
@@ -44,7 +45,7 @@ public class RepositoryCrawlerTest {
 
 	@Before
 	public void setup() throws IOException{
-		crawler =  new RepositoryCrawler("", false);
+		crawler =  new RepositoryCrawler("", false, NetworkType.CHUNK_BASED);
 	}
 	
 	@Test

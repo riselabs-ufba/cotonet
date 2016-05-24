@@ -47,7 +47,7 @@ public class DBManagerTest extends DBTestCase {
 
 	@Before
 	public void setup() throws ClassNotFoundException, IOException, URISyntaxException, SQLException{
-		conn = DBConnection.getConnection();
+		conn = DBConnection.INSTANCE.getConnection();
 		resetTestDB();
 	}
 
@@ -59,8 +59,8 @@ public class DBManagerTest extends DBTestCase {
 	// connect to the mysql DB;
 	@Test
 	public void openMySQLConnection() throws ClassNotFoundException,
-			IOException {
-		conn = DBConnection.getConnection();
+			IOException, SQLException {
+		conn = DBConnection.INSTANCE.getConnection();
 		assertNotNull(conn);
 	}
 
@@ -68,7 +68,7 @@ public class DBManagerTest extends DBTestCase {
 	@Test
 	public void closeMySQLConnection() throws SQLException,
 			ClassNotFoundException, IOException {
-		conn = DBConnection.getConnection();
+		conn = DBConnection.INSTANCE.getConnection();
 		conn.close();
 		assertTrue(conn.isClosed());
 	}
@@ -77,7 +77,7 @@ public class DBManagerTest extends DBTestCase {
 	@Test
 	public void executeSelectQuery() throws SQLException,
 			ClassNotFoundException, IOException {
-		conn = DBConnection.getConnection();
+		conn = DBConnection.INSTANCE.getConnection();
 		PreparedStatement statement = conn
 				.prepareStatement("select count(*) \"count\" from `cotonet-test`.`developers`;");
 		ResultSet rs = DBManager.executeQuery(statement);
@@ -89,7 +89,7 @@ public class DBManagerTest extends DBTestCase {
 	@Test
 	public void executeInsertQuery() throws SQLException,
 			ClassNotFoundException, IOException {
-		conn = DBConnection.getConnection();
+		conn = DBConnection.INSTANCE.getConnection();
 		PreparedStatement statement = conn
 				.prepareStatement("insert into `cotonet-test`.`systems` (name, url) values (?,?), (?,?);");
 		statement.setString(1, "test");

@@ -34,14 +34,14 @@ import java.util.Properties;
  * @author Alcemir R. Santos
  *
  */
-public class DBConnection {
+public enum DBConnection {
+	INSTANCE;
 	
-	private static Properties prop = new Properties();
-	private static InputStream input = null;
+	private Properties prop = new Properties();
+	private InputStream input = null;
 
-	public DBConnection() {
-	}
-
+	private Connection conn;
+	
 	public enum TypeConnection {
 		MYSQL, SQLITE
 	}
@@ -52,9 +52,13 @@ public class DBConnection {
 	 * @return
 	 * @throws ClassNotFoundException
 	 * @throws IOException 
+	 * @throws SQLException 
 	 */
-	public static Connection getConnection() throws ClassNotFoundException, IOException {
-		return getConnection(TypeConnection.MYSQL);
+	public synchronized  Connection getConnection() throws ClassNotFoundException, IOException, SQLException {
+		if (conn==null|| conn.isClosed()) {
+			conn = openConnection(TypeConnection.MYSQL);
+		}
+		return conn;
 	}
 
 	/**
@@ -65,7 +69,15 @@ public class DBConnection {
 	 * @throws ClassNotFoundException
 	 * @throws IOException 
 	 */
-	public static Connection getConnection(TypeConnection type)
+	public synchronized  Connection getConnection(TypeConnection type) throws ClassNotFoundException, IOException, SQLException {
+		if (conn==null|| conn.isClosed()) {
+			conn = openConnection(type);
+		}
+		return conn;
+	}
+
+	
+	public synchronized  Connection openConnection(TypeConnection type)
 			throws ClassNotFoundException, IOException {
 		ClassLoader classloader = Thread.currentThread().getContextClassLoader();
 		input = classloader.getResourceAsStream("db.properties");
@@ -75,8 +87,6 @@ public class DBConnection {
 		String user = prop.getProperty("database.user");
 		String pass = prop.getProperty("database.password");
 		
-		// Variável de conexão
-		Connection conn = null;
 		try {
 			switch (type) {
 			case SQLITE:
@@ -112,7 +122,7 @@ public class DBConnection {
 		return conn;
 	}
 
-	public static void closeConnection(Connection conn) {
+	public synchronized void closeConnection() {
 		try {
 			conn.close();
 		} catch (SQLException e) {
@@ -121,25 +131,24 @@ public class DBConnection {
 		}
 	}
 
-	public static void closeConnection(Connection conn, Statement stm) {
+	public synchronized void closeConnection(Statement stm) {
 		try {
 			stm.close();
 		} catch (SQLException e) {
 			System.err.println("Não foi possível fechar a conexão!"
 					+ e.getCause());
 		}
-		closeConnection(conn);
+		closeConnection();
 	}
 
-	public static void closeConnection(Connection conn, Statement stm,
-			ResultSet rs) {
+	public synchronized void closeConnection(Statement stm,	ResultSet rs) {
 		try {
 			rs.close();
 		} catch (SQLException e) {
 			System.err.println("Não foi possível fechar a conexão!"
 					+ e.getCause());
 		}
-		closeConnection(conn, stm);
+		closeConnection(stm);
 	}
 
 }
