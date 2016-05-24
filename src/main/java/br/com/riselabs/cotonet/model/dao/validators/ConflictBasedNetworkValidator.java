@@ -23,7 +23,11 @@ package br.com.riselabs.cotonet.model.dao.validators;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
+import br.com.riselabs.cotonet.model.dao.DAOFactory;
+import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
+import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -31,7 +35,6 @@ import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
  */
 public class ConflictBasedNetworkValidator implements
 		Validator<ConflictBasedNetwork> {
-	private ConflictBasedNetwork theNetwork;
 
 	/**
 	 * Checks whether the network is well formed or not.
@@ -41,9 +44,6 @@ public class ConflictBasedNetworkValidator implements
 	 * @throws InvalidCotonetBeanException 
 	 */
 	public boolean validate(ConflictBasedNetwork obj) throws InvalidCotonetBeanException {
-		if (obj != null) {
-			this.theNetwork = obj;
-		}
 		if (obj.getNodes() == null 
 				|| obj.getEdges() == null 
 				|| obj.getMergeScenarioID() == null)
@@ -65,26 +65,25 @@ public class ConflictBasedNetworkValidator implements
 		// checking nodes
 		for (DeveloperNode dnode : obj.getNodes()) {
 			// data must not be null
-			if (dnode.getID() == null || dnode.getEmail() == null)
+			if ( dnode.getEmail() == null)
 				throw new InvalidCotonetBeanException(
 						ConflictBasedNetwork.class, 
-						"Threre is a developer node with either an `ID' or an `Email' <null>.",
+						"Threre is a developer node with an `Email' <null>.",
 						new NullPointerException());
 			// data must not be empty
-			if (dnode.getID() < 0 || dnode.getEmail().equals(""))
+			if (dnode.getEmail().equals(""))
 				throw new InvalidCotonetBeanException(
 						ConflictBasedNetwork.class, 
-						"Threre is a developer node with either an `ID' or an `Email' invalid.",
+						"Threre is a developer node with an `Email' invalid.",
 						new IllegalArgumentException());
 			// developers must have different IDs and Emails
 			for (DeveloperNode anode : obj.getNodes()) {
 				if (dnode.equals(anode))
 					continue;
-				else if (dnode.getID() == anode.getID()
-						|| dnode.getEmail().equals(anode.getEmail()))
+				else if ( dnode.getEmail().equals(anode.getEmail()))
 					throw new InvalidCotonetBeanException(
 							ConflictBasedNetwork.class, 
-							"Threre is two developer nodes with same `ID' or `Email'.",
+							"Threre is two developer nodes with same  `Email'.",
 							new NullPointerException());
 			}
 		}
@@ -95,27 +94,32 @@ public class ConflictBasedNetworkValidator implements
 						ConflictBasedNetwork.class, 
 						"Threre is a developer edge with either the `LeftID' or the `RightID' <null>.",
 						new NullPointerException());
-			if (!isThereSuchDeveloper(dedge.getLeft())
-					|| !isThereSuchDeveloper(dedge.getRight()))
-				throw new InvalidCotonetBeanException(
-						ConflictBasedNetwork.class, 
-						"Threre is a developer edge with either an `LeftID' or an `RightID' invalid.",
-						new NullPointerException());
+//			if (!isThereSuchDeveloper(dedge.getLeft())
+//					|| !isThereSuchDeveloper(dedge.getRight()))
+//				throw new InvalidCotonetBeanException(
+//						ConflictBasedNetwork.class, 
+//						"Threre is a developer edge with either an `LeftID' or an `RightID' invalid.",
+//						new NullPointerException());
 		}
 		return true;
 	}
 
-	/**
-	 * checks the existence of developer with such ID.
-	 * 
-	 * @param id
-	 * @return
-	 */
-	private boolean isThereSuchDeveloper(Integer id) {
-		for (DeveloperNode n : this.theNetwork.getNodes()) {
-			if (n.getID() == id)
-				return true;
-		}
-		return false;
-	}
+//	/**
+//	 * checks the existence of developer with such ID.
+//	 * 
+//	 * @param id
+//	 * @return
+//	 */
+//	private boolean isThereSuchDeveloper(Integer id) {
+//		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
+//		DeveloperNode n = null;
+//		try {
+//			n = ddao.get(new DeveloperNode(id, null, null, null));
+//		} catch (InvalidCotonetBeanException e) {
+//			Logger.logStackTrace(e);
+//		}		
+//		if (n.getID() == id)
+//			return true;
+//		return false;
+//	}
 }

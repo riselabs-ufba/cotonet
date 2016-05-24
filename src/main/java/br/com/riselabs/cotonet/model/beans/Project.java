@@ -20,9 +20,7 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -38,7 +36,7 @@ public class Project {
 	private String url;
 	private Repository repository;
 	private Map<MergeScenario, ConflictBasedNetwork> scenarioNetMap;
-	private List<DeveloperNode> devs;
+	private Map<Integer, DeveloperNode> devs;
 	private Integer id;
 
 	public Project() {
@@ -59,10 +57,9 @@ public class Project {
 		setUrl(anURL);
 		setRepository(aRepository);
 		setScenarioNetMap(new HashMap<MergeScenario, ConflictBasedNetwork>());
-		setDevs(new ArrayList<DeveloperNode>());
+		setDevs(new HashMap<Integer, DeveloperNode>());
 	}
 	
-
 	public String getName() {
 		return name;
 	}
@@ -101,11 +98,11 @@ public class Project {
 		this.scenarioNetMap = scenarioNetMap;
 	}
 	
-	public List<DeveloperNode> getDevs() {
-		return devs;
+	public Map<Integer, DeveloperNode> getDevs() {
+		return this.devs;
 	}
 
-	public void setDevs(List<DeveloperNode> devs) {
+	public void setDevs(Map<Integer, DeveloperNode> devs) {
 		this.devs = devs;
 	}
 
@@ -130,23 +127,13 @@ public class Project {
 
 	public void add(DeveloperNode dev) {
 		if (this.devs == null) {
-			this.devs = new ArrayList<DeveloperNode>();
+			this.devs = new HashMap<Integer, DeveloperNode>();
 		}
-		this.devs.add(dev);
-	}
-
-	public Integer getNextID() {
-		if (this.getDevs() == null) {
-			this.setDevs(new ArrayList<DeveloperNode>());
-			return 1;
-		}else{
-			return getDevs().size()+1;
-		}
-		
+		this.devs.put(this.devs.size(), dev);
 	}
 
 	public DeveloperNode getDevByMail(String anEmail) {
-		for (DeveloperNode node : getDevs()) {
+		for (DeveloperNode node : getDevs().values()) {
 			if(node.getEmail().equals(anEmail)){
 				return node;
 			}
