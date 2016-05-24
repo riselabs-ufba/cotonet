@@ -30,12 +30,19 @@ import br.com.riselabs.cotonet.model.beans.ChunkBlame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
+import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 
 /**
  * @author Alcemir R. Santos
  *
  */
 public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
+
+	public ChunkBasedNetworkBuilder(Project project) {
+		setProject(project);
+		setType(NetworkType.CHUNK_BASED);
+	}
 
 	/* (non-Javadoc)
 	 * @see br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#getDeveloperNodes(java.util.List)
@@ -51,8 +58,7 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 				CommandLineBlameResult bResult = blame.getResult();
 				for (String anEmail : bResult.getAuthors()) {
 					DeveloperNode newNode = new DeveloperNode(anEmail);
-					if (!getProject().getDevs().contains(newNode)) {
-						newNode.setID(getProject().getNextID());
+					if (!getProject().getDevs().values().contains(newNode)) {
 						getProject().add(newNode);
 					} else {
 						newNode = getProject().getDevByMail(anEmail);

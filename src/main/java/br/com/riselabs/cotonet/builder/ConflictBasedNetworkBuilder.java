@@ -232,7 +232,7 @@ public class ConflictBasedNetworkBuilder {
 				.getDAO(CotonetBean.EDGE);
 		for (DeveloperEdge edge : connet.getEdges()) {
 			boolean leftupdated = false, rightupdated = false;
-			for (DeveloperNode node : getProject().getDevs()) {
+			for (DeveloperNode node : getProject().getDevs().values()) {
 				if (leftupdated && rightupdated) {
 					break;
 				}
@@ -346,8 +346,7 @@ public class ConflictBasedNetworkBuilder {
 			CommandLineBlameResult bResult = blame.getResult();
 			for (String anEmail : bResult.getAuthors()) {
 				DeveloperNode newNode = new DeveloperNode(anEmail);
-				if (!getProject().getDevs().contains(newNode)) {
-					newNode.setID(getProject().getNextID());
+				if (!getProject().getDevs().values().contains(newNode)) {
 					getProject().add(newNode);
 				} else {
 					newNode = getProject().getDevByMail(anEmail);
@@ -525,8 +524,7 @@ public class ConflictBasedNetworkBuilder {
 					DeveloperNode dev = new DeveloperNode();
 					dev.setName(person.getName());
 					dev.setEmail(person.getEmailAddress());
-					if (!getProject().getDevs().contains(dev)) {
-						dev.setID(getProject().getNextID());
+					if (!getProject().getDevs().values().contains(dev)) {
 						getProject().add(dev);
 					} else {
 						dev = getProject().getDevByMail(

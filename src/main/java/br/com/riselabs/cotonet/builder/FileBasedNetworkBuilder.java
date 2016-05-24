@@ -47,6 +47,8 @@ import br.com.riselabs.cotonet.builder.commands.RecursiveBlame;
 import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
+import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 
 /**
  * @author Alcemir R. Santos
@@ -54,6 +56,11 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
  */
 public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
 	
+	public FileBasedNetworkBuilder(Project project) {
+		setProject(project);
+		setType(NetworkType.FILE_BASED);
+	}
+
 	@Override
 	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario,
 			List<File> conflictingFiles) throws IOException,
@@ -92,8 +99,7 @@ public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
 					DeveloperNode dev = new DeveloperNode();
 					dev.setName(person.getName());
 					dev.setEmail(person.getEmailAddress());
-					if (!getProject().getDevs().contains(dev)) {
-						dev.setID(getProject().getNextID());
+					if (!getProject().getDevs().values().contains(dev)) {
 						getProject().add(dev);
 					} else {
 						dev = getProject().getDevByMail(

@@ -43,9 +43,13 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
+import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
+import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
 import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 import br.com.riselabs.cotonet.util.Directories;
@@ -71,17 +75,23 @@ public class RepositoryCrawler implements Runnable {
 	private Integer repositoryID;
 	private File repositoryDir;
 	private boolean skipNetworks;
+	private NetworkType type;
 
 	private File log;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone)
+	public RepositoryCrawler(String systemURL, boolean mustClone, NetworkType type)
 			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
 		setLogFile(new File(Directories.getLogDir(), "thread-"
 				+ getProject().getName() + ".log"));
 		setRepositoryDir(new File(Directories.getReposDir(), project.getName()));
+		setType(type);
 		tagsMap = new HashMap<String, String>();
+	}
+
+	private void setType(NetworkType type) {
+		this.type = type;
 	}
 
 	public Project getProject() {
@@ -146,30 +156,22 @@ public class RepositoryCrawler implements Runnable {
 	 * @throws TransportException
 	 * @throws GitAPIException
 	 */
-	class Clonner extends Thread {
-		private Repository repo;
-
-		@Override
-		public void run() {
+		public Repository cloneRepository() {
 			Git result;
 			try {
-				Logger.log(log, "[Cloning Start]" + getProject().getName());
+				Logger.log(log, "["+ getProject().getName()+ "] Cloning Start.");
 				result = Git.cloneRepository()
 						.setURI(project.getUrl() + ".git")
 						.setDirectory(repositoryDir).call();
-				Logger.log(log, "[Cloning Finished]" + getProject().getName());
-				this.repo = result.getRepository();
+				Logger.log(log, "["+ getProject().getName()+ "] Cloning Finished.");
+				return result.getRepository();
 			} catch (GitAPIException e) {
-				Logger.log(log, "[Cloning Failed]" + getProject().getName());
+				Logger.log(log, "["+ getProject().getName()+ "] Cloning Failed.");
 				Logger.logStackTrace(log, e);
 			}
 			System.gc();
+			return null;
 		}
-
-		public Repository getRepository() {
-			return this.repo;
-		}
-	}
 
 	@Override
 	public void run() {
@@ -179,36 +181,34 @@ public class RepositoryCrawler implements Runnable {
 			try(Repository aux = openRepository()){
 				repo = aux;
 			}catch(RepositoryNotFoundException e){
-				Clonner t = new Clonner();
-				t.start();
-				t.join();
-				repo = t.getRepository();
+				repo = cloneRepository();
 			}
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-				buildNetworks();
+//				ConflictBasedNetworkBuilder builder = 
+//						new ConflictBasedNetworkBuilder(project);
+//				builder.execute();
+				AbstractNetworkBuilder builderr = null;
+ 	 			switch (type) {
+ 	 			case FILE_BASED:
+ 	 				builderr =  new FileBasedNetworkBuilder(getProject());
+ 	 				break;
+				case CHUNK_BASED:
+				default:
+					builderr =  new ChunkBasedNetworkBuilder( getProject());
+					break;
+				}
+ 	 			builderr.build();
 			}
 			// persisting aux files
-			createTagToSHA1MappingFile();
-			createCodefaceConfFile();
+// TODO			createTagToSHA1MappingFile();
+// TODO			createCodefaceConfFile();
 
 		} catch (Exception e) {
 			Logger.logStackTrace(log, e);
 		}
 		System.gc();
-	}
-
-	@Deprecated
-	private Repository cloneRepository() throws IOException,
-			InvalidRemoteException, TransportException, GitAPIException {
-		Logger.log("Starting the cloning of \"" + project.getName());
-
-		Git result = Git.cloneRepository().setURI(project.getUrl() + ".git")
-				.setDirectory(repositoryDir).call();
-		Logger.log("Clonning of \"" + project.getName() + "\": [_DONE_]");
-		System.gc();
-		return result.getRepository();
 	}
 
 	private Repository openRepository() throws IOException {
@@ -272,12 +272,6 @@ public class RepositoryCrawler implements Runnable {
 			count++;
 		}
 
-	}
-
-	public Project buildNetworks() throws Exception {
-		ConflictBasedNetworkBuilder builder = new ConflictBasedNetworkBuilder(
-				project);
-		return builder.execute();
 	}
 
 	/**
