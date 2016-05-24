@@ -34,8 +34,8 @@ public class ConflictBasedNetwork {
 	private Integer id;
 	private Integer mergeScenarioID;
 	private MergeScenario scenario;
-	private NetworkType type;
 	
+	private NetworkType type;
 	private List<DeveloperNode> nodes;
 	private List<DeveloperEdge> edges;
 	
@@ -66,6 +66,11 @@ public class ConflictBasedNetwork {
 		setMergeScenarioID(mergeScenarioID);
 	}
 
+
+	public ConflictBasedNetwork(List<DeveloperNode> lNodes,
+			List<DeveloperEdge> lEdges, NetworkType aType) {
+		this(null, null, lNodes, lEdges, aType);
+	}
 
 	public void setType(NetworkType aType) {
 		this.type = aType;

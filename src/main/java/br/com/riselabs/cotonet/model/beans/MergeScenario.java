@@ -41,6 +41,10 @@ public class MergeScenario {
 		this(null, null, null, null, null);
 	}
 
+	public MergeScenario(RevCommit base, RevCommit left, RevCommit right) {
+		this(null, base, left, right);
+	}
+	
 	public MergeScenario(Integer projectID, RevCommit baseCommit, RevCommit leftParent,
 			RevCommit rightParent) {
 		setProjectID(projectID);
