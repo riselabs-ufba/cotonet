@@ -85,6 +85,7 @@ public abstract class AbstractNetworkBuilder {
 					new ArrayList<DeveloperNode>(project.getDevs().values()),
 					edges, type));
 		}
+		DBWritter.INSTANCE.persist(project);
 	}
 
 	/**
