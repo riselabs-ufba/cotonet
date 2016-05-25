@@ -195,7 +195,9 @@ public class RepositoryCrawler implements Runnable {
 					builder =  new ChunkBasedNetworkBuilder( getProject());
 					break;
 				}
+ 	 			builder.setLogFile(log);
  	 			builder.build();
+ 	 			builder.persist();
 			}
 			// persisting aux files
 // TODO			createTagToSHA1MappingFile();

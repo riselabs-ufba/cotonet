@@ -48,6 +48,7 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.db.DBWritter;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -57,6 +58,7 @@ public abstract class AbstractNetworkBuilder {
 
 	protected Project project;
 	protected NetworkType type;
+	private File log;
 
 	public Project getProject() {
 		return project;
@@ -74,6 +76,10 @@ public abstract class AbstractNetworkBuilder {
 		this.type = type;
 	}
 
+	public void setLogFile(File log) {
+		this.log = log;
+	}
+	
 	/**
 	 * Builds the conflict based network considering the previously network type
 	 * set and the repository information provided. In case the the type was not
@@ -90,6 +96,7 @@ public abstract class AbstractNetworkBuilder {
 	 */
 	public void build() throws IOException, CheckoutConflictException,
 			GitAPIException, InterruptedException {
+		Logger.log(log, "["+project.getName()+"] Network building start.");
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
 			getDeveloperNodes(scenario);
@@ -98,13 +105,17 @@ public abstract class AbstractNetworkBuilder {
 					new ArrayList<DeveloperNode>(project.getDevs().values()),
 					edges, type));
 		}
+		Logger.log(log, "["+project.getName()+"] Network building finished.");
 	}
 
 	/**
 	 * Triggers the persistence of the networks built for this project.
 	 */
 	public void persist() {
+		Logger.log(log, "["+project.getName()+"] Project persistence start.");
+		DBWritter.INSTANCE.setLogFile(log);
 		DBWritter.INSTANCE.persist(project);
+		Logger.log(log, "["+project.getName()+"] Project persistence start.");
 	}
 
 	/**
@@ -213,4 +224,5 @@ public abstract class AbstractNetworkBuilder {
 	protected abstract List<DeveloperNode> getDeveloperNodes(
 			MergeScenario scenario) throws IOException, GitAPIException,
 			InterruptedException;
+
 }

@@ -20,6 +20,7 @@
  */
 package br.com.riselabs.cotonet.model.db;
 
+import java.io.File;
 import java.util.Map.Entry;
 
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
@@ -53,6 +54,12 @@ public enum DBWritter {
 
 	private Project current;
 
+	private File log;
+	
+	public void setLogFile(File log) {
+		this.log =  log;
+	}
+
 	/**
 	 * Persists a given project.
 	 * 
@@ -75,7 +82,7 @@ public enum DBWritter {
 				persistEntry(e.getKey(), e.getValue());
 			}
 		} catch (InvalidCotonetBeanException e) {
-			Logger.logStackTrace(e);
+			Logger.logStackTrace(log, e);
 		}
 
 	}
