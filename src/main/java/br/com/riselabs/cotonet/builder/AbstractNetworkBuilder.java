@@ -36,11 +36,14 @@ import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.JGitInternalException;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -79,7 +82,7 @@ public abstract class AbstractNetworkBuilder {
 	public void setLogFile(File log) {
 		this.log = log;
 	}
-	
+
 	/**
 	 * Builds the conflict based network considering the previously network type
 	 * set and the repository information provided. In case the the type was not
@@ -176,8 +179,16 @@ public abstract class AbstractNetworkBuilder {
 		Git git = Git.wrap(getProject().getRepository());
 		// this is for the cases of restarting after exception in a conflict
 		// scenario analysis
-		git.reset().setRef(scenario.getLeft().getName())
-				.setMode(ResetType.HARD).call();
+		try {
+			git.reset().setRef(scenario.getLeft().getName())
+					.setMode(ResetType.HARD).call();
+		} catch (JGitInternalException e) {
+			ExternalGitCommand egit = new ExternalGitCommand();
+			egit.setType(CommandType.RESET)
+					.setDirectory(
+							project.getRepository().getDirectory()
+									.getParentFile()).call();
+		}
 
 		CheckoutCommand ckoutCmd = git.checkout();
 		ckoutCmd.setName(scenario.getLeft().getName());

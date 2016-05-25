@@ -28,7 +28,8 @@ import java.util.List;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
-import br.com.riselabs.cotonet.builder.commands.GitConflictBlame;
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
 import br.com.riselabs.cotonet.model.beans.ChunkBlame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -60,9 +61,13 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		List<File> conflictingFiles = getConflictingFiles(scenario);
 		for (File file : conflictingFiles) {
-			List<ChunkBlame> blames = GitConflictBlame
-					.getConflictingLinesBlames(file);
 
+			ExternalGitCommand egit = new ExternalGitCommand();
+			List<ChunkBlame> blames = (List<ChunkBlame>)
+					egit.setDirectory(file)
+					.setType(CommandType.BLAME)
+					.call();
+			
 			for (ChunkBlame blame : blames) {
 				CommandLineBlameResult bResult = blame.getResult();
 				for (String anEmail : bResult.getAuthors()) {
