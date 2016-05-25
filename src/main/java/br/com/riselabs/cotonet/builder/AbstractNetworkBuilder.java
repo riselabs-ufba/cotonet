@@ -99,7 +99,7 @@ public abstract class AbstractNetworkBuilder {
 	 */
 	public void build() throws IOException, CheckoutConflictException,
 			GitAPIException, InterruptedException {
-		Logger.log(log, "["+project.getName()+"] Network building start.");
+		Logger.log(log, "[" + project.getName() + "] Network building start.");
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
 			getDeveloperNodes(scenario);
@@ -108,17 +108,20 @@ public abstract class AbstractNetworkBuilder {
 					new ArrayList<DeveloperNode>(project.getDevs().values()),
 					edges, type));
 		}
-		Logger.log(log, "["+project.getName()+"] Network building finished.");
+		Logger.log(log, "[" + project.getName()
+				+ "] Network building finished.");
 	}
 
 	/**
 	 * Triggers the persistence of the networks built for this project.
 	 */
 	public void persist() {
-		Logger.log(log, "["+project.getName()+"] Project persistence start.");
+		Logger.log(log, "[" + project.getName()
+				+ "] Project persistence start.");
 		DBWritter.INSTANCE.setLogFile(log);
 		DBWritter.INSTANCE.persist(project);
-		Logger.log(log, "["+project.getName()+"] Project persistence finished.");
+		Logger.log(log, "[" + project.getName()
+				+ "] Project persistence finished.");
 	}
 
 	/**

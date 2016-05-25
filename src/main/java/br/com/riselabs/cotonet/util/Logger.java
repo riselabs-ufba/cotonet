@@ -24,6 +24,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 /**
  * @author Alcemir R. Santos
@@ -68,8 +70,13 @@ public abstract class Logger {
 	 * @param logFile
 	 * @param anException
 	 */
-	public static void logStackTrace(File logFile, Exception anException){
-		log(logFile, getStackTrace(anException));
+	public static synchronized void logStackTrace(File logFile, Exception anException){
+		StringBuilder sb =  new StringBuilder();
+		String timestamp =  new SimpleDateFormat("yyyy.MM.dd.HH.mm.ss").format(new Date());
+		sb.append(">>>>> Exception Begin: ("+timestamp+")\n");
+		sb.append(getStackTrace(anException));
+		sb.append("<<<<< Exception End.");
+		log(logFile, sb.toString());
 	}
 
 	/**
@@ -78,7 +85,7 @@ public abstract class Logger {
 	 * @param anException
 	 */
 	public static synchronized void logStackTrace(Exception anException) {
-		log(log, getStackTrace(anException));
+		logStackTrace(log, anException);
 	}
 	
 	private static String getStackTrace(Exception anException) {
