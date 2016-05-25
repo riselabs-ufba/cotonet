@@ -129,7 +129,7 @@ public class Project {
 		if (this.devs == null) {
 			this.devs = new HashMap<Integer, DeveloperNode>();
 		}
-		this.devs.put(this.devs.size(), dev);
+		this.devs.put(this.devs.size()+1, dev);
 	}
 
 	public DeveloperNode getDevByMail(String anEmail) {

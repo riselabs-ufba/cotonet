@@ -173,7 +173,7 @@ public abstract class AbstractNetworkBuilder {
 			Map<Integer, DeveloperNode> map) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 		if (map.size() == 1) {
-			edges.add(new DeveloperEdge(map.get(0).getID(), map.get(0).getID()));
+			edges.add(new DeveloperEdge(1, 1));
 			return edges;
 		}
 		for (Entry<Integer, DeveloperNode> from : map.entrySet()) {
