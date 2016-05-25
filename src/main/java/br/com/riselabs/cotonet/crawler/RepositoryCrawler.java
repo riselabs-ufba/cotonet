@@ -45,7 +45,6 @@ import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
 import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
 import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
-import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
 import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
@@ -186,20 +185,17 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-//				ConflictBasedNetworkBuilder builder = 
-//						new ConflictBasedNetworkBuilder(project);
-//				builder.execute();
-				AbstractNetworkBuilder builderr = null;
+				AbstractNetworkBuilder builder = null;
  	 			switch (type) {
  	 			case FILE_BASED:
- 	 				builderr =  new FileBasedNetworkBuilder(getProject());
+ 	 				builder =  new FileBasedNetworkBuilder(getProject());
  	 				break;
 				case CHUNK_BASED:
 				default:
-					builderr =  new ChunkBasedNetworkBuilder( getProject());
+					builder =  new ChunkBasedNetworkBuilder( getProject());
 					break;
 				}
- 	 			builderr.build();
+ 	 			builder.build();
 			}
 			// persisting aux files
 // TODO			createTagToSHA1MappingFile();

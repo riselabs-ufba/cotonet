@@ -74,17 +74,36 @@ public abstract class AbstractNetworkBuilder {
 		this.type = type;
 	}
 
+	/**
+	 * Builds the conflict based network considering the previously network type
+	 * set and the repository information provided. In case the the type was not
+	 * set yet, this method used the <i>default</i> type (<i>i.e.,</i> the
+	 * chunk-based {@code NetworkType.CHUNK_BASED}).
+	 * 
+	 * OBS: You should set the repository first, otherwise this method will
+	 * return <code>null</code>
+	 * 
+	 * @return {@code aNetwork}
+	 * 
+	 *         -<code>null</code> when the repository is not set.
+	 * @throws Exception
+	 */
 	public void build() throws IOException, CheckoutConflictException,
 			GitAPIException, InterruptedException {
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
-			List<File> conflictingFiles = getConflictingFiles(scenario);
-			getDeveloperNodes(scenario, conflictingFiles);
+			getDeveloperNodes(scenario);
 			List<DeveloperEdge> edges = getDeveloperEdges(project.getDevs());
 			project.add(scenario, new ConflictBasedNetwork(
 					new ArrayList<DeveloperNode>(project.getDevs().values()),
 					edges, type));
 		}
+	}
+
+	/**
+	 * Triggers the persistence of the networks built for this project.
+	 */
+	public void persist() {
 		DBWritter.INSTANCE.persist(project);
 	}
 
@@ -141,7 +160,7 @@ public abstract class AbstractNetworkBuilder {
 	 * @throws CheckoutConflictException
 	 * @throws GitAPIException
 	 */
-	private List<File> getConflictingFiles(MergeScenario scenario)
+	protected List<File> getConflictingFiles(MergeScenario scenario)
 			throws CheckoutConflictException, GitAPIException {
 		Git git = Git.wrap(getProject().getRepository());
 		// this is for the cases of restarting after exception in a conflict
@@ -181,7 +200,8 @@ public abstract class AbstractNetworkBuilder {
 				if (from.getValue().equals(to.getValue())) {
 					continue;
 				}
-				DeveloperEdge edge = new DeveloperEdge(from.getKey(), to.getKey());
+				DeveloperEdge edge = new DeveloperEdge(from.getKey(),
+						to.getKey());
 				if (!edges.contains(edge)) {
 					edges.add(edge);
 				}
@@ -191,6 +211,6 @@ public abstract class AbstractNetworkBuilder {
 	}
 
 	protected abstract List<DeveloperNode> getDeveloperNodes(
-			MergeScenario scenario, List<File> conflictingFiles)
-			throws IOException, GitAPIException, InterruptedException;
+			MergeScenario scenario) throws IOException, GitAPIException,
+			InterruptedException;
 }

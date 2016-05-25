@@ -23,7 +23,6 @@ package br.com.riselabs.cotonet.test.suites;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import br.com.riselabs.cotonet.test.model.DBManagerTest;
 import br.com.riselabs.cotonet.test.model.beans.ConflictBasedNetworkTest;
 import br.com.riselabs.cotonet.test.model.beans.DeveloperEdgeTest;
 import br.com.riselabs.cotonet.test.model.beans.DeveloperNodeTest;
@@ -32,6 +31,8 @@ import br.com.riselabs.cotonet.test.model.dao.DeveloperEdgeDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.DeveloperNodeDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.MergeScenarioDAOTest;
 import br.com.riselabs.cotonet.test.model.dao.ProjectDAOTest;
+import br.com.riselabs.cotonet.test.model.db.DBManagerTest;
+import br.com.riselabs.cotonet.test.model.db.DBWritterTest;
 import br.com.riselabs.cotonet.test.model.handlers.FilesWritingTest;
 
 /**
@@ -53,7 +54,8 @@ import br.com.riselabs.cotonet.test.model.handlers.FilesWritingTest;
 	// Handlers
 	FilesWritingTest.class,
 	// Model
-	DBManagerTest.class
+	DBManagerTest.class,
+	DBWritterTest.class
 })
 public class CotonetModelTestSuite {
 

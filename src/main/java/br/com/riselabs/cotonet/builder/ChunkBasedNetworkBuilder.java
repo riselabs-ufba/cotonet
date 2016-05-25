@@ -25,6 +25,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.jgit.api.errors.CheckoutConflictException;
+import org.eclipse.jgit.api.errors.GitAPIException;
+
 import br.com.riselabs.cotonet.builder.commands.GitConflictBlame;
 import br.com.riselabs.cotonet.model.beans.ChunkBlame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
@@ -44,16 +47,22 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 		setType(NetworkType.CHUNK_BASED);
 	}
 
-	/* (non-Javadoc)
-	 * @see br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#getDeveloperNodes(java.util.List)
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see
+	 * br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#getDeveloperNodes
+	 * (java.util.List)
 	 */
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario, List<File> conflictingFiles) throws IOException, InterruptedException {
+	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario)
+			throws IOException, InterruptedException, CheckoutConflictException, GitAPIException {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
+		List<File> conflictingFiles = getConflictingFiles(scenario);
 		for (File file : conflictingFiles) {
 			List<ChunkBlame> blames = GitConflictBlame
 					.getConflictingLinesBlames(file);
-			
+
 			for (ChunkBlame blame : blames) {
 				CommandLineBlameResult bResult = blame.getResult();
 				for (String anEmail : bResult.getAuthors()) {
@@ -71,6 +80,5 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 		}
 		return result;
 	}
-
 
 }

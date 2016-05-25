@@ -23,7 +23,8 @@ package br.com.riselabs.cotonet.test.suites;
 import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 
-import br.com.riselabs.cotonet.test.builder.ConflictBasedNetworkBuilderTest;
+import br.com.riselabs.cotonet.test.builder.ChunkBasedNetworkBuilderTest;
+import br.com.riselabs.cotonet.test.builder.FileBasedNetworkBuilderTest;
 import br.com.riselabs.cotonet.test.builder.command.GitConflictBlameTest;
 import br.com.riselabs.cotonet.test.builder.command.RecursiveBlameTest;
 
@@ -38,7 +39,8 @@ import br.com.riselabs.cotonet.test.builder.command.RecursiveBlameTest;
 	RecursiveBlameTest.class,
 	GitConflictBlameTest.class,
 	// Builders
-	ConflictBasedNetworkBuilderTest.class
+	ChunkBasedNetworkBuilderTest.class,
+	FileBasedNetworkBuilderTest.class
 })
 public class CotonetBuilderTestSuite {
 

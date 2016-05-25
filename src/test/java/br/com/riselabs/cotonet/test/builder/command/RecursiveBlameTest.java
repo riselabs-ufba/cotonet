@@ -29,11 +29,9 @@ import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
-import br.com.riselabs.cotonet.builder.ConflictBasedNetworkBuilder;
 import br.com.riselabs.cotonet.builder.commands.RecursiveBlame;
 import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
-import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
 
 /**
@@ -43,20 +41,18 @@ import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
  */
 public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 
-	private ConflictBasedNetworkBuilder builder;
-
+	RecursiveBlame blamer;
+	
 	@Before
 	public void setup() {
-		builder = new ConflictBasedNetworkBuilder();
+		blamer =  new RecursiveBlame();
 	}
 
 	@Test
 	public void shouldRetriveBlamesFromTheRightBranch() throws Exception {
-		builder.setProject(new Project("", db));
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
-		RecursiveBlame blame = new RecursiveBlame();
 
-		List<Blame> blames = blame.setRepository(db)
+		List<Blame> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getRight())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
@@ -74,11 +70,9 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	
 	@Test
 	public void shouldRetriveBlamesFromTheLeftBranch() throws Exception {
-		builder.setProject(new Project("", db));
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
-		RecursiveBlame blame = new RecursiveBlame();
 
-		List<Blame> blames = blame.setRepository(db)
+		List<Blame> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getLeft())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
@@ -97,15 +91,13 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	
 	@Test
 	public void shouldRetriveBlamesFromBothBranch() throws Exception {
-		builder.setProject(new Project("", db));
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
-		RecursiveBlame blame = new RecursiveBlame();
 
-		List<Blame> blames = blame.setRepository(db)
+		List<Blame> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getRight())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
-		blames.addAll(blame.setRepository(db)
+		blames.addAll(blamer.setRepository(db)
 				.setBeginRevision(scenario.getLeft())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call());
