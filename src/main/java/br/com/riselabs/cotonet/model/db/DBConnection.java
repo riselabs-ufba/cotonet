@@ -40,7 +40,7 @@ public enum DBConnection {
 	private Properties prop = new Properties();
 	private InputStream input = null;
 
-	private Connection conn;
+	private static Connection conn;
 	
 	public enum TypeConnection {
 		MYSQL, SQLITE
