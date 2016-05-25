@@ -38,4 +38,7 @@ public interface DAO<T> {
 	public abstract T get(T object) throws InvalidCotonetBeanException;
 
 	public abstract List<T> search(T object) throws InvalidCotonetBeanException;
+	
+	abstract void closeResources();
+		
 }

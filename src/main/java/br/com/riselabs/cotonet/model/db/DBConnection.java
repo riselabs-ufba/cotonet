@@ -55,10 +55,7 @@ public enum DBConnection {
 	 * @throws SQLException 
 	 */
 	public synchronized  Connection getConnection() throws ClassNotFoundException, IOException, SQLException {
-		if (conn==null|| conn.isClosed()) {
-			conn = openConnection(TypeConnection.MYSQL);
-		}
-		return conn;
+		return getConnection(TypeConnection.MYSQL);
 	}
 
 	/**
@@ -100,7 +97,7 @@ public enum DBConnection {
 				// This will load the MySQL driver, each DB has its own driver
 				String dbClass = "com.mysql.jdbc.Driver";
 				Class.forName(dbClass).newInstance();
-				String dbURL = "jdbc:mysql://localhost/"+db+"?autoReconnect=true&useSSL=false";
+				String dbURL = "jdbc:mysql://localhost/"+db+"?autoReconnect=true&useSSL=false&failOverReadOnly=false&maxReconnects=100";
 				// Setup the connection with the DB
 				conn = DriverManager.getConnection(dbURL, user, pass);
 				break;

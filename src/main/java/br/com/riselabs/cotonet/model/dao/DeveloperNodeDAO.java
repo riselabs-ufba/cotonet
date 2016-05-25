@@ -20,7 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.dao;
 
-import java.io.IOException;
+import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,8 +30,7 @@ import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperNodeValidator;
-import br.com.riselabs.cotonet.model.db.DBConnection;
-import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -39,8 +39,17 @@ import br.com.riselabs.cotonet.util.Logger;
  *
  */
 public class DeveloperNodeDAO implements DAO<DeveloperNode> {
-
+	private Connection conn = null;
+	private PreparedStatement ps = null;
+	private ResultSet rs = null;
+	
+	private File log = null;
+	
 	public DeveloperNodeDAO() {
+	}
+
+	public void setLog(File f) {
+		log = f;
 	}
 
 	@Override
@@ -49,7 +58,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 		boolean hasSaved = false;
 		validator.validate(node);
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps =  conn.prepareStatement(
 					"insert into `developers` "
 					+ "(`name`, `email1`, `system_id`)"
 					+ " values (?,?,?);");
@@ -59,11 +69,16 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 			ps.setString(1, node.getName());
 			ps.setString(2, node.getEmail());
 			ps.setInt(3, node.getSystemID());
-			hasSaved = DBManager.executeUpdate(ps);
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+			hasSaved = ps.executeUpdate()>0?true:false;
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return hasSaved;
 	}
@@ -71,16 +86,15 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 	@Override
 	public void delete(DeveloperNode object) throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
-
 	}
 
 	@Override
 	public List<DeveloperNode> list() throws InvalidCotonetBeanException {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
-					"select * from `developers`;");
-			ResultSet rs = DBManager.executeQuery(ps);
+			conn = Database.getConnection();
+			ps = conn.prepareStatement("select * from `developers`;");
+			rs = ps.executeQuery();
 
 			while (rs.next()) {
 				DeveloperNode node = new DeveloperNode();
@@ -92,10 +106,15 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 				result.add(node);
 			}
 
-		} catch (SQLException | IOException | ClassNotFoundException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return result;
 	}
@@ -104,7 +123,8 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 	public DeveloperNode get(DeveloperNode node)
 			throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `developers` where `email1`=? or `id`=?;");
 			ps.setString(1, node.getEmail());
 			if (node.getID() == null) {
@@ -112,7 +132,7 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 			} else {
 				ps.setInt(2, node.getID());
 			}
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer systemid = rs.getInt("system_id");
@@ -122,10 +142,15 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 						name, email);
 				return nodeResult;
 			}
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return null;
 	}
@@ -137,4 +162,15 @@ public class DeveloperNodeDAO implements DAO<DeveloperNode> {
 		return null;
 	}
 
+	@Override
+	public void closeResources() {
+		try {
+			if(rs!=null) rs.close();
+			if(ps!=null) ps.close();
+			if(conn!=null) conn.close();
+		} catch (SQLException e) {
+			Logger.logStackTrace(log, e);
+		}
+	}
+	
 }

@@ -30,7 +30,8 @@ import java.util.Map.Entry;
 
 import org.junit.Test;
 
-import br.com.riselabs.cotonet.builder.commands.GitConflictBlame;
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
+import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
 import br.com.riselabs.cotonet.model.beans.ChunkBlame;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
@@ -40,7 +41,7 @@ import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
  * @author Alcemir R. Santos
  *
  */
-public class GitConflictBlameTest extends ConflictBasedRepositoryTestCase {
+public class ExternalGitComandTest extends ConflictBasedRepositoryTestCase {
 
 	@Test
 	public void buildChunckBasedNetworkCommandLineBased() throws Exception {
@@ -48,7 +49,8 @@ public class GitConflictBlameTest extends ConflictBasedRepositoryTestCase {
 		runMerge(aScenario);
 		
 		String mergedfilepath = db.getDirectory().getParent().concat(File.separator+"Bar.java");
-		List<ChunkBlame> chunksBlames = GitConflictBlame.getConflictingLinesBlames(new File(mergedfilepath));
+		ExternalGitCommand egit = new ExternalGitCommand();
+		List<ChunkBlame> chunksBlames = egit.setType(CommandType.BLAME).setDirectory(new File(mergedfilepath)).call();
 		
 		Iterator<ChunkBlame> iBlames = chunksBlames.iterator();
 		ChunkBlame aBlame = iBlames.next();

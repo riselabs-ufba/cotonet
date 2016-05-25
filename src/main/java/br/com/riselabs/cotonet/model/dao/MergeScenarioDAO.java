@@ -20,7 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.dao;
 
-import java.io.IOException;
+import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,8 +30,7 @@ import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.dao.validators.MergeScenarioValidator;
-import br.com.riselabs.cotonet.model.db.DBConnection;
-import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -39,8 +39,17 @@ import br.com.riselabs.cotonet.util.Logger;
  *
  */
 public class MergeScenarioDAO implements DAO<MergeScenario> {
-
+	private Connection conn = null;
+	private PreparedStatement ps = null;
+	private ResultSet rs = null;
+	
+	private File log = null;
+	
 	public MergeScenarioDAO() {
+	}
+	
+	public void setLog(File f) {
+		log = f;
 	}
 
 	@Override
@@ -49,7 +58,8 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 		boolean hasSaved = false;
 		validator.validate(ms);
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"insert into `merge_scenarios` "
 					+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`) "
 					+ "values (?,?,?,?);");
@@ -57,11 +67,16 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			ps.setString(2, ms.getBase().getName());
 			ps.setString(3, ms.getLeft().getName());
 			ps.setString(4, ms.getRight().getName());
-			hasSaved = DBManager.executeUpdate(ps);
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+			hasSaved = ps.executeUpdate()>0?true:false;
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return hasSaved;
 	}
@@ -69,14 +84,20 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 	@Override
 	public void delete(MergeScenario object) throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"delete from `merge_cenarios` whrere `id`=?;");
 			ps.setInt(1, object.getID());
-			DBManager.executeUpdate(ps);
-		} catch (Exception e) {
-			Logger.logStackTrace(e);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 	}
 
@@ -84,9 +105,10 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 	public List<MergeScenario> list() throws InvalidCotonetBeanException {
 		List<MergeScenario> result = new ArrayList<MergeScenario>();
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `merge_scenarios`;");
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 
 			while (rs.next()) {
 				MergeScenario ms = new MergeScenario();
@@ -98,10 +120,15 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				result.add(ms);
 			}
 
-		} catch (SQLException | IOException | ClassNotFoundException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return result;
 	}
@@ -110,7 +137,8 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 	public MergeScenario get(MergeScenario ms)
 			throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `merge_scenarios`"
 					+ " where (`commit_base`=? and `commit_left`=? and `commit_right`=?) "
 					+ "or `id`=?;");
@@ -136,7 +164,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			} else {
 				ps.setInt(4, ms.getID());
 			}
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer systemID = rs.getInt("system_id");
@@ -147,10 +175,15 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 						left, right);
 				return pResult;
 			}
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return null;
 	}
@@ -162,4 +195,14 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 		return null;
 	}
 
+	@Override
+	public void closeResources() {
+		try {
+			if(rs!=null) rs.close();
+			if(ps!=null) ps.close();
+			if(conn!=null) conn.close();
+		} catch (SQLException e) {
+			Logger.logStackTrace(log, e);
+		}
+	}
 }

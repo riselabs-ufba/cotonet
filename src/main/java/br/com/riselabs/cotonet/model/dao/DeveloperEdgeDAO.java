@@ -20,7 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.dao;
 
-import java.io.IOException;
+import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -29,8 +30,7 @@ import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperEdgeValidator;
-import br.com.riselabs.cotonet.model.db.DBConnection;
-import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -40,7 +40,17 @@ import br.com.riselabs.cotonet.util.Logger;
  */
 public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 
+	private Connection conn = null;
+	private PreparedStatement ps = null;
+	private ResultSet rs = null;
+	
+	private File log = null;
+	
 	public DeveloperEdgeDAO() {
+	}
+
+	public void setLog(File f) {
+		log = f;
 	}
 
 	@Override
@@ -49,17 +59,23 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 		boolean hasSaved = false;
 		validator.validate(edge);
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps =  conn.prepareStatement(
 					"insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
 			ps.setInt(1, edge.getNetworkID());
 			ps.setInt(2, edge.getLeft());
 			ps.setInt(3, edge.getRight());
 			ps.setInt(4, edge.getWeight());
-			hasSaved = DBManager.executeUpdate(ps);
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+			hasSaved = ps.executeUpdate()>0?true:false;
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return hasSaved;
 	}
@@ -74,9 +90,10 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 	public List<DeveloperEdge> list() throws InvalidCotonetBeanException {
 		List<DeveloperEdge> result = new ArrayList<DeveloperEdge>();
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `edges`;");
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 
 			while (rs.next()) {
 				DeveloperEdge edge = new DeveloperEdge();
@@ -88,10 +105,15 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 				result.add(edge);
 			}
 
-		} catch (SQLException | IOException | ClassNotFoundException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return result;
 	}
@@ -100,7 +122,8 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 	public DeveloperEdge get(DeveloperEdge edge)
 			throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `edges` where (`network_id`=? and `dev_a`=? and `dev_b`=?) or `id`=?;");
 
 			if (edge.getNetworkID() == null) {
@@ -123,7 +146,7 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 			} else {
 				ps.setInt(4, edge.getID());
 			}
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer networkid = rs.getInt("network_id");
@@ -133,10 +156,15 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 						left, right);
 				return nodeResult;
 			}
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return null;
 	}
@@ -148,4 +176,14 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 		return null;
 	}
 
+	@Override
+	public void closeResources() {
+		try {
+			if(rs!=null) rs.close();
+			if(ps!=null) ps.close();
+			if(conn!=null) conn.close();
+		} catch (SQLException e) {
+			Logger.logStackTrace(log, e);
+		}
+	}
 }

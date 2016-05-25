@@ -25,7 +25,7 @@ import org.junit.runners.Suite;
 
 import br.com.riselabs.cotonet.test.builder.ChunkBasedNetworkBuilderTest;
 import br.com.riselabs.cotonet.test.builder.FileBasedNetworkBuilderTest;
-import br.com.riselabs.cotonet.test.builder.command.GitConflictBlameTest;
+import br.com.riselabs.cotonet.test.builder.command.ExternalGitComandTest;
 import br.com.riselabs.cotonet.test.builder.command.RecursiveBlameTest;
 
 /**
@@ -37,7 +37,7 @@ import br.com.riselabs.cotonet.test.builder.command.RecursiveBlameTest;
 @Suite.SuiteClasses({
 	// Commands
 	RecursiveBlameTest.class,
-	GitConflictBlameTest.class,
+	ExternalGitComandTest.class,
 	// Builders
 	ChunkBasedNetworkBuilderTest.class,
 	FileBasedNetworkBuilderTest.class

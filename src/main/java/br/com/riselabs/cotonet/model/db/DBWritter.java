@@ -84,7 +84,6 @@ public enum DBWritter {
 		} catch (InvalidCotonetBeanException e) {
 			Logger.logStackTrace(log, e);
 		}
-
 	}
 
 	/**

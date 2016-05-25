@@ -30,8 +30,10 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -43,7 +45,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
-import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 
 /**
@@ -180,17 +182,15 @@ public class IOHandler {
 	public Map<Integer, String> readURLsFromDatabase() throws IOException {
 		Map<Integer, String> result = new HashMap<Integer, String>();
 		try {
-			ResultSet rs = DBManager
-					.executeQuery("select r.id ids, r.url urls from repository as r");
+			Connection conn = Database.getConnection();
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery("select r.id ids, r.url urls from repository as r");
 			while (rs.next()) {
 				Integer id = rs.getInt("ids");
 				String url = rs.getString("urls");
 				url = url.replace("http:", "https:");
 				result.put(id, url);
 			}
-		} catch (ClassNotFoundException e) {
-			// getConnection fail.
-			e.printStackTrace();
 		} catch (SQLException e) {
 			// prepareStatement fail.
 			e.printStackTrace();
@@ -215,7 +215,9 @@ public class IOHandler {
 		// + " limit ", max_scenarios, sep="";
 
 		try {
-			ResultSet rs = DBManager.executeQuery(sql);
+			Connection conn = Database.getConnection();
+			Statement st = conn.createStatement();
+			ResultSet rs = st.executeQuery(sql);
 			while (rs.next()) {
 				try(RevWalk w = new RevWalk(repo)){
 					RevCommit left = w.parseCommit(repo.resolve(rs.getString("leftsha")));
@@ -225,8 +227,6 @@ public class IOHandler {
 				}
 			}
 		} catch (SQLException e) {
-			e.printStackTrace();
-		} catch (ClassNotFoundException e) {
 			e.printStackTrace();
 		}
 

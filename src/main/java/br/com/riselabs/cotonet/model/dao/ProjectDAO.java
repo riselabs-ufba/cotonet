@@ -20,7 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.dao;
 
-import java.io.IOException;
+import java.io.File;
+import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -28,8 +29,7 @@ import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.validators.ProjectValidator;
-import br.com.riselabs.cotonet.model.db.DBConnection;
-import br.com.riselabs.cotonet.model.db.DBManager;
+import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -38,8 +38,17 @@ import br.com.riselabs.cotonet.util.Logger;
  *
  */
 public class ProjectDAO implements DAO<Project> {
-
-	public ProjectDAO() {
+	private Connection conn = null;
+	private PreparedStatement ps = null;
+	private ResultSet rs = null;
+	
+	private File log = null;
+	
+	public ProjectDAO(){
+	}
+	
+	public void setLog(File f) {
+		log = f;
 	}
 
 	/**
@@ -54,15 +63,21 @@ public class ProjectDAO implements DAO<Project> {
 		boolean hasSaved = false;
 		validator.validate(p);
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"insert into `systems` (`name`, `url`) values (?,?);");
 			ps.setString(1, p.getName());
 			ps.setString(2, p.getUrl());
-			hasSaved = DBManager.executeUpdate(ps);
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+			hasSaved = ps.executeUpdate() > 0 ? true : false;
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return hasSaved;
 	}
@@ -70,27 +85,33 @@ public class ProjectDAO implements DAO<Project> {
 	@Override
 	public void delete(Project p) throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"delete from `systems` whrere `id`=?;");
 			ps.setInt(1, p.getID());
-			DBManager.executeUpdate(ps);
-		} catch (Exception e) {
-			Logger.logStackTrace(e);
+			ps.executeUpdate();
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 	}
 
 	@Override
 	public List<Project> list() throws InvalidCotonetBeanException {
-		// TODO Auto-generated method stub
 		return null;
 	}
 
 	@Override
 	public Project get(Project p) throws InvalidCotonetBeanException {
 		try {
-			PreparedStatement ps = DBManager.getPreparedStatement(
+			conn = Database.getConnection();
+			ps = conn.prepareStatement(
 					"select * from `systems` where `url`=? or `id`=?;");
 			ps.setString(1, p.getUrl());
 			if (p.getID() == null) {
@@ -99,7 +120,7 @@ public class ProjectDAO implements DAO<Project> {
 				ps.setInt(2, p.getID());
 			}
 
-			ResultSet rs = DBManager.executeQuery(ps);
+			rs = ps.executeQuery();
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				String name = rs.getString("name");
@@ -107,10 +128,15 @@ public class ProjectDAO implements DAO<Project> {
 				Project pResult = new Project(id, name, url, null);
 				return pResult;
 			}
-		} catch (SQLException | ClassNotFoundException | IOException e) {
-			Logger.logStackTrace(e);
+		} catch (SQLException e) {
+			try {
+				conn.rollback();
+			} catch (SQLException e1) {
+				Logger.logStackTrace(log, e);
+			}
+			Logger.logStackTrace(log, e);
 		}finally{
-			DBConnection.INSTANCE.closeConnection();
+			closeResources();
 		}
 		return null;
 	}
@@ -120,6 +146,17 @@ public class ProjectDAO implements DAO<Project> {
 			throws InvalidCotonetBeanException {
 		// TODO Auto-generated method stub
 		return null;
+	}
+
+	@Override
+	public void closeResources() {
+		try {
+			if(rs!=null) rs.close();
+			if(ps!=null) ps.close();
+			if(conn!=null) conn.close();
+		} catch (SQLException e) {
+			Logger.logStackTrace(log, e);
+		}
 	}
 
 }
