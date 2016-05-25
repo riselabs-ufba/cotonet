@@ -28,7 +28,7 @@ import java.sql.PreparedStatement;
 import java.sql.SQLException;
 import java.util.ArrayList;
 
-import br.com.riselabs.cotonet.model.db.DBConnection;
+import br.com.riselabs.cotonet.model.db.Database;
 
 /**
  * @author Alcemir R. Santos
@@ -42,7 +42,7 @@ public abstract class DBTestCase {
 
 
 	public static void resetTestDB() throws URISyntaxException, SQLException, ClassNotFoundException, IOException {
-		conn = (conn==null)?DBConnection.INSTANCE.getConnection():conn;
+		conn = (conn==null)?Database.getConnection():conn;
 		ClassLoader classloader = Thread.currentThread()
 				.getContextClassLoader();
 		File f = new File(classloader.getResource(testDBFileName).toURI());
