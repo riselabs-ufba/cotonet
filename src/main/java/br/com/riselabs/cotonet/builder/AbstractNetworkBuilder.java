@@ -115,7 +115,7 @@ public abstract class AbstractNetworkBuilder {
 		Logger.log(log, "["+project.getName()+"] Project persistence start.");
 		DBWritter.INSTANCE.setLogFile(log);
 		DBWritter.INSTANCE.persist(project);
-		Logger.log(log, "["+project.getName()+"] Project persistence start.");
+		Logger.log(log, "["+project.getName()+"] Project persistence finished.");
 	}
 
 	/**
