@@ -47,7 +47,7 @@ public class DeveloperNodeValidator implements Validator<DeveloperNode> {
 		if (node.getEmail().equals("")) {
 			throw new InvalidCotonetBeanException(
 					DeveloperNode.class, 
-					"Developer `Email is empty.",
+					"Developer `Email' is empty.",
 					new IllegalArgumentException());
 		}
 		ProjectDAO pdao =  (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);

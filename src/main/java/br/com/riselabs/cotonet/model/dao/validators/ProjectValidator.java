@@ -36,7 +36,7 @@ public class ProjectValidator implements Validator<Project> {
 		|| p.getUrl() == null){
 			throw new InvalidCotonetBeanException(
 					Project.class, 
-					"Either the object itself, the `Name', the `URL' are <null>.",
+					"Either the object itself, the `Name', or the `URL' are <null>.",
 					new NullPointerException());
 		}
 		
@@ -44,7 +44,7 @@ public class ProjectValidator implements Validator<Project> {
 		|| p.getUrl().equals("")){
 			throw new InvalidCotonetBeanException(
 					Project.class, 
-					"Either the object itself, the `Name', the `URL' are empty.",
+					"Either the object itself, the `Name', or the `URL' are empty.",
 					new IllegalArgumentException());
 		}
 		return true;

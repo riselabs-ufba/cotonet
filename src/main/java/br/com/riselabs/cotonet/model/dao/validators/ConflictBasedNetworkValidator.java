@@ -68,13 +68,13 @@ public class ConflictBasedNetworkValidator implements
 			if ( dnode.getEmail() == null)
 				throw new InvalidCotonetBeanException(
 						ConflictBasedNetwork.class, 
-						"Threre is a developer node with an `Email' <null>.",
+						"There is a developer node with an `Email' <null>.",
 						new NullPointerException());
 			// data must not be empty
 			if (dnode.getEmail().equals(""))
 				throw new InvalidCotonetBeanException(
 						ConflictBasedNetwork.class, 
-						"Threre is a developer node with an `Email' invalid.",
+						"There is a developer node with an `Email' invalid.",
 						new IllegalArgumentException());
 			// developers must have different IDs and Emails
 			for (DeveloperNode anode : obj.getNodes()) {
@@ -83,7 +83,7 @@ public class ConflictBasedNetworkValidator implements
 				else if ( dnode.getEmail().equals(anode.getEmail()))
 					throw new InvalidCotonetBeanException(
 							ConflictBasedNetwork.class, 
-							"Threre is two developer nodes with same  `Email'.",
+							"There is two developer nodes with same  `Email'.",
 							new NullPointerException());
 			}
 		}
@@ -92,7 +92,7 @@ public class ConflictBasedNetworkValidator implements
 			if (dedge.getLeft() == null || dedge.getRight() == null)
 				throw new InvalidCotonetBeanException(
 						ConflictBasedNetwork.class, 
-						"Threre is a developer edge with either the `LeftID' or the `RightID' <null>.",
+						"There is a developer edge with either the `LeftID' or the `RightID' <null>.",
 						new NullPointerException());
 //			if (!isThereSuchDeveloper(dedge.getLeft())
 //					|| !isThereSuchDeveloper(dedge.getRight()))
