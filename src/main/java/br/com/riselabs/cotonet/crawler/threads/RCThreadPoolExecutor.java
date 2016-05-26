@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
  *
  */
 public class RCThreadPoolExecutor {
-	int poolSize = 12;
+	int poolSize = 4;
 
 	int maxPoolSize = 24;
 
