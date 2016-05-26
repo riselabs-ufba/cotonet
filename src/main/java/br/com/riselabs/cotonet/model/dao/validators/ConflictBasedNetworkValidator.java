@@ -21,13 +21,9 @@
 package br.com.riselabs.cotonet.model.dao.validators;
 
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
-import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
-import br.com.riselabs.cotonet.model.dao.DAOFactory;
-import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
-import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
+import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
-import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -87,20 +83,29 @@ public class ConflictBasedNetworkValidator implements
 							new NullPointerException());
 			}
 		}
-		// checking edges
-		for (DeveloperEdge dedge : obj.getEdges()) {
-			if (dedge.getLeft() == null || dedge.getRight() == null)
-				throw new InvalidCotonetBeanException(
-						ConflictBasedNetwork.class, 
-						"There is a developer edge with either the `LeftID' or the `RightID' <null>.",
-						new NullPointerException());
+//		// checking edges
+//		for (DeveloperEdge dedge : obj.getEdges()) {
+//			if (dedge.getDevA().getID() == null || dedge.getDevB().getID() == null)
+//				throw new InvalidCotonetBeanException(
+//						ConflictBasedNetwork.class, 
+//						"There is a developer edge with either the `LeftID' or the `RightID' <null>.",
+//						new NullPointerException());
 //			if (!isThereSuchDeveloper(dedge.getLeft())
 //					|| !isThereSuchDeveloper(dedge.getRight()))
 //				throw new InvalidCotonetBeanException(
 //						ConflictBasedNetwork.class, 
 //						"Threre is a developer edge with either an `LeftID' or an `RightID' invalid.",
 //						new NullPointerException());
+//		}
+		// checking merge scenario
+		if(new MergeScenarioDAO().get(obj.getScenario())==null){
+			throw new InvalidCotonetBeanException(
+					ConflictBasedNetwork.class, 
+					"There is no such a merge scenario ("+obj.getScenario().getID()
+					+") in the database.",
+					new NullPointerException());
 		}
+			
 		return true;
 	}
 
