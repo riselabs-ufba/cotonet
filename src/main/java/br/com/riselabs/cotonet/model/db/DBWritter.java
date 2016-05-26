@@ -55,9 +55,9 @@ public enum DBWritter {
 	private Project current;
 
 	private File log;
-	
+
 	public void setLogFile(File log) {
-		this.log =  log;
+		this.log = log;
 	}
 
 	/**
@@ -66,20 +66,37 @@ public enum DBWritter {
 	 * @param project
 	 */
 	public synchronized void persist(Project project) {
-		pdao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
 		try {
-			Project aux;
-			if ((aux = pdao.get(project)) == null) {
-				pdao.save(project);
-				aux = pdao.get(project);
-				current = project;
-				current.setID(aux.getID());
-			}
-			current = project;
-			current.setID(aux.getID());
+			// persist the project itself
+			current = persistProject(project);
+
 			for (Entry<MergeScenario, ConflictBasedNetwork> e : project
 					.getScenarioNetMap().entrySet()) {
-				persistEntry(e.getKey(), e.getValue());
+				if(e.getValue()==null)
+					continue; //ghost scenario
+					
+				// save merge scenario
+				MergeScenario scenario = e.getKey();
+				scenario.setProjectID(current.getID());
+				scenario = persistScenario(scenario);
+
+				// save networks
+				ConflictBasedNetwork connet = e.getValue();
+				connet.setMergeScenarioID(scenario.getID());
+				connet = persistNetwork(connet);
+
+				// save developers
+				for (DeveloperNode dev : connet.getNodes()) {
+					dev.setSystemID(current.getID());
+					dev = persistNode(dev);
+				}
+
+				// save edges
+				for (DeveloperEdge edge : connet.getEdges()) {
+//					edge = updateEdgeIDs(edge, connet.getNodes());
+					edge.setNetworkID(connet.getID());
+					edge = persistEdge(edge);
+				}
 			}
 		} catch (InvalidCotonetBeanException e) {
 			Logger.logStackTrace(log, e);
@@ -87,70 +104,103 @@ public enum DBWritter {
 	}
 
 	/**
-	 * Persists the merge scenario and the conflict based network.
+	 * Persists a project in the database and update the parameter with the its
+	 * respective ID.
 	 * 
-	 * @param scenario
-	 * @param connet
+	 * @param project
+	 * @return - the project with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized void persistEntry(MergeScenario scenario,
-			ConflictBasedNetwork connet) throws InvalidCotonetBeanException {
-		// save merge scenario
-		msdao = (MergeScenarioDAO) DAOFactory
-				.getDAO(CotonetBean.MERGE_SCENARIO);
-		scenario.setProjectID(current.getID());
-		msdao.save(scenario);
-		scenario.setID(msdao.get(scenario).getID());
-
-		// save networks
-		cndao = (ConflictBasedNetworkDAO) DAOFactory
-				.getDAO(CotonetBean.CONFLICT_NETWORK);
-		connet.setMergeScenarioID(scenario.getID());
-		cndao.save(connet);
-		connet.setID(cndao.get(connet).getID());
-
-		// save edges
-		dedao = (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
-		for (DeveloperEdge edge : connet.getEdges()) {
-			boolean leftupdated = false, rightupdated = false;
-			for (Entry<Integer, DeveloperNode> node : current.getDevs().entrySet()) {
-				if (leftupdated && rightupdated) {
-					break;
-				}
-				if (node.getKey() == edge.getLeft() && !leftupdated) {
-					edge.setLeft(getNodeIDFromDB(node.getValue()));
-					leftupdated = true;
-				} else if (node.getKey() == edge.getRight() && !rightupdated) {
-					edge.setRight(getNodeIDFromDB(node.getValue()));
-					rightupdated = true;
-				}
-			}
-			edge.setNetworkID(connet.getID());
-			dedao.save(edge);
+	private synchronized Project persistProject(Project project)
+			throws InvalidCotonetBeanException {
+		pdao = new ProjectDAO();
+		Project aux;
+		if ((aux = pdao.get(project)) == null) {
+			pdao.save(project);
 		}
-
+		aux = pdao.get(project);
+		project.setID(aux.getID());
+		return project;
 	}
 
 	/**
-	 * Persists the developer node if it does not exists yet and returns it ID in the database.
+	 * Persists a merge scenario in the database and update the parameter with
+	 * the its respective ID.
 	 * 
-	 * @param node
-	 * @return
+	 * @param scenario
+	 * @return - the scenario with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized Integer getNodeIDFromDB(DeveloperNode node)
+	private synchronized MergeScenario persistScenario(MergeScenario scenario)
+			throws InvalidCotonetBeanException {
+		msdao = new MergeScenarioDAO();
+		MergeScenario aux;
+		if ((aux = msdao.get(scenario)) == null) {
+			msdao.save(scenario);
+		}
+		aux = msdao.get(scenario);
+		scenario.setID(aux.getID());
+		return scenario;
+	}
+
+	/**
+	 * Persists a network in the database and update the parameter with the its
+	 * respective ID.
+	 * 
+	 * @param network
+	 * @return - the network with the updated ID.
+	 * @throws InvalidCotonetBeanException
+	 */
+	private synchronized ConflictBasedNetwork persistNetwork(
+			ConflictBasedNetwork connet) throws InvalidCotonetBeanException {
+		cndao = new ConflictBasedNetworkDAO();
+		ConflictBasedNetwork aux;
+		if ((aux = cndao.get(connet)) == null) {
+			cndao.save(connet);
+		}
+		aux = cndao.get(connet);
+		connet.setID(aux.getID());
+		return connet;
+	}
+
+	/**
+	 * Persists an edge in the database and update the parameter with the its
+	 * respective ID.
+	 * 
+	 * @param edge
+	 * @return - the edge with the updated ID.
+	 * @throws InvalidCotonetBeanException
+	 */
+	private synchronized DeveloperEdge persistEdge(DeveloperEdge edge)
+			throws InvalidCotonetBeanException {
+		dedao = new DeveloperEdgeDAO();
+		DeveloperEdge aux;
+		if ((aux = dedao.get(edge)) == null) {
+			dedao.save(edge);
+		}
+		aux = dedao.get(edge);
+		edge.setID(aux.getID());
+		return edge;
+	}
+
+	/**
+	 * Persists a node in the database and update the parameter with the its
+	 * respective ID.
+	 * 
+	 * @param edge
+	 * @return - the edge with the updated ID.
+	 * @throws InvalidCotonetBeanException
+	 */
+	private synchronized DeveloperNode persistNode(DeveloperNode node)
 			throws InvalidCotonetBeanException {
 		// save developers
 		dndao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
 		DeveloperNode aux;
 		if ((aux = dndao.get(node)) == null) {
-			node.setSystemID(current.getID());
 			dndao.save(node);
-			aux = node;
-		} else {
-			aux = node;
 		}
-		return dndao.get(aux).getID();
+		aux = dndao.get(node);
+		node.setID(aux.getID());
+		return node;
 	}
-
 }
