@@ -62,26 +62,23 @@ public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
 	}
 
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario) throws IOException,
+	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario, File file) throws IOException,
 			InterruptedException, GitAPIException {
 		List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
 
 		RecursiveBlame blamer = new RecursiveBlame(getProject()
 				.getRepository());
 		List<Blame> blames = null;
-		List<File> conflictingFiles = getConflictingFiles(scenario);
-		for (File file : conflictingFiles) {
-			blames = blamer
+		blames = blamer
 					.setRepository(getProject().getRepository())
 					.setBeginRevision(scenario.getRight())
 					.setEndRevision(scenario.getBase())
 					.setFilePath(file.getName()).call();
-			blames.addAll(blamer
+		blames.addAll(blamer
 					.setRepository(getProject().getRepository())
 					.setBeginRevision(scenario.getLeft())
 					.setEndRevision(scenario.getBase())
 					.setFilePath(file.getName()).call());
-		}
 
 		List<RevCommit> commits = getCommitsFrom(scenario);
 		

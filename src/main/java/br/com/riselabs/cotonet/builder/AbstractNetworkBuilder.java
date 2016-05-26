@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -102,11 +100,8 @@ public abstract class AbstractNetworkBuilder {
 		Logger.log(log, "[" + project.getName() + "] Network building start.");
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
-			getDeveloperNodes(scenario);
-			List<DeveloperEdge> edges = getDeveloperEdges(project.getDevs());
-			project.add(scenario, new ConflictBasedNetwork(
-					new ArrayList<DeveloperNode>(project.getDevs().values()),
-					edges, type));
+			ConflictBasedNetwork connet = getConflictNetwork(scenario);
+			project.add(scenario, connet);
 		}
 		Logger.log(log, "[" + project.getName()
 				+ "] Network building finished.");
@@ -177,7 +172,7 @@ public abstract class AbstractNetworkBuilder {
 	 * @throws CheckoutConflictException
 	 * @throws GitAPIException
 	 */
-	protected List<File> getConflictingFiles(MergeScenario scenario)
+	private List<File> getConflictingFiles(MergeScenario scenario)
 			throws CheckoutConflictException, GitAPIException {
 		Git git = Git.wrap(getProject().getRepository());
 		// this is for the cases of restarting after exception in a conflict
@@ -202,9 +197,16 @@ public abstract class AbstractNetworkBuilder {
 		mergeCmd.setCommit(false);
 		mergeCmd.setStrategy(MergeStrategy.RECURSIVE);
 		mergeCmd.include(scenario.getRight());
-		MergeResult mResult = mergeCmd.call();
 
-		Set<String> conflictingPaths = mResult.getConflicts().keySet();
+		Set<String> conflictingPaths;
+		try {
+			// TODO dealing with MissingObjectException
+			MergeResult mResult = mergeCmd.call();
+			// TODO dealing with Ghosts conflicts
+			conflictingPaths = mResult.getConflicts().keySet();
+		} catch (NullPointerException | JGitInternalException e) {
+			return null;
+		}
 		List<File> result = new ArrayList<File>();
 		for (String path : conflictingPaths) {
 			result.add(new File(getProject().getRepository().getDirectory()
@@ -213,20 +215,39 @@ public abstract class AbstractNetworkBuilder {
 		return result;
 	}
 
-	private List<DeveloperEdge> getDeveloperEdges(
-			Map<Integer, DeveloperNode> map) {
+	private ConflictBasedNetwork getConflictNetwork(MergeScenario scenario)
+			throws IOException, GitAPIException, InterruptedException {
+		ConflictBasedNetwork connet = null;
+		List<File> files = getConflictingFiles(scenario);
+		if(files==null){
+			return null; // dealing with ghost scenarios
+		}
+		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
-		if (map.size() == 1) {
-			edges.add(new DeveloperEdge(1, 1));
+		for (File file : files) {
+			List<DeveloperNode> fileNodes = getDeveloperNodes(scenario, file);
+			nodes.addAll(fileNodes);
+			edges.addAll(getDeveloperEdges(fileNodes));
+		}
+		connet = new ConflictBasedNetwork(project, scenario, nodes, edges, type);
+		return connet;
+	}
+
+	private List<DeveloperEdge> getDeveloperEdges(List<DeveloperNode> nodes) {
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+		// if there is only one developer, create loop
+		if (nodes.size() == 1) {
+			DeveloperNode node = nodes.get(0);
+			edges.add(new DeveloperEdge(node, node));
 			return edges;
 		}
-		for (Entry<Integer, DeveloperNode> from : map.entrySet()) {
-			for (Entry<Integer, DeveloperNode> to : map.entrySet()) {
-				if (from.getValue().equals(to.getValue())) {
+		// crete a fully connected graph
+		for (DeveloperNode from : nodes) {
+			for (DeveloperNode to : nodes) {
+				if (from.equals(to)) {
 					continue;
 				}
-				DeveloperEdge edge = new DeveloperEdge(from.getKey(),
-						to.getKey());
+				DeveloperEdge edge = new DeveloperEdge(from, to);
 				if (!edges.contains(edge)) {
 					edges.add(edge);
 				}
@@ -236,7 +257,7 @@ public abstract class AbstractNetworkBuilder {
 	}
 
 	protected abstract List<DeveloperNode> getDeveloperNodes(
-			MergeScenario scenario) throws IOException, GitAPIException,
+			MergeScenario scenario, File file) throws IOException, GitAPIException,
 			InterruptedException;
 
 }

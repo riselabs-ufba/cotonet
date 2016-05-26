@@ -48,38 +48,36 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 		setType(NetworkType.CHUNK_BASED);
 	}
 
-	/*
-	 * (non-Javadoc)
+	/**
+	 * Creates the nodes for a given file.
+	 * 
+	 * @param scenario - can be null
+	 * @param file - a file with conflicts
 	 * 
 	 * @see
 	 * br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#getDeveloperNodes
 	 * (java.util.List)
 	 */
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario)
-			throws IOException, InterruptedException, CheckoutConflictException, GitAPIException {
+	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario,
+			File file) throws IOException, InterruptedException,
+			CheckoutConflictException, GitAPIException {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
-		List<File> conflictingFiles = getConflictingFiles(scenario);
-		for (File file : conflictingFiles) {
+		ExternalGitCommand egit = new ExternalGitCommand();
+		List<ChunkBlame> blames = (List<ChunkBlame>) egit.setDirectory(file)
+				.setType(CommandType.BLAME).call();
 
-			ExternalGitCommand egit = new ExternalGitCommand();
-			List<ChunkBlame> blames = (List<ChunkBlame>)
-					egit.setDirectory(file)
-					.setType(CommandType.BLAME)
-					.call();
-			
-			for (ChunkBlame blame : blames) {
-				CommandLineBlameResult bResult = blame.getResult();
-				for (String anEmail : bResult.getAuthors()) {
-					DeveloperNode newNode = new DeveloperNode(anEmail);
-					if (!getProject().getDevs().values().contains(newNode)) {
-						getProject().add(newNode);
-					} else {
-						newNode = getProject().getDevByMail(anEmail);
-					}
-					if (!result.contains(newNode)) {
-						result.add(newNode);
-					}
+		for (ChunkBlame blame : blames) {
+			CommandLineBlameResult bResult = blame.getResult();
+			for (String anEmail : bResult.getAuthors()) {
+				DeveloperNode newNode = new DeveloperNode(anEmail);
+				if (!getProject().getDevs().values().contains(newNode)) {
+					getProject().add(newNode);
+				} else {
+					newNode = getProject().getDevByMail(anEmail);
+				}
+				if (!result.contains(newNode)) {
+					result.add(newNode);
 				}
 			}
 		}
