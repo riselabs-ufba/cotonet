@@ -29,28 +29,29 @@ public class DeveloperEdge {
 	private Integer id;
 	private Integer networkID;
 
-	private Integer left;
-	private Integer right;
+	private DeveloperNode devA;
+	private DeveloperNode devB;
+	
 	private Integer weight;
 
 	public DeveloperEdge() {
-		this(null, null, null, null);
+		this(null, null, null, null, 1);
 	}
 	
 	public DeveloperEdge(Integer id) {
-		this(id, null, null, null);
-	}
-	
-	public DeveloperEdge(Integer left, Integer right) {
-		this(null, null, left, right);
+		this(id, null, null, null, 1);
 	}
 
-	public DeveloperEdge(Integer id, Integer networkID, Integer left, Integer right) {
+	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB) {
+		this(null, null, devA, devB, 1);
+	}
+	
+	public DeveloperEdge(Integer id, Integer networkID, DeveloperNode devA, DeveloperNode devB, Integer weight) {
 		setID(id);
 		setNetworkID(networkID);
-		setLeft(left);
-		setRight(right);
-		setWeight(1);
+		setDevA(devA);
+		setDevB(devB);
+		setWeight(weight);
 	}
 	
 	public Integer getID() {
@@ -69,28 +70,41 @@ public class DeveloperEdge {
 		this.networkID = left;
 	}
 
-	public Integer getLeft() {
-		return left;
+	public Integer getId() {
+		return id;
 	}
 
-	public void setLeft(Integer left) {
-		this.left = left;
+	public void setId(Integer id) {
+		this.id = id;
 	}
 
-	public Integer getRight() {
-		return right;
+	public DeveloperNode getDevA() {
+		return devA;
 	}
 
-	public void setRight(Integer right) {
-		this.right = right;
+	public void setDevA(DeveloperNode devA) {
+		this.devA = devA;
 	}
+
+	public DeveloperNode getDevB() {
+		return devB;
+	}
+
+	public void setDevB(DeveloperNode devB) {
+		this.devB = devB;
+	}
+
+	public void setWeight(Integer weight) {
+		this.weight = weight;
+	}
+
 
 	@Override
 	public int hashCode() {
 		final int prime = 31;
 		int result = 1;
-		result = prime * result + ((left == null) ? 0 : left.hashCode());
-		result = prime * result + ((right == null) ? 0 : right.hashCode());
+		result = prime * result + ((devA == null) ? 0 : devA.hashCode());
+		result = prime * result + ((devB == null) ? 0 : devB.hashCode());
 		return result;
 	}
 
@@ -103,22 +117,22 @@ public class DeveloperEdge {
 		if (getClass() != obj.getClass())
 			return false;
 		DeveloperEdge other = (DeveloperEdge) obj;
-		if (left == null) {
-			if (other.left != null)
+		if (devA == null) {
+			if (other.devA != null)
 				return false;
 		} 
-		if (right == null) {
-			if (other.right != null)
+		if (devB == null) {
+			if (other.devB != null)
 				return false;
 		}
 		// testing bidirectionality
-		if( (right.equals(other.right) && left.equals(other.left))
-				|| (right.equals(other.left) && left.equals(other.right))){
+		if( (devB.equals(other.devB) && devA.equals(other.devA))
+				|| (devB.equals(other.devA) && devA.equals(other.devB))){
 			return true;
 		}
-		if((right.equals(other.right) && !left.equals(other.left))
-				|| (!right.equals(other.right) && left.equals(other.left))
-				|| (!right.equals(other.right) && !left.equals(other.left))){
+		if((devB.equals(other.devB) && !devA.equals(other.devA))
+				|| (!devB.equals(other.devB) && devA.equals(other.devA))
+				|| (!devB.equals(other.devB) && !devA.equals(other.devA))){
 			return false;
 		}
 		
@@ -127,7 +141,7 @@ public class DeveloperEdge {
 
 	@Override
 	public String toString() {
-		return "Edge(" + this.left + ", " + this.right + ")";
+		return "E(" + this.devA.getID() + ", " + this.devB.getID() + ")";
 	}
 
 	public void setWeight(int w){

@@ -86,8 +86,8 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	@Test(expected=InvalidCotonetBeanException.class)
 	public void saveEmptyEdge() throws InvalidCotonetBeanException{
 		DeveloperEdge edge = new DeveloperEdge();
-		assertNull(edge.getLeft());
-		assertNull(edge.getRight());
+		assertNull(edge.getDevA());
+		assertNull(edge.getDevB());
 		assertNull(edge.getID());
 		assertNull(edge.getNetworkID());
 		dao.save(edge);
@@ -95,9 +95,9 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test(expected=InvalidCotonetBeanException.class)
 	public void saveEdgeWithInexistentDevelopers() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(34, 25);
-		assertTrue(edge.getLeft()==34);
-		assertTrue(edge.getRight()==25);
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null, null, null), new DeveloperNode(35, null, null, null));
+		assertTrue(edge.getDevA().getID()==34);
+		assertTrue(edge.getDevB().getID()==25);
 		edge.setNetworkID(1);
 		assertTrue(edge.getNetworkID()==1);
 		dao.save(edge);
@@ -105,9 +105,9 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test(expected=InvalidCotonetBeanException.class)
 	public void saveEdgeWithLeftInexistentDeveloper() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(34, 2);
-		assertTrue(edge.getLeft()==34);
-		assertTrue(edge.getRight()==2);
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null, null, null), new DeveloperNode(2, null, null, null));
+		assertTrue(edge.getDevA().getID()==34);
+		assertTrue(edge.getDevB().getID()==2);
 		edge.setNetworkID(1);
 		assertTrue(edge.getNetworkID()==1);
 		dao.save(edge);
@@ -115,9 +115,9 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test(expected=InvalidCotonetBeanException.class)
 	public void saveEdgeWithRightInexistentDeveloper() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(1, 25);
-		assertTrue(edge.getLeft()==1);
-		assertTrue(edge.getRight()==25);
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null, null), new DeveloperNode(35, null, null, null));
+		assertTrue(edge.getDevA().getID()==1);
+		assertTrue(edge.getDevB().getID()==25);
 		edge.setNetworkID(1);
 		assertTrue(edge.getNetworkID()==1);
 		dao.save(edge);
@@ -125,9 +125,9 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test
 	public void saveEdgeSuccessfully() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(1, 2);
-		assertTrue(edge.getLeft()==1);
-		assertTrue(edge.getRight()==2);
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null));
+		assertTrue(edge.getDevA().getID()==1);
+		assertTrue(edge.getDevB().getID()==2);
 		assertNull(edge.getID());
 		edge.setNetworkID(1);
 		assertTrue(edge.getNetworkID()==1);
@@ -136,8 +136,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test
 	public void getEdgeWithNoID() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(1, 2);
-		edge.setNetworkID(1);
+		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null),1);
 		dao.save(edge);
 		assertNull(edge.getID());
 		edge =  dao.get(edge);
@@ -146,13 +145,12 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 	
 	@Test
 	public void getEdgeByID() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(1, 2);
-		edge.setNetworkID(1);
+		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null),1);
 		dao.save(edge);
 		assertNull(edge.getID());
 		edge =  dao.get(new DeveloperEdge(1));
-		assertTrue(edge.getLeft()==1);
-		assertTrue(edge.getRight()==2);
+		assertTrue(edge.getDevA().getID()==1);
+		assertTrue(edge.getDevB().getID()==2);
 		assertTrue(edge.getNetworkID()==1);
 	}
 	

@@ -107,21 +107,37 @@ public class FileBasedNetworkBuilderTest extends
 
 		Iterator<DeveloperEdge> iEdges = connet.getEdges().iterator();
 		DeveloperEdge edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(1, 2)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(1, null, null, null), 
+				new DeveloperNode(2, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(1, 3)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(1, null, null, null), 
+				new DeveloperNode(3, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(1, 4)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(1, null, null, null), 
+				new DeveloperNode(4, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(2, 3)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(2, null, null, null), 
+				new DeveloperNode(3, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(2, 4)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(2, null, null, null), 
+				new DeveloperNode(4, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(3, 4)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(3, null, null, null), 
+				new DeveloperNode(4, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(5, 4)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(5, null, null, null), 
+				new DeveloperNode(4, null, null, null))));
 		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(5, 2)));
+		assertTrue(edge.equals(new DeveloperEdge(
+				new DeveloperNode(5, null, null, null), 
+				new DeveloperNode(2, null, null, null))));
 		assertFalse(iEdges.hasNext());
 	}
 

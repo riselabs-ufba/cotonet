@@ -22,11 +22,10 @@ package br.com.riselabs.cotonet.model.dao.validators;
 
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
-import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.ConflictBasedNetworkDAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;
-import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
+import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 
@@ -38,7 +37,7 @@ public class DeveloperEdgeValidator implements Validator<DeveloperEdge> {
 
 	@Override
 	public boolean validate(DeveloperEdge edge) throws InvalidCotonetBeanException {
-		if (edge == null || edge.getLeft() == null || edge.getRight() == null
+		if (edge == null || edge.getDevA().getID() == null || edge.getDevB().getID() == null
 				|| edge.getNetworkID() == null) {
 			throw new InvalidCotonetBeanException(
 					DeveloperEdge.class, 
@@ -47,12 +46,11 @@ public class DeveloperEdgeValidator implements Validator<DeveloperEdge> {
 		}
 		DeveloperNodeDAO dndao = (DeveloperNodeDAO) DAOFactory
 				.getDAO(CotonetBean.NODE);
-		if (dndao.get(new DeveloperNode(edge.getLeft(), null, null, null)) == null
-				|| dndao.get(new DeveloperNode(edge.getRight(), null, null,
-						null)) == null) {
+		if (dndao.get(edge.getDevA()) == null
+				|| dndao.get(edge.getDevB()) == null) {
 			throw new InvalidCotonetBeanException(
 					DeveloperEdge.class, 
-					"Either the `LeftID' or the `RightID' node are inexistent in the database.",
+					"Either the `DevA' or the `DevB' nodes are inexistent in the database.",
 					new NullPointerException());
 		}
 		ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory

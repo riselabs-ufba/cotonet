@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
+import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.dao.validators.DeveloperEdgeValidator;
 import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
@@ -63,8 +64,8 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 			ps =  conn.prepareStatement(
 					"insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
 			ps.setInt(1, edge.getNetworkID());
-			ps.setInt(2, edge.getLeft());
-			ps.setInt(3, edge.getRight());
+			ps.setInt(2, edge.getDevA().getID());
+			ps.setInt(3, edge.getDevB().getID());
 			ps.setInt(4, edge.getWeight());
 			hasSaved = ps.executeUpdate()>0?true:false;
 		} catch (SQLException e) {
@@ -99,8 +100,12 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 				DeveloperEdge edge = new DeveloperEdge();
 				edge.setID(rs.getInt("id"));
 				edge.setNetworkID(rs.getInt("network_id"));
-				edge.setLeft(rs.getInt("dev_a"));
-				edge.setRight(rs.getInt("dev_b"));
+				DeveloperNode aux = new DeveloperNodeDAO().get(
+						new DeveloperNode(rs.getInt("dev_a"), null, null, null));
+				edge.setDevA(aux);
+				aux = new DeveloperNodeDAO().get(
+						new DeveloperNode(rs.getInt("dev_b"), null, null, null));
+				edge.setDevB(aux);
 				edge.setWeight(rs.getInt("weight"));
 				result.add(edge);
 			}
@@ -131,15 +136,15 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 			} else {
 				ps.setInt(1, edge.getNetworkID());
 			}
-			if (edge.getLeft() == null) {
+			if (edge.getDevA().getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
 			} else {
-				ps.setInt(2, edge.getLeft());
+				ps.setInt(2, edge.getDevA().getID());
 			}
-			if (edge.getRight() == null) {
+			if (edge.getDevB().getID() == null) {
 				ps.setInt(3, Integer.MAX_VALUE);
 			} else {
-				ps.setInt(3, edge.getRight());
+				ps.setInt(3, edge.getDevB().getID());
 			}
 			if (edge.getID() == null) {
 				ps.setInt(4, Integer.MAX_VALUE);
@@ -150,10 +155,13 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer networkid = rs.getInt("network_id");
-				Integer left = rs.getInt("dev_a");
-				Integer right = rs.getInt("dev_b");
+				DeveloperNode deva = new DeveloperNodeDAO().get(
+						new DeveloperNode(rs.getInt("dev_a"), null, null, null));
+				DeveloperNode devb = new DeveloperNodeDAO().get(
+						new DeveloperNode(rs.getInt("dev_b"), null, null, null));
+				Integer weight = rs.getInt("weight");
 				DeveloperEdge nodeResult = new DeveloperEdge(id, networkid,
-						left, right);
+						deva, devb, weight);
 				return nodeResult;
 			}
 		} catch (SQLException e) {
