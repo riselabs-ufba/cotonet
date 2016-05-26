@@ -21,6 +21,7 @@
 package br.com.riselabs.cotonet.model.db;
 
 import java.beans.PropertyVetoException;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -36,42 +37,51 @@ import br.com.riselabs.cotonet.util.Logger;
  *
  */
 public final class Database {
-	
-    private static final BasicDataSource ds = new BasicDataSource();
 
-    private static void initDataSource() throws IOException, SQLException, PropertyVetoException {
-    	ClassLoader classloader = Thread.currentThread().getContextClassLoader();
-    	Properties prop = new Properties();
-    	InputStream input = null;
-		input = classloader.getResourceAsStream("db.properties");
-		prop.load(input);
-		
+	private static final BasicDataSource ds = new BasicDataSource();
+
+	private static void initDataSource() throws IOException, SQLException,
+			PropertyVetoException {
+		Thread currentThread = Thread.currentThread();
+		ClassLoader classloader = currentThread.getContextClassLoader();
+		InputStream input = classloader.getResourceAsStream("db.properties");
+		Properties prop = new Properties();
+		if (input != null) {
+			prop.load(input);
+			input.close();
+		} else {
+			Logger.logStackTrace(new FileNotFoundException(
+					"The file 'db.properties was not found."));
+		}
+
 		String db = prop.getProperty("database.name");
 		String user = prop.getProperty("database.user");
 		String pass = prop.getProperty("database.password");
 		String dbClass = "com.mysql.jdbc.Driver";
-		String dbURL = "jdbc:mysql://localhost/"+db+"?autoReconnect=true&useSSL=false&failOverReadOnly=false&maxReconnects=100";
-		
-        ds.setDriverClassName(dbClass);
-        ds.setUsername(user);
-        ds.setPassword(pass);
-        ds.setUrl(dbURL);
-       
-     // the settings below are optional -- dbcp can work with defaults
-        ds.setMinIdle(5);
-        ds.setMaxIdle(20);
-        ds.setMaxOpenPreparedStatements(180);
+		String dbURL = "jdbc:mysql://localhost/"
+				+ db
+				+ "?autoReconnect=true&useSSL=false&failOverReadOnly=false&maxReconnects=100";
 
-    }
+		ds.setDriverClassName(dbClass);
+		ds.setUsername(user);
+		ds.setPassword(pass);
+		ds.setUrl(dbURL);
 
-    public static Connection getConnection(){
-    	try{
-    		initDataSource();
-    		return ds.getConnection();
+		// the settings below are optional -- dbcp can work with defaults
+		ds.setMinIdle(5);
+		ds.setMaxIdle(20);
+		ds.setMaxOpenPreparedStatements(180);
+
+	}
+
+	public static Connection getConnection() {
+		try {
+			initDataSource();
+			return ds.getConnection();
 		} catch (SQLException | IOException | PropertyVetoException e) {
 			Logger.logStackTrace(e);
 		}
 		return null;
-    }
+	}
 
 }
