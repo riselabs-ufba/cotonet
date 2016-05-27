@@ -22,7 +22,10 @@ package br.com.riselabs.cotonet.util;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Date;
@@ -199,32 +202,45 @@ public class CodefaceHelper {
 	}
 
 	/**
-	 * Returns a commit from the given repository dated {@code i} months earlier.
+	 * Returns a commit from the given repository dated {@code i} months
+	 * earlier.
 	 * 
 	 * @param repo
 	 * @param baseCommit
 	 * @param i
 	 * @return
-	 * @throws IOException 
-	 * @throws IncorrectObjectTypeException 
-	 * @throws MissingObjectException 
+	 * @throws IOException
+	 * @throws IncorrectObjectTypeException
+	 * @throws MissingObjectException
 	 */
-	private static RevCommit getEarlierCommit(Repository repo, RevCommit baseCommit, int i) throws MissingObjectException, IncorrectObjectTypeException, IOException {
+	private static RevCommit getEarlierCommit(Repository repo,
+			RevCommit baseCommit, int i) throws MissingObjectException,
+			IncorrectObjectTypeException, IOException {
 		RevCommit result = null;
 		try (RevWalk rw = new RevWalk(repo)) {
-		    rw.markStart(rw.parseCommit(baseCommit));
-		    Date baseDate = baseCommit.getAuthorIdent().getWhen();
-		    LocalDate reference =  LocalDate.ofEpochDay(baseDate.getTime()); 
-		    while((result = rw.next()) != null){
-		    	Date resultDate = result.getAuthorIdent().getWhen();
-		    	LocalDate imonths =  LocalDate.ofEpochDay(resultDate.getTime());
-		    	long days = ChronoUnit.DAYS.between(imonths, reference);
-		    	if ((days % 30)>i) {
-					return result;
+			RevCommit base = rw.parseCommit(baseCommit.getId());
+			rw.markStart(base);
+			Date baseDate = base.getAuthorIdent().getWhen();
+			Instant instant = baseDate.toInstant();
+			ZonedDateTime zdt = instant.atZone(ZoneId.systemDefault());
+			LocalDate reference = zdt.toLocalDate();
+			RevCommit aux;
+			while ((aux = rw.next()) != null) {
+				Date resultDate = aux.getAuthorIdent().getWhen();
+				instant = resultDate.toInstant();
+				zdt = instant.atZone(ZoneId.systemDefault());
+				LocalDate imonths = zdt.toLocalDate();
+				long days = ChronoUnit.DAYS.between(imonths, reference);
+				if ((days % 30) > i) {
+					return aux;
+				} else {
+					// in case it reaches the beginning of the tree returns the
+					// last commit
+					result = aux;
 				}
-		    }
+			}
 		}
-		return null;
+		return result;
 	}
 
 	/**
