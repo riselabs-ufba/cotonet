@@ -4,7 +4,6 @@ https://github.com/Netflix/curator
 https://github.com/Netflix/exhibitor
 https://github.com/Atmosphere/atmosphere
 https://github.com/mtoader/google-go-lang-idea-plugin
-https://github.com/processing/processing
 https://github.com/tinkerpop/blueprints
 https://github.com/datastax/java-driver
 https://github.com/AsynchttpClient/async-http-client
