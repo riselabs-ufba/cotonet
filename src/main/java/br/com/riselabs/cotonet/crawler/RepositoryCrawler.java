@@ -94,35 +94,6 @@ public class RepositoryCrawler implements Runnable {
 		this.repositoryDir = directory;
 	}
 
-	/**
-	 * Clones the project's repository of this {@code RepositoryCrawler}
-	 * instance. The method {@code #getRepository()} returns an object that
-	 * represents the repository.
-	 * 
-	 * @param repositoryURL
-	 * @return
-	 * @throws IOException
-	 * @throws InvalidRemoteException
-	 * @throws TransportException
-	 * @throws GitAPIException
-	 */
-	public Repository cloneRepository() {
-		Git result;
-		try {
-			Logger.log(log, "[" + getProject().getName() + "] Cloning Start.");
-			result = Git.cloneRepository().setURI(project.getUrl() + ".git")
-					.setDirectory(repositoryDir).call();
-			Logger.log(log, "[" + getProject().getName()
-					+ "] Cloning Finished.");
-			return result.getRepository();
-		} catch (GitAPIException e) {
-			Logger.log(log, "[" + getProject().getName() + "] Cloning Failed.");
-			Logger.logStackTrace(log, e);
-		}
-		System.gc();
-		return null;
-	}
-
 	@Override
 	public void run() {
 		try {
@@ -157,6 +128,35 @@ public class RepositoryCrawler implements Runnable {
 			Logger.logStackTrace(log, e);
 		}
 		System.gc();
+	}
+
+	/**
+	 * Clones the project's repository of this {@code RepositoryCrawler}
+	 * instance. The method {@code #getRepository()} returns an object that
+	 * represents the repository.
+	 * 
+	 * @param repositoryURL
+	 * @return
+	 * @throws IOException
+	 * @throws InvalidRemoteException
+	 * @throws TransportException
+	 * @throws GitAPIException
+	 */
+	public Repository cloneRepository() {
+		Git result;
+		try {
+			Logger.log(log, "[" + getProject().getName() + "] Cloning Start.");
+			result = Git.cloneRepository().setURI(project.getUrl() + ".git")
+					.setDirectory(repositoryDir).call();
+			Logger.log(log, "[" + getProject().getName()
+					+ "] Cloning Finished.");
+			return result.getRepository();
+		} catch (GitAPIException e) {
+			Logger.log(log, "[" + getProject().getName() + "] Cloning Failed.");
+			Logger.logStackTrace(log, e);
+		}
+		System.gc();
+		return null;
 	}
 
 	private Repository openRepository() throws IOException {
