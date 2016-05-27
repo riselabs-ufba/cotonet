@@ -7,6 +7,6 @@ target
 /build/
 .settings/
 *.DS_Store
-*.mwb.bak
+src/main/resources/ERD.mwb.bak
 *.prefs
 cotonet-files/*
