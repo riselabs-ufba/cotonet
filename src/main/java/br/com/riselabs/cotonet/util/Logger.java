@@ -35,7 +35,6 @@ public abstract class Logger {
 	
 	private static File log = new File(Directories.getLogDir(),
 			"cotonet.log");;
-
 	
 	/**
 	 * Logs a message in the system log.
