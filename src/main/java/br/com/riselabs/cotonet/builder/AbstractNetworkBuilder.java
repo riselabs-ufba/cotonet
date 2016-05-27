@@ -205,6 +205,14 @@ public abstract class AbstractNetworkBuilder {
 			// TODO dealing with Ghosts conflicts
 			conflictingPaths = mResult.getConflicts().keySet();
 		} catch (NullPointerException | JGitInternalException e) {
+			StringBuilder sb = new StringBuilder();
+			sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
+					+ "Skipping merge scenario due to '" + e.getClass() + "'\n");
+			sb.append("---> Skipped scenario:\n");
+			sb.append("::Base:" + scenario.getBase().getName() + "\n");
+			sb.append("::Left:" + scenario.getLeft().getName() + "\n");
+			sb.append("::Right:" + scenario.getRight().getName() + "\n");
+			Logger.log(log, sb.toString());
 			return null;
 		}
 		List<File> result = new ArrayList<File>();
@@ -219,7 +227,7 @@ public abstract class AbstractNetworkBuilder {
 			throws IOException, GitAPIException, InterruptedException {
 		ConflictBasedNetwork connet = null;
 		List<File> files = getConflictingFiles(scenario);
-		if(files==null){
+		if (files == null) {
 			return null; // dealing with ghost scenarios
 		}
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
@@ -257,7 +265,7 @@ public abstract class AbstractNetworkBuilder {
 	}
 
 	protected abstract List<DeveloperNode> getDeveloperNodes(
-			MergeScenario scenario, File file) throws IOException, GitAPIException,
-			InterruptedException;
+			MergeScenario scenario, File file) throws IOException,
+			GitAPIException, InterruptedException;
 
 }
