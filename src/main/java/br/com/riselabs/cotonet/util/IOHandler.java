@@ -30,22 +30,11 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.FileUtils;
-import org.eclipse.jgit.lib.Repository;
-import org.eclipse.jgit.revwalk.RevCommit;
-import org.eclipse.jgit.revwalk.RevWalk;
 
-import br.com.riselabs.cotonet.model.beans.MergeScenario;
-import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 
 /**
@@ -129,19 +118,6 @@ public class IOHandler {
 	}
 
 	/**
-	 * Checks whether the "repos" directory correspondent to the given name
-	 * already exists. Returns <code>null</code> if not.
-	 * 
-	 * @param folderName
-	 * @return - the directory
-	 * @throws IOException
-	 */
-	public File getReposDirectory(String folderName) throws IOException {
-		File dir = new File(Directories.getReposDir(), folderName);
-		return getDirectory(dir);
-	}
-
-	/**
 	 * Checks whether the directory correspondent to the given name already
 	 * exists. Returns <code>null</code> if not.
 	 * 
@@ -169,88 +145,6 @@ public class IOHandler {
 		systemDir.mkdirs();
 		System.gc();
 		return systemDir;
-	}
-
-
-	/**
-	 * Returns the URLs from the "ghanalysis" database.
-	 * 
-	 * @return - a map <id, url> for each entry in the "repository" table of the
-	 *         database.
-	 * @throws IOException 
-	 */
-	public Map<Integer, String> readURLsFromDatabase() throws IOException {
-		Map<Integer, String> result = new HashMap<Integer, String>();
-		try {
-			Connection conn = Database.getConnection();
-			Statement st = conn.createStatement();
-			ResultSet rs = st.executeQuery("select r.id ids, r.url urls from repository as r");
-			while (rs.next()) {
-				Integer id = rs.getInt("ids");
-				String url = rs.getString("urls");
-				url = url.replace("http:", "https:");
-				result.put(id, url);
-			}
-		} catch (SQLException e) {
-			// prepareStatement fail.
-			e.printStackTrace();
-		}
-		return result;
-	}
-
-	public static List<MergeScenario> getMergeScenarios(Integer repositoryID, Repository repo) throws IOException {
-		List<MergeScenario> scenarios = new ArrayList<MergeScenario>();
-		String sql = "select  " + "m.leftrevision \"left\", "
-				+ "m.baserevision \"base\", " + "m.rightrevision \"right\", "
-				+ "m.leftcommits \"nlcommits\","
-				+ "m.rightcommits \"nrcommits\"," + "l.commitid \"leftsha\","
-				+ "b.commitid \"basesha\"," + "r.commitid \"rightsha\" "
-				+ "from mergescenario m, revision l, revision b, revision r "
-				+ "where m.leftrepo = " + repositoryID + " and m.rightrepo = "
-				+ repositoryID + " and m.diffstatsdone "
-				+ "and m.gitstatsdone " + "and m.commitstatsdone "
-				+ "and m.leftrevision=l.id " + "and m.baserevision=b.id "
-				+ "and m.rightrevision=r.id " + "and m.leftcommits > 0 "
-				+ "and m.rightcommits > 0";
-		// + " limit ", max_scenarios, sep="";
-
-		try {
-			Connection conn = Database.getConnection();
-			Statement st = conn.createStatement();
-			ResultSet rs = st.executeQuery(sql);
-			while (rs.next()) {
-				try(RevWalk w = new RevWalk(repo)){
-					RevCommit left = w.parseCommit(repo.resolve(rs.getString("leftsha")));
-					RevCommit base = w.parseCommit(repo.resolve(rs.getString("basesha")));
-					RevCommit right = w.parseCommit(repo.resolve(rs.getString("rightsha")));
-					scenarios.add(new MergeScenario(repositoryID, base, left, right));
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
-
-		return scenarios;
-	}
-
-	public void createCodefaceRunScript(List<String> target_systems)
-			throws IOException, NullPointerException, EmptyContentException {
-		String str = "#!/bin/sh\n";
-		for (String s : target_systems) {
-			str += "echo \"============================\"\n"
-					+ "echo \"[Running " + s + "]: Start\"\n"
-					+ "codeface run -p conf/" + s + ".conf results/ repos/\n"
-					+ "echo \"[Running " + s + "]: End\"\n" + "echo \n";
-		}
-		str += "echo \"[Running Target Systems]: Done.\"";
-
-		List<String> content = new ArrayList<String>();
-		content.add(str);
-		File sh = new File(Directories.getConfigDir(), "run_target-systems.sh");
-		checkAndRemove(sh);
-		writeFile(sh, content);
-		Logger.log("Codeface execution shell script written at: "
-				+ sh.getCanonicalPath());
 	}
 
 	/**

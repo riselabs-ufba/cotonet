@@ -40,31 +40,15 @@ public final class Database {
 
 	private static final BasicDataSource ds = new BasicDataSource();
 
-	private static void initDataSource() throws IOException, SQLException,
+	private static void initDataSource(String dbname, String dbuser,
+			String dbpass) throws IOException, SQLException,
 			PropertyVetoException {
-		Thread currentThread = Thread.currentThread();
-		ClassLoader classloader = currentThread.getContextClassLoader();
-		InputStream input = classloader.getResourceAsStream("db.properties");
-		Properties prop = new Properties();
-		if (input != null) {
-			prop.load(input);
-			input.close();
-		} else {
-			Logger.logStackTrace(new FileNotFoundException(
-					"The file 'db.properties was not found."));
-		}
+		String dbURL = "jdbc:mysql://localhost/"+ dbname +
+				"?autoReconnect=true&useSSL=false&failOverReadOnly=false&maxReconnects=100";
 
-		String db = prop.getProperty("database.name");
-		String user = prop.getProperty("database.user");
-		String pass = prop.getProperty("database.password");
-		String dbClass = "com.mysql.jdbc.Driver";
-		String dbURL = "jdbc:mysql://localhost/"
-				+ db
-				+ "?autoReconnect=true&useSSL=false&failOverReadOnly=false&maxReconnects=100";
-
-		ds.setDriverClassName(dbClass);
-		ds.setUsername(user);
-		ds.setPassword(pass);
+		ds.setDriverClassName("com.mysql.jdbc.Driver");
+		ds.setUsername(dbuser);
+		ds.setPassword(dbpass);
 		ds.setUrl(dbURL);
 
 		// the settings below are optional -- dbcp can work with defaults
@@ -75,8 +59,31 @@ public final class Database {
 	}
 
 	public static Connection getConnection() {
+		Thread currentThread = Thread.currentThread();
+		ClassLoader classloader = currentThread.getContextClassLoader();
+		InputStream input = classloader.getResourceAsStream("db.properties");
+		Properties prop = new Properties();
 		try {
-			initDataSource();
+			if (input != null) {
+				prop.load(input);
+				input.close();
+			} else {
+				Logger.logStackTrace(new FileNotFoundException(
+						"The file 'db.properties was not found."));
+			}
+		} catch (IOException e) {
+			Logger.logStackTrace(e);
+		}
+		String db = prop.getProperty("database.name");
+		String user = prop.getProperty("database.user");
+		String pass = prop.getProperty("database.password");
+		return getConnection(db, user, pass);
+	}
+
+	public static Connection getConnection(String dbname, String dbuser,
+			String dbpass) {
+		try {
+			initDataSource(dbname, dbuser, dbpass);
 			return ds.getConnection();
 		} catch (SQLException | IOException | PropertyVetoException e) {
 			Logger.logStackTrace(e);
