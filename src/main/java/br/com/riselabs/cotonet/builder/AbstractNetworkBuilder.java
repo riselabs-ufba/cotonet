@@ -130,11 +130,11 @@ public abstract class AbstractNetworkBuilder {
 		List<MergeScenario> result = new ArrayList<MergeScenario>();
 		// collecting merge commits
 		List<RevCommit> merges = new LinkedList<>();
-		Iterable<RevCommit> log;
+		Iterable<RevCommit> gitlog;
 		try {
 			Git git = Git.wrap(getProject().getRepository());
-			log = git.log().call();
-			for (RevCommit commit : log) {
+			gitlog = git.log().call();
+			for (RevCommit commit : gitlog) {
 				if (commit.getParentCount() == 2) {
 					merges.add(commit);
 					// we know there is only to parents
@@ -159,7 +159,7 @@ public abstract class AbstractNetworkBuilder {
 				}
 			}
 		} catch (GitAPIException e) {
-			System.out.println(e.getMessage());
+			Logger.logStackTrace(log, e);
 		}
 		return result;
 	}
@@ -207,7 +207,7 @@ public abstract class AbstractNetworkBuilder {
 		} catch (NullPointerException | JGitInternalException e) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
-					+ "Skipping merge scenario due to '" + e.getClass() + "'\n");
+					+ "Skipping merge scenario due to '" + e.getMessage() + "'\n");
 			sb.append("---> Skipped scenario:\n");
 			sb.append("::Base:" + scenario.getBase().getName() + "\n");
 			sb.append("::Left:" + scenario.getLeft().getName() + "\n");
