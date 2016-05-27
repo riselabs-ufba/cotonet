@@ -78,7 +78,7 @@ public class CodefaceHelper {
 					+ "echo \"[Running " + s + "]: End\"\n" + "echo \n";
 		}
 		str += "echo \"[Running Target Systems]: Done.\"";
-	
+
 		List<String> content = new ArrayList<String>();
 		content.add(str);
 		File sh = new File(Directories.getScriptsDir(), "run_target-systems.sh");
@@ -90,25 +90,28 @@ public class CodefaceHelper {
 
 	/**
 	 * Writes the {@code .conf} file to be used with codeface.
-	 * @param log 
+	 * 
+	 * @param log
 	 * 
 	 * @throws IOException
 	 * @throws NullPointerException
 	 * @throws EmptyContentException
 	 * @throws InvalidNumberOfTagsException
 	 */
-	public static void createCodefaceConfFiles(Project project) throws IOException, NullPointerException, EmptyContentException {
+	public static void createCodefaceConfFiles(Project project)
+			throws IOException, NullPointerException, EmptyContentException {
 		createMergeBasedTags(project);
 		String releases = null;
 		List<String> tuples = new ArrayList<String>();
-		for (MergeScenario ms: project.getMergeScenarios()) {
-			if (ms.getID()==null) {
+		for (MergeScenario ms : project.getMergeScenarios()) {
+			if (ms.getID() == null) {
 				continue;
 			}
-			tuples.add("\""+project.getName()+"T" + ms.getID() + "\", \""+project.getName()+"B" + ms.getID());
+			tuples.add("\"" + project.getName() + "T" + ms.getID() + "\", \""
+					+ project.getName() + "B" + ms.getID());
 		}
 		releases = createReleasesString(tuples);
-	
+
 		StringBuilder sb = new StringBuilder();
 		sb.append("# Codeface configuration file for '" + project.getName()
 				+ "'");
@@ -134,17 +137,21 @@ public class CodefaceHelper {
 		sb.append("# rcs : [" + releases + " ]\n");
 		sb.append("# tagging types: proximity, tag, file, feature, committer2author, feature_file\n");
 		sb.append("\n" + "tagging: file\n" + "");
-	
+
 		List<String> content = new ArrayList<String>();
 		content.add(sb.toString());
-	
+
 		File systemDir = new File(Directories.getConfigDir(), project.getName()
 				+ ".conf");
-		io.checkAndRemove(systemDir);
 		io.writeFile(systemDir, content);
+		Logger.log(
+				new File(Directories.getLogDir(), "thread-" + project.getName()
+						+ ".log"), "[" + project.getName()
+						+ "] Codeface configuration file written.");
 	}
 
-	private static void createMergeBasedTags(Project project) throws IOException {
+	private static void createMergeBasedTags(Project project)
+			throws IOException {
 		Map<String, String> tagsMap;
 		Repository repository = project.getRepository();
 		List<MergeScenario> scenarios = new ArrayList<MergeScenario>(
@@ -167,7 +174,8 @@ public class CodefaceHelper {
 			String tagB = project.getName() + "B" + s.getID();
 
 			tagsMap.put(tagB, s.getBase().getName());
-			RevCommit earlier = getEarlierCommit(project.getRepository(), s.getBase(), 3);
+			RevCommit earlier = getEarlierCommit(project.getRepository(),
+					s.getBase(), 3);
 			tagsMap.put(tagT, earlier.getName());
 
 			// prepare test-repository
@@ -260,11 +268,11 @@ public class CodefaceHelper {
 		for (Entry<String, String> e : tagsMap.entrySet()) {
 			lines.add(e.getKey() + ": " + e.getValue());
 		}
-		File mappingFile = io.createFile(Directories.getMappingsDir(),
+		File mappingFile = new File(Directories.getMappingsDir(),
 				projectName + "_TAGsMapping.txt");
 		io.writeFile(mappingFile, lines);
-		Logger.log("[" + projectName + "] Tags mapping file written.");
-
+		Logger.log(new File(Directories.getLogDir(), "thread-" + projectName
+				+ ".log"), "[" + projectName + "] Tags mapping file written.");
 	}
 
 	private static String createReleasesString(List<String> tagsList) {
@@ -274,7 +282,7 @@ public class CodefaceHelper {
 			return tagsList.remove(0) + ", " + createReleasesString(tagsList);
 		}
 	}
-	
+
 	/**
 	 * Returns the list of TAGs from the given repository.
 	 * 

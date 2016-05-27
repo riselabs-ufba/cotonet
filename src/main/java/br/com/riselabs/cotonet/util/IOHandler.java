@@ -90,7 +90,7 @@ public class IOHandler {
 	 */
 	public void appendLineToFile(File file, String aLine) throws IOException {
 		BufferedWriter writer = null;
-		writer = new BufferedWriter(new FileWriter(file, true));
+		writer = new BufferedWriter(new FileWriter(createFile(file), true));
 		writer.write(aLine + "\n");
 		// Close the writer regardless of what happens...
 		writer.close();
@@ -112,9 +112,27 @@ public class IOHandler {
 		if (content.isEmpty())
 			throw new EmptyContentException();
 
+		createFile(file);
 		for (String line : content) {
 			appendLineToFile(file, line);
 		}
+	}
+
+	/**
+	 * Creates a file and all the inexistent parent folders if it not exists
+	 * yet.
+	 * 
+	 * @param directory
+	 * @param filename
+	 * @return
+	 * @throws IOException
+	 */
+	private File createFile(File directory) throws IOException {
+		if (!directory.getParentFile().exists()) {
+			directory.getParentFile().mkdirs();
+		}
+		directory.createNewFile();
+		return directory;
 	}
 
 	/**
@@ -159,23 +177,6 @@ public class IOHandler {
 			System.out.println("Removing old file: " + instance.toString());
 			FileUtils.deleteQuietly(instance);
 		}
-	}
-
-	/**
-	 * Creates a file and all the inexistent parent folders.
-	 * @param directory
-	 * @param filename
-	 * @return
-	 * @throws IOException
-	 */
-	public File createFile(File directory, String filename) throws IOException {
-		File f;
-		if (!directory.exists()){
-			directory.mkdirs();
-		}
-		f = new File(directory, filename);
-		f.createNewFile();
-		return f;
 	}
 
 }

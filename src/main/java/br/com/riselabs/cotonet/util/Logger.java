@@ -56,7 +56,7 @@ public abstract class Logger {
 	public static void log(File logFile, String message) {
 		IOHandler io = new IOHandler();
 		try {
-			logFile = io.createFile(logFile.getParentFile(),logFile.getName());
+			logFile = new File(logFile.getParentFile(),logFile.getName());
 			io.appendLineToFile(logFile, message);
 		} catch (IOException e) {
 			e.printStackTrace();

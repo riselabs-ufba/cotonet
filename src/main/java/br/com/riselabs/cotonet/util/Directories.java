@@ -53,6 +53,7 @@ public class Directories {
 	public static File getScriptsDir() {
 		return getDir("scripts");
 	}
+	
 	private static File getDir(String child) {
 		File dir;
 		if ((dir = new File(new File(APP_DIR, "cotonet-files"), child)).exists()) {
