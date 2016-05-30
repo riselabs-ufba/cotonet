@@ -22,6 +22,7 @@ package br.com.riselabs.cotonet;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.apache.commons.cli.CommandLine;
@@ -37,6 +38,7 @@ import br.com.riselabs.cotonet.crawler.threads.RCThreadPoolExecutor;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
+import br.com.riselabs.cotonet.util.CodefaceHelper;
 import br.com.riselabs.cotonet.util.IOHandler;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -145,6 +147,7 @@ public class Main {
 				// reponsable to coordinate the threads for each system
 				RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
 				List<String> systems = io.readFile(list);
+				List<String> systems_name = new ArrayList<String>();
 				
 				for (String url : systems) {
 					try {
@@ -154,9 +157,16 @@ public class Main {
 						Logger.logStackTrace(e);
 					}
 					Logger.log("Repository scheduled: " + url);
+					String[] str = url.split("/");
+					systems_name.add(str[str.length-1]);
 				}
 				
 				pool.shutDown();
+				try {
+					CodefaceHelper.createCodefaceRunScript(systems_name);
+				} catch (NullPointerException | IOException |EmptyContentException e) {
+					Logger.logStackTrace(e);
+				}
 			}
 			
 		}
