@@ -35,6 +35,7 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.errors.NoMergeBaseException;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -59,7 +60,7 @@ public abstract class AbstractNetworkBuilder {
 
 	protected Project project;
 	protected NetworkType type;
-	private File log;
+	protected File log;
 
 	public Project getProject() {
 		return project;
@@ -143,7 +144,30 @@ public abstract class AbstractNetworkBuilder {
 					ThreeWayMerger merger = MergeStrategy.RECURSIVE.newMerger(
 							getProject().getRepository(), true);
 					// selecting the conflicting ones
-					if (merger.merge(leftParent, rightParent)) {
+					boolean noConflicts = false;
+					try {
+						noConflicts = merger.merge(leftParent, rightParent);
+					} catch (NoMergeBaseException e) {
+						StringBuilder sb = new StringBuilder();
+						sb.append("[" + project.getName() + ":"
+								+ project.getUrl() + "] "
+								+ "Skipping merge scenario due to '"
+								+ e.getMessage() + "'\n");
+						sb.append("---> Skipped scenario:\n");
+						sb.append("::Base (<several>): \n");
+						sb.append("::Left ("
+								+ leftParent.getAuthorIdent().getWhen()
+										.toString() + "):"
+								+ leftParent.getName() + "\n");
+						sb.append("::Right ("
+								+ rightParent.getAuthorIdent().getWhen()
+										.toString() + "):"
+								+ rightParent.getName() + "\n");
+						Logger.log(log, sb.toString());
+						Logger.logStackTrace(log, e);
+						continue;
+					}
+					if (noConflicts) {
 						continue;
 					}
 					RevWalk walk = new RevWalk(getProject().getRepository());
@@ -181,11 +205,19 @@ public abstract class AbstractNetworkBuilder {
 			git.reset().setRef(scenario.getLeft().getName())
 					.setMode(ResetType.HARD).call();
 		} catch (JGitInternalException e) {
+			Logger.log(log, "[" + project.getName()
+					+ "] JGit Reset Command ended with exception."
+					+ " Trying external reset command.");
 			ExternalGitCommand egit = new ExternalGitCommand();
-			egit.setType(CommandType.RESET)
-					.setDirectory(
-							project.getRepository().getDirectory()
-									.getParentFile()).call();
+			try {
+				egit.setType(CommandType.RESET)
+						.setDirectory(
+								project.getRepository().getDirectory()
+										.getParentFile()).call();
+			} catch (IOException e1) {
+				Logger.logStackTrace(log, e1);
+				return null;
+			}
 		}
 
 		CheckoutCommand ckoutCmd = git.checkout();
@@ -207,8 +239,10 @@ public abstract class AbstractNetworkBuilder {
 		} catch (NullPointerException | JGitInternalException e) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
-					+ "Skipping merge scenario due to '" + e.getMessage() + "'\n");
-			sb.append("---> Skipped scenario:\n");
+					+ "Skipping merge scenario due to '" + e.getMessage()
+					+ "'\n");
+			sb.append("--> Exception: "+e.getClass()); 
+			sb.append("--> Skipped scenario:\n");
 			sb.append("::Base:" + scenario.getBase().getName() + "\n");
 			sb.append("::Left:" + scenario.getLeft().getName() + "\n");
 			sb.append("::Right:" + scenario.getRight().getName() + "\n");
@@ -228,12 +262,21 @@ public abstract class AbstractNetworkBuilder {
 		ConflictBasedNetwork connet = null;
 		List<File> files = getConflictingFiles(scenario);
 		if (files == null) {
-			return null; // dealing with ghost scenarios
+			return null; // dealing with ghost scenarios or fail to hard reset.
 		}
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 		for (File file : files) {
-			List<DeveloperNode> fileNodes = getDeveloperNodes(scenario, file);
+			List<DeveloperNode> fileNodes = null;
+			try {
+				fileNodes = getDeveloperNodes(scenario, file);
+			} catch (IOException | InterruptedException e) {
+				Logger.log(
+						log,
+						"[" + project.getName() + "] Exception ("
+								+ e.getMessage() + ");");
+				continue;
+			}
 			nodes.addAll(fileNodes);
 			edges.addAll(getDeveloperEdges(fileNodes));
 		}

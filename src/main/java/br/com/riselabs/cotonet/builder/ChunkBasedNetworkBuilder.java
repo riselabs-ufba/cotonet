@@ -64,9 +64,12 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 			CheckoutConflictException, GitAPIException {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		ExternalGitCommand egit = new ExternalGitCommand();
-		List<ChunkBlame> blames = (List<ChunkBlame>) egit.setDirectory(file)
-				.setType(CommandType.BLAME).call();
-
+		List<ChunkBlame> blames = null;
+		try{
+			blames = egit.setDirectory(file).setType(CommandType.BLAME).call();
+		}catch(RuntimeException | IOException e ){
+			throw new IOException("Couldn't create blames for the file:"+file);
+		}
 		for (ChunkBlame blame : blames) {
 			CommandLineBlameResult bResult = blame.getResult();
 			for (String anEmail : bResult.getAuthors()) {
