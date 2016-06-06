@@ -25,6 +25,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -35,6 +37,7 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
+import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.errors.NoMergeBaseException;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
@@ -43,6 +46,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
+import br.com.riselabs.cotonet.model.beans.Blame;
+import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -54,9 +59,11 @@ import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
+ * @param <T>
+ * @param <T>
  *
  */
-public abstract class AbstractNetworkBuilder {
+public abstract class AbstractNetworkBuilder<T> {
 
 	protected Project project;
 	protected NetworkType type;
@@ -232,16 +239,16 @@ public abstract class AbstractNetworkBuilder {
 
 		Set<String> conflictingPaths;
 		try {
-			// TODO dealing with MissingObjectException
+			// dealing with MissingObjectException
 			MergeResult mResult = mergeCmd.call();
-			// TODO dealing with Ghosts conflicts
+			// dealing with Ghosts conflicts
 			conflictingPaths = mResult.getConflicts().keySet();
 		} catch (NullPointerException | JGitInternalException e) {
 			StringBuilder sb = new StringBuilder();
 			sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
 					+ "Skipping merge scenario due to '" + e.getMessage()
 					+ "'\n");
-			sb.append("--> Exception: "+e.getClass()); 
+			sb.append("--> Exception: " + e.getClass());
 			sb.append("--> Skipped scenario:\n");
 			sb.append("::Base:" + scenario.getBase().getName() + "\n");
 			sb.append("::Left:" + scenario.getLeft().getName() + "\n");
@@ -267,7 +274,7 @@ public abstract class AbstractNetworkBuilder {
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 		for (File file : files) {
-			List<DeveloperNode> fileNodes = null;
+			Map<Blame<T>, List<DeveloperNode>> fileNodes = null;
 			try {
 				fileNodes = getDeveloperNodes(scenario, file);
 			} catch (IOException | InterruptedException e) {
@@ -277,37 +284,65 @@ public abstract class AbstractNetworkBuilder {
 								+ e.getMessage() + ");");
 				continue;
 			}
-			nodes.addAll(fileNodes);
+			for (Entry<Blame<T>, List<DeveloperNode>> e : fileNodes.entrySet()) {
+				for (DeveloperNode dev : e.getValue()) {
+					if (!nodes.contains(dev)) {
+						nodes.add(dev);
+					}
+				}
+			}
 			edges.addAll(getDeveloperEdges(fileNodes));
 		}
 		connet = new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 		return connet;
 	}
 
-	private List<DeveloperEdge> getDeveloperEdges(List<DeveloperNode> nodes) {
+	private List<DeveloperEdge> getDeveloperEdges(
+			Map<Blame<T>, List<DeveloperNode>> nodesPerBlame) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
-		// if there is only one developer, create loop
-		if (nodes.size() == 1) {
-			DeveloperNode node = nodes.get(0);
-			edges.add(new DeveloperEdge(node, node));
-			return edges;
-		}
-		// crete a fully connected graph
-		for (DeveloperNode from : nodes) {
-			for (DeveloperNode to : nodes) {
-				if (from.equals(to)) {
-					continue;
+
+		for (Blame<T> b : nodesPerBlame.keySet()) {
+			List<DeveloperNode> bNodes = nodesPerBlame.get(b);
+			
+			// if there is only one developer, create loop
+			if (bNodes.size() == 1) {
+				DeveloperNode node = bNodes.get(0);
+				DeveloperEdge newEdge;
+				if (type == NetworkType.CHUNK_BASED) {
+					CommandLineBlameResult r = ((CommandLineBlameResult)b.getResult());
+					newEdge = new DeveloperEdge(node, node, b.getChunkRange(), r.getFilePath() );
+				}else{
+					BlameResult r = ((BlameResult)b.getResult());
+					newEdge = new DeveloperEdge(node, node, b.getChunkRange(), r.getResultPath());
 				}
-				DeveloperEdge edge = new DeveloperEdge(from, to);
-				if (!edges.contains(edge)) {
-					edges.add(edge);
+				edges.add(newEdge);
+				continue;
+			}
+			// create a fully connected graph
+			for (DeveloperNode from : bNodes) {
+				for (DeveloperNode to : bNodes) {
+					if (from.equals(to)) {
+						continue;
+					}
+					DeveloperEdge newEdge;
+					if (type == NetworkType.CHUNK_BASED) {
+						CommandLineBlameResult r = ((CommandLineBlameResult)b.getResult());
+						newEdge = new DeveloperEdge(from, to, b.getChunkRange(), r.getFilePath() );
+					}else{
+						BlameResult r = ((BlameResult)b.getResult());
+						newEdge = new DeveloperEdge(from, to, b.getChunkRange(), r.getResultPath());
+					}
+					if (!edges.contains(newEdge)) {
+						edges.add(newEdge);
+					}
 				}
 			}
+			
 		}
 		return edges;
 	}
 
-	protected abstract List<DeveloperNode> getDeveloperNodes(
+	protected abstract Map<Blame<T>, List<DeveloperNode>> getDeveloperNodes(
 			MergeScenario scenario, File file) throws IOException,
 			GitAPIException, InterruptedException;
 

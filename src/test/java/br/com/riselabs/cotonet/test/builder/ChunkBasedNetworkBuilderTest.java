@@ -83,31 +83,31 @@ public class ChunkBasedNetworkBuilderTest extends
 		DeveloperEdge edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(1, null, null, null), 
-				new DeveloperNode(2, null, null, null))));
+				new DeveloperNode(2, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(1, null, null, null), 
-				new DeveloperNode(3, null, null, null))));
+				new DeveloperNode(3, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(1, null, null, null), 
-				new DeveloperNode(4, null, null, null))));
+				new DeveloperNode(4, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(2, null, null, null), 
-				new DeveloperNode(3, null, null, null))));
+				new DeveloperNode(3, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(2, null, null, null), 
-				new DeveloperNode(4, null, null, null))));
+				new DeveloperNode(4, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(3, null, null, null), 
-				new DeveloperNode(4, null, null, null))));
+				new DeveloperNode(4, null, null, null), null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
 				new DeveloperNode(2, null, null, null), 
-				new DeveloperNode(5, null, null, null))));
+				new DeveloperNode(5, null, null, null), null, null)));
 		assertFalse(iEdges.hasNext());
 	}
 

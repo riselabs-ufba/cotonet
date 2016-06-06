@@ -27,41 +27,56 @@ import org.eclipse.jgit.revwalk.RevCommit;
  * @author Alcemir R. Santos
  *
  */
-public class Blame {
-
-	private RevCommit commit;
-	private BlameResult result;
-
-	public Blame() {
-		this(null, null);
+public class Blame<T> {
+	
+	private RevCommit revision; 
+	private T result;
+	private Integer beginLine;
+	private Integer endLine;
+	
+	public Blame(RevCommit aCommit, T aResult){
+		setRevision(aCommit);
+		setResult(aResult);
+	}
+	
+	public RevCommit getRevision() {
+		return revision;
 	}
 
-	public Blame(RevCommit commit, BlameResult result) {
-		super();
-		this.commit = commit;
-		this.result = result;
+	public void setRevision(RevCommit commit) {
+		this.revision = commit;
 	}
-
-	public RevCommit getCommit() {
-		return commit;
-	}
-
-	public void setCommit(RevCommit commit) {
-		this.commit = commit;
-	}
-
-	public BlameResult getResult() {
+	
+	public T getResult() {
 		return result;
 	}
 
-	public void setResult(BlameResult result) {
+	public void setResult(T result) {
 		this.result = result;
 	}
-
+	
+	public void setLine(Integer linenumber) {
+		if (beginLine == null) {
+			beginLine = linenumber;
+		}
+		endLine = linenumber;
+	}
+	
+	public String getChunkRange(){
+		return beginLine + "-" + endLine;
+	}
+	
 	@Override
 	public String toString() {
-		return "['"+ this.result.getResultPath()+"' blame @ "
+		String filepath = null;
+		if (result instanceof CommandLineBlameResult) {
+			filepath = ((CommandLineBlameResult)result).getFilePath();
+		}else if (result instanceof BlameResult) {
+			filepath = ((BlameResult)result).getResultPath();
+		}
+		return "['"+ filepath +"' blame @ "
 				+ "Commit ('"
-				+ this.commit.getFullMessage() + "')]";
+				+ this.revision.getFullMessage() + "')]";
 	}
+	
 }

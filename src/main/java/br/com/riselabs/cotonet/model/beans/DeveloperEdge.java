@@ -34,24 +34,29 @@ public class DeveloperEdge {
 	
 	private Integer weight;
 
+	private String chunkRange;
+	private String filepath;
+	
 	public DeveloperEdge() {
-		this(null, null, null, null, 1);
+		this(null, null, null, null, 1, null, null);
 	}
 	
 	public DeveloperEdge(Integer id) {
-		this(id, null, null, null, 1);
+		this(id, null, null, null, 1, null, null);
 	}
 
-	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB) {
-		this(null, null, devA, devB, 1);
+	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB, String chunkRange, String filepath) {
+		this(null, null, devA, devB, 1, chunkRange, filepath);
 	}
 	
-	public DeveloperEdge(Integer id, Integer networkID, DeveloperNode devA, DeveloperNode devB, Integer weight) {
+	public DeveloperEdge(Integer id, Integer networkID, DeveloperNode devA, DeveloperNode devB, Integer weight, String chunkRange, String filepath) {
 		setID(id);
 		setNetworkID(networkID);
 		setDevA(devA);
 		setDevB(devB);
 		setWeight(weight);
+		setChunkRange(chunkRange);
+		setFilepath(filepath);
 	}
 	
 	public Integer getID() {
@@ -150,5 +155,21 @@ public class DeveloperEdge {
 	
 	public int getWeight() {
 		return this.weight;
+	}
+
+	public String getChunkRange() {
+		return chunkRange;
+	}
+
+	public void setChunkRange(String chunkRange) {
+		this.chunkRange = chunkRange;
+	}
+
+	public String getFilepath() {
+		return filepath;
+	}
+
+	public void setFilepath(String filepath) {
+		this.filepath = filepath;
 	}
 }

@@ -74,19 +74,19 @@ public class RecursiveBlame {
 		return this;
 	}
 
-	public List<Blame> call() throws IOException, GitAPIException {
+	public List<Blame<BlameResult>> call() throws IOException, GitAPIException {
 		if (this.path == null
 				|| this.beginRevision == null
 				|| this.endRevision == null) {
 			return null;
 		}
 		
-		List<Blame> result = new ArrayList<Blame>();
+		List<Blame<BlameResult>> result = new ArrayList<Blame<BlameResult>>();
 		try (RevWalk rw = new RevWalk(this.repo)) {
 		    rw.markStart(rw.parseCommit(this.beginRevision));
 		    rw.markUninteresting(rw.parseCommit(this.endRevision));
 		    for (RevCommit curr; (curr = rw.next()) != null;){
-		    	result.add(new Blame(curr, blameCommit(curr)));
+		    	result.add(new Blame<BlameResult>(curr, blameCommit(curr)));
 		    }
 		}
 		

@@ -26,6 +26,7 @@ import static org.junit.Assert.assertTrue;
 import java.util.Iterator;
 import java.util.List;
 
+import org.eclipse.jgit.blame.BlameResult;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -52,19 +53,19 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	public void shouldRetriveBlamesFromTheRightBranch() throws Exception {
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 
-		List<Blame> blames = blamer.setRepository(db)
+		List<Blame<BlameResult>> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getRight())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
 		
 		assertTrue(blames.size()==3);
-		Iterator<Blame> i = blames.iterator();
-		Blame b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s3"));
+		Iterator<Blame<BlameResult>> i = blames.iterator();
+		Blame<BlameResult> b = i.next();
+		assertTrue(b.getRevision().getFullMessage().equals("s3"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s2"));
+		assertTrue(b.getRevision().getFullMessage().equals("s2"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s1"));
+		assertTrue(b.getRevision().getFullMessage().equals("s1"));
 		assertFalse(i.hasNext());
 	}
 	
@@ -72,19 +73,19 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	public void shouldRetriveBlamesFromTheLeftBranch() throws Exception {
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 
-		List<Blame> blames = blamer.setRepository(db)
+		List<Blame<BlameResult>> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getLeft())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
 		
 		assertTrue(blames.size()==3);
-		Iterator<Blame> i = blames.iterator();
-		Blame b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m3"));
+		Iterator<Blame<BlameResult>> i = blames.iterator();
+		Blame<BlameResult> b = i.next();
+		assertTrue(b.getRevision().getFullMessage().equals("m3"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m2"));
+		assertTrue(b.getRevision().getFullMessage().equals("m2"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m1"));
+		assertTrue(b.getRevision().getFullMessage().equals("m1"));
 		assertFalse(i.hasNext());
 	}
 	
@@ -93,7 +94,7 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 	public void shouldRetriveBlamesFromBothBranch() throws Exception {
 		MergeScenario scenario = setCollaborationScenarioInTempRepository();
 
-		List<Blame> blames = blamer.setRepository(db)
+		List<Blame<BlameResult>> blames = blamer.setRepository(db)
 				.setBeginRevision(scenario.getRight())
 				.setEndRevision(scenario.getBase()).setFilePath("Foo.java")
 				.call();
@@ -103,19 +104,19 @@ public class RecursiveBlameTest extends ConflictBasedRepositoryTestCase {
 				.call());
 		
 		assertTrue(blames.size()==6);
-		Iterator<Blame> i = blames.iterator();
-		Blame b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s3"));
+		Iterator<Blame<BlameResult>> i = blames.iterator();
+		Blame<BlameResult> b = i.next();
+		assertTrue(b.getRevision().getFullMessage().equals("s3"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s2"));
+		assertTrue(b.getRevision().getFullMessage().equals("s2"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("s1"));
+		assertTrue(b.getRevision().getFullMessage().equals("s1"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m3"));
+		assertTrue(b.getRevision().getFullMessage().equals("m3"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m2"));
+		assertTrue(b.getRevision().getFullMessage().equals("m2"));
 		b = i.next();
-		assertTrue(b.getCommit().getFullMessage().equals("m1"));
+		assertTrue(b.getRevision().getFullMessage().equals("m1"));
 		assertFalse(i.hasNext());
 	}
 }

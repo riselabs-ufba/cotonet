@@ -23,14 +23,16 @@ package br.com.riselabs.cotonet.builder;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
-import br.com.riselabs.cotonet.model.beans.ChunkBlame;
+import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
@@ -41,7 +43,7 @@ import br.com.riselabs.cotonet.model.enums.NetworkType;
  * @author Alcemir R. Santos
  *
  */
-public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
+public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder<CommandLineBlameResult> {
 
 	public ChunkBasedNetworkBuilder(Project project) {
 		setProject(project);
@@ -59,30 +61,34 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder {
 	 * (java.util.List)
 	 */
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario,
+	protected Map<Blame<CommandLineBlameResult>, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			File file) throws IOException, InterruptedException,
 			CheckoutConflictException, GitAPIException {
-		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
+		Map<Blame<CommandLineBlameResult>, List<DeveloperNode>> result = 
+				new HashMap<Blame<CommandLineBlameResult>, List<DeveloperNode>>();
 		ExternalGitCommand egit = new ExternalGitCommand();
-		List<ChunkBlame> blames = null;
+		List<Blame<CommandLineBlameResult>> blames = null;
 		try{
-			blames = egit.setDirectory(file).setType(CommandType.BLAME).call();
+			blames = egit.setMergeScenario(scenario).setDirectory(file).setType(CommandType.BLAME).call();
 		}catch(RuntimeException | IOException e ){
 			throw new IOException("Couldn't create blames for the file:"+file);
 		}
-		for (ChunkBlame blame : blames) {
+		for (Blame<CommandLineBlameResult> blame : blames) {
+			List<DeveloperNode> lDev =  new ArrayList<DeveloperNode>();
 			CommandLineBlameResult bResult = blame.getResult();
-			for (String anEmail : bResult.getAuthors()) {
-				DeveloperNode newNode = new DeveloperNode(anEmail);
-				if (!getProject().getDevs().values().contains(newNode)) {
-					getProject().add(newNode);
+			for (DeveloperNode aDev : bResult.getAuthors()) {
+				if (!getProject().getDevs().values().contains(aDev)) {
+					// if there is no such dev in the project, then add it 
+					getProject().add(aDev);
 				} else {
-					newNode = getProject().getDevByMail(anEmail);
+					// else update the reference with the project one
+					aDev = getProject().getDevByMail(aDev.getEmail());
 				}
-				if (!result.contains(newNode)) {
-					result.add(newNode);
+				if (!lDev.contains(aDev)) {
+					lDev.add(aDev);
 				}
 			}
+			result.put(blame, lDev);
 		}
 		return result;
 	}

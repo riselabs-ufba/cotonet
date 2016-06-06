@@ -62,11 +62,13 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 		try {
 			conn = Database.getConnection();
 			ps =  conn.prepareStatement(
-					"insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`) values (?,?,?,?);");
+					"insert into `edges` (`network_id`, `dev_a`, `dev_b`, `weight`, `chunk_range`, `filepath`) values (?,?,?,?,?,?);");
 			ps.setInt(1, edge.getNetworkID());
 			ps.setInt(2, edge.getDevA().getID());
 			ps.setInt(3, edge.getDevB().getID());
 			ps.setInt(4, edge.getWeight());
+			ps.setString(5, edge.getChunkRange());
+			ps.setString(6, edge.getFilepath());
 			hasSaved = ps.executeUpdate()>0?true:false;
 		} catch (SQLException e) {
 			try {
@@ -107,6 +109,9 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 						new DeveloperNode(rs.getInt("dev_b"), null, null, null));
 				edge.setDevB(aux);
 				edge.setWeight(rs.getInt("weight"));
+				edge.setChunkRange(rs.getString("chunk_range"));
+				edge.setFilepath(rs.getString("filepath"));
+				
 				result.add(edge);
 			}
 
@@ -160,8 +165,10 @@ public class DeveloperEdgeDAO implements DAO<DeveloperEdge> {
 				DeveloperNode devb = new DeveloperNodeDAO().get(
 						new DeveloperNode(rs.getInt("dev_b"), null, null, null));
 				Integer weight = rs.getInt("weight");
+				String chunkrange = rs.getString("chunk_range");
+				String filepath =  rs.getString("filepath");
 				DeveloperEdge nodeResult = new DeveloperEdge(id, networkid,
-						deva, devb, weight);
+						deva, devb, weight, chunkrange, filepath );
 				return nodeResult;
 			}
 		} catch (SQLException e) {

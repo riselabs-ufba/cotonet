@@ -32,14 +32,14 @@ import java.util.Map;
 public class CommandLineBlameResult {
 
 	private String filePath;
-	private Map<Integer, String> lineAuthorsMap;
+	private Map<Integer, DeveloperNode> lineAuthorsMap;
 	private Map<Integer, String> lineContentMap;
 	
 	public CommandLineBlameResult (String aPath){
-		this(aPath, new HashMap<Integer, String>(), new HashMap<Integer, String>());
+		this(aPath, new HashMap<Integer, DeveloperNode>(), new HashMap<Integer, String>());
 	}
 	
-	public CommandLineBlameResult(String aPath, Map<Integer, String> aLineToAuthorMap, Map<Integer, String> aLineToContentMap) {
+	public CommandLineBlameResult(String aPath, Map<Integer, DeveloperNode> aLineToAuthorMap, Map<Integer, String> aLineToContentMap) {
 		this.filePath = aPath;
 		this.lineAuthorsMap = aLineToAuthorMap;
 		this.lineContentMap = aLineToContentMap;
@@ -51,7 +51,7 @@ public class CommandLineBlameResult {
 	 * @param idx
 	 * @return
 	 */
-	public String getAuthor(int idx){
+	public DeveloperNode getAuthor(int idx){
 		return lineAuthorsMap.get(idx);
 	}
 	
@@ -59,9 +59,9 @@ public class CommandLineBlameResult {
 		return filePath;
 	}
 
-	public void addLineAuthor(Integer lineNumber, String author) {
+	public void addLineAuthor(Integer lineNumber, DeveloperNode author) {
 		if (lineAuthorsMap == null) {
-			lineAuthorsMap = new HashMap<Integer, String>();
+			lineAuthorsMap = new HashMap<Integer, DeveloperNode>();
 		}
 		lineAuthorsMap.put(lineNumber, author);
 	}
@@ -73,7 +73,7 @@ public class CommandLineBlameResult {
 		lineContentMap.put(lineNumber,content);
 	}
 	
-	public Map<Integer, String> getLineAuthorsMap(){
+	public Map<Integer, DeveloperNode> getLineAuthorsMap(){
 		return lineAuthorsMap;
 	}
 	
@@ -83,10 +83,9 @@ public class CommandLineBlameResult {
 		return result;
 	}
 
-	public List<String> getAuthors() {
-		List<String> result = new ArrayList<String>();
+	public List<DeveloperNode> getAuthors() {
+		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 		result.addAll(lineAuthorsMap.values());
 		return result;
 	}
-	
 }

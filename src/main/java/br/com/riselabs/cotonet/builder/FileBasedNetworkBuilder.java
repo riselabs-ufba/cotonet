@@ -25,7 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -54,42 +56,42 @@ import br.com.riselabs.cotonet.model.enums.NetworkType;
  * @author Alcemir R. Santos
  *
  */
-public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
-	
+public class FileBasedNetworkBuilder extends
+		AbstractNetworkBuilder<BlameResult> {
+
 	public FileBasedNetworkBuilder(Project project) {
 		setProject(project);
 		setType(NetworkType.FILE_BASED);
 	}
 
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(MergeScenario scenario, File file) throws IOException,
+	protected Map<Blame<BlameResult>, List<DeveloperNode>> getDeveloperNodes(
+			MergeScenario scenario, File file) throws IOException,
 			InterruptedException, GitAPIException {
-		List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
+		Map<Blame<BlameResult>, List<DeveloperNode>> devs = new HashMap<Blame<BlameResult>, List<DeveloperNode>>();
 
-		RecursiveBlame blamer = new RecursiveBlame(getProject()
-				.getRepository());
-		List<Blame> blames = null;
-		blames = blamer
-					.setRepository(getProject().getRepository())
-					.setBeginRevision(scenario.getRight())
-					.setEndRevision(scenario.getBase())
-					.setFilePath(file.getName()).call();
-		blames.addAll(blamer
-					.setRepository(getProject().getRepository())
-					.setBeginRevision(scenario.getLeft())
-					.setEndRevision(scenario.getBase())
-					.setFilePath(file.getName()).call());
+		RecursiveBlame blamer = new RecursiveBlame(getProject().getRepository());
+		List<Blame<BlameResult>> blames = null;
+		blames = blamer.setRepository(getProject().getRepository())
+				.setBeginRevision(scenario.getRight())
+				.setEndRevision(scenario.getBase()).setFilePath(file.getName())
+				.call();
+		blames.addAll(blamer.setRepository(getProject().getRepository())
+				.setBeginRevision(scenario.getLeft())
+				.setEndRevision(scenario.getBase()).setFilePath(file.getName())
+				.call());
 
 		List<RevCommit> commits = getCommitsFrom(scenario);
-		
-		for (Blame b : blames) {
-			RevCommit key = b.getCommit();
+
+		for (Blame<BlameResult> b : blames) {
+			RevCommit key = b.getRevision();
 			BlameResult value = b.getResult();
 
 			// read the number of lines from the commit to not look at
 			// changes in the working copy
 			int lines = countFileLines(key.getId(), value.getResultPath());
 
+			List<DeveloperNode> lDevs =  new ArrayList<DeveloperNode>();
 			for (int i = 0; i < lines; i++) {
 				if (commits.contains(value.getSourceCommit(i))) {
 					PersonIdent person = value.getSourceAuthor(i);
@@ -102,16 +104,16 @@ public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
 						dev = getProject().getDevByMail(
 								person.getEmailAddress());
 					}
-					if (!devs.contains(dev)) {
-						devs.add(dev);
+					if (!lDevs.contains(dev)) {
+						lDevs.add(dev);
 					}
 				}
 			}
-
+			devs.put(b, lDevs);
 		}
 		return devs;
 	}
-	
+
 	public List<RevCommit> getCommitsFrom(MergeScenario aScenario)
 			throws RevisionSyntaxException, MissingObjectException,
 			IncorrectObjectTypeException, AmbiguousObjectException,
@@ -160,7 +162,7 @@ public class FileBasedNetworkBuilder extends AbstractNetworkBuilder{
 		}
 		return result;
 	}
-	
+
 	private int countFileLines(ObjectId commitID, String name)
 			throws IOException {
 		try (RevWalk revWalk = new RevWalk(getProject().getRepository())) {

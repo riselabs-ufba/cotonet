@@ -56,35 +56,39 @@ import br.com.riselabs.cotonet.test.helpers.DBTestCase;
  * @author Alcemir R. Santos
  *
  */
-public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
+public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 	private DeveloperEdgeDAO dao;
 	private TestRepository<Repository> util;
-	
+
 	@Before
-	public void setup() throws Exception{
+	public void setup() throws Exception {
 		super.setUp();
 		util = new TestRepository<Repository>(db, new RevWalk(db));
 		DBTestCase.resetTestDB();
-		dao =  (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
-		Project p =  new Project("http://github.com/test", null);
+		dao = (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
+		Project p = new Project("http://github.com/test", null);
 		((ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT)).save(p);
 		DeveloperNode node = new DeveloperNode(1, "dev1", "dev1@project.com");
 		((DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE)).save(node);
 		node = new DeveloperNode(1, "dev2", "dev2@project.com");
 		((DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE)).save(node);
-		MergeScenario ms =  new MergeScenario(1, commit(), commit(), commit());
-		((MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO)).save(ms);
-		ConflictBasedNetwork conet = new ConflictBasedNetwork(1, 1, NetworkType.CHUNK_BASED);
-		((ConflictBasedNetworkDAO) DAOFactory.getDAO(CotonetBean.CONFLICT_NETWORK)).save(conet);
+		MergeScenario ms = new MergeScenario(1, commit(), commit(), commit());
+		((MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO))
+				.save(ms);
+		ConflictBasedNetwork conet = new ConflictBasedNetwork(1, 1,
+				NetworkType.CHUNK_BASED);
+		((ConflictBasedNetworkDAO) DAOFactory
+				.getDAO(CotonetBean.CONFLICT_NETWORK)).save(conet);
 	}
-	
+
 	@After
-	public void teardown() throws ClassNotFoundException, URISyntaxException, SQLException, IOException{
+	public void teardown() throws ClassNotFoundException, URISyntaxException,
+			SQLException, IOException {
 		DBTestCase.resetTestDB();
 	}
-	
-	@Test(expected=InvalidCotonetBeanException.class)
-	public void saveEmptyEdge() throws InvalidCotonetBeanException{
+
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEmptyEdge() throws InvalidCotonetBeanException {
 		DeveloperEdge edge = new DeveloperEdge();
 		assertNull(edge.getDevA());
 		assertNull(edge.getDevB());
@@ -92,68 +96,80 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase{
 		assertNull(edge.getNetworkID());
 		dao.save(edge);
 	}
-	
-	@Test(expected=InvalidCotonetBeanException.class)
-	public void saveEdgeWithInexistentDevelopers() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null, null, null), new DeveloperNode(35, null, null, null));
-		assertTrue(edge.getDevA().getID()==34);
-		assertTrue(edge.getDevB().getID()==25);
+
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEdgeWithInexistentDevelopers()
+			throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null,
+				null, null), new DeveloperNode(35, null, null, null), null,
+				null);
+		assertTrue(edge.getDevA().getID() == 34);
+		assertTrue(edge.getDevB().getID() == 25);
 		edge.setNetworkID(1);
-		assertTrue(edge.getNetworkID()==1);
+		assertTrue(edge.getNetworkID() == 1);
 		dao.save(edge);
 	}
-	
-	@Test(expected=InvalidCotonetBeanException.class)
-	public void saveEdgeWithLeftInexistentDeveloper() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null, null, null), new DeveloperNode(2, null, null, null));
-		assertTrue(edge.getDevA().getID()==34);
-		assertTrue(edge.getDevB().getID()==2);
+
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEdgeWithLeftInexistentDeveloper()
+			throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null,
+				null, null), new DeveloperNode(2, null, null, null), null, null);
+		assertTrue(edge.getDevA().getID() == 34);
+		assertTrue(edge.getDevB().getID() == 2);
 		edge.setNetworkID(1);
-		assertTrue(edge.getNetworkID()==1);
+		assertTrue(edge.getNetworkID() == 1);
 		dao.save(edge);
 	}
-	
-	@Test(expected=InvalidCotonetBeanException.class)
-	public void saveEdgeWithRightInexistentDeveloper() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null, null), new DeveloperNode(35, null, null, null));
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==25);
+
+	@Test(expected = InvalidCotonetBeanException.class)
+	public void saveEdgeWithRightInexistentDeveloper()
+			throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null,
+				null), new DeveloperNode(35, null, null, null), null, null);
+		assertTrue(edge.getDevA().getID() == 1);
+		assertTrue(edge.getDevB().getID() == 25);
 		edge.setNetworkID(1);
-		assertTrue(edge.getNetworkID()==1);
+		assertTrue(edge.getNetworkID() == 1);
 		dao.save(edge);
 	}
-	
+
 	@Test
-	public void saveEdgeSuccessfully() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null));
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==2);
+	public void saveEdgeSuccessfully() throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null,
+				null), new DeveloperNode(2, null, null, null), null, null);
+		assertTrue(edge.getDevA().getID() == 1);
+		assertTrue(edge.getDevB().getID() == 2);
 		assertNull(edge.getID());
 		edge.setNetworkID(1);
-		assertTrue(edge.getNetworkID()==1);
+		assertTrue(edge.getNetworkID() == 1);
 		assertTrue(dao.save(edge));
 	}
-	
+
 	@Test
-	public void getEdgeWithNoID() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null),1);
+	public void getEdgeWithNoID() throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1,
+				null, null, null), new DeveloperNode(2, null, null, null), 1,
+				null, null);
 		dao.save(edge);
 		assertNull(edge.getID());
-		edge =  dao.get(edge);
-		assertTrue(edge.getID()==1);
+		edge = dao.get(edge);
+		assertTrue(edge.getID() == 1);
 	}
-	
+
 	@Test
-	public void getEdgeByID() throws InvalidCotonetBeanException{
-		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1, null, null, null), new DeveloperNode(2, null, null, null),1);
+	public void getEdgeByID() throws InvalidCotonetBeanException {
+		DeveloperEdge edge = new DeveloperEdge(null, 1, new DeveloperNode(1,
+				null, null, null), new DeveloperNode(2, null, null, null), 1,
+				null, null);
 		dao.save(edge);
 		assertNull(edge.getID());
-		edge =  dao.get(new DeveloperEdge(1));
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==2);
-		assertTrue(edge.getNetworkID()==1);
+		edge = dao.get(new DeveloperEdge(1));
+		assertTrue(edge.getDevA().getID() == 1);
+		assertTrue(edge.getDevB().getID() == 2);
+		assertTrue(edge.getNetworkID() == 1);
 	}
-	
+
 	protected RevCommit commit(final RevCommit... parents) throws Exception {
 		return util.commit(parents);
 	}

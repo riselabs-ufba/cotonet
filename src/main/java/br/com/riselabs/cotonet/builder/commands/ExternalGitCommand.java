@@ -26,12 +26,17 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
+import org.eclipse.jgit.revwalk.RevCommit;
 
-import br.com.riselabs.cotonet.model.beans.ChunkBlame;
+import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
+import br.com.riselabs.cotonet.model.beans.DeveloperNode;
+import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
@@ -45,6 +50,7 @@ public class ExternalGitCommand {
 	}
 
 	private CommandType type;
+	private MergeScenario scenario;
 	private File file;
 
 	public ExternalGitCommand() {
@@ -67,13 +73,13 @@ public class ExternalGitCommand {
 	 * @return
 	 * @throws IOException
 	 */
-	public List<ChunkBlame> call() throws IOException, RuntimeException{
+	public List<Blame<CommandLineBlameResult>> call() throws IOException, RuntimeException {
 		Runtime run = Runtime.getRuntime();
 		Process pr;
 		String cmd;
 		String[] env = {};
 		BufferedReader buf;
-		List<ChunkBlame> blames = null;
+		List<Blame<CommandLineBlameResult>> blames = null;
 		switch (type) {
 		case RESET:
 			cmd = "git reset --hard";
@@ -94,7 +100,7 @@ public class ExternalGitCommand {
 			// parse output
 			buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
 
-			blames = new ArrayList<ChunkBlame>();
+			blames = new ArrayList<Blame<CommandLineBlameResult>>();
 			CommandLineBlameResult blameResult = new CommandLineBlameResult(
 					file.getCanonicalPath());
 
@@ -109,26 +115,38 @@ public class ExternalGitCommand {
 			final String CONFLICT_SEP = "=======";
 			final String CONFLICT_END = ">>>>>>>";
 			String line;
+			
 			while ((line = buf.readLine()) != null) {
-				// hack lines by blame into useful output
-				line = line.trim().replaceAll("\\s+|\\t", " ");
-				String author = line.substring(line.indexOf('<') + 1,
-						line.indexOf('>'));
-				Integer number = Integer.valueOf(line.split(" ")[2]);
-				String content;
-				int firstchar = line.indexOf(')') + 1;
-				int lastchar = line.length();
-				if (lastchar > firstchar) {
-					content = line.substring(firstchar, lastchar);
-				} else {
-					content = "";
+				
+				List<String> block =  new ArrayList<String>();
+				if (line.split(" ")[0].length()==40) {
+					block.add(line);
+					do{
+						block.add(buf.readLine());
+					}while((line = buf.readLine()).startsWith("\t"));
+					block.add(line);
 				}
+				Map<PKeys, String> porcelain = nextPorcelainBlock(block);
+				String content =  porcelain.get(PKeys.content);
+				
+//				// =====
+//				// hack lines by blame into useful output
+//				line = line.trim().replaceAll("\\s+|\\t", " ");
+//				String author = line.substring(line.indexOf('<') + 1,
+//						line.indexOf('>'));
+//				Integer number = Integer.valueOf(line.split(" ")[2]);
+//				int firstchar = line.indexOf(')') + 1;
+//				int lastchar = line.length();
+//				if (lastchar > firstchar) {
+//					content = line.substring(firstchar, lastchar);
+//				} else {
+//					content = "";
+//				}
 
 				// control flow seems a bit odd, I did this to collect the
-				// revision
-				// names before
-				// pushing the authors into the hashmap
-
+				// revision names before pushing the authors into the hashmap
+				Blame<CommandLineBlameResult> cBlame = 
+						new Blame<CommandLineBlameResult>(null, blameResult);
 				String[] markers = content.trim().split(" ", 2);
 				if (markers[0].startsWith(CONFLICT_START)) {
 					location = 0;
@@ -141,19 +159,24 @@ public class ExternalGitCommand {
 					location = -1;
 				} else if (location >= 0) {
 					// we are in one of the conflicting chunks
-					blameResult.addLineAuthor(number, author);
-					blameResult.addLineContent(number, content);
+					Integer linenumber = Integer.valueOf(porcelain.get(PKeys.linenumber));
+					String name = porcelain.get(PKeys.authorname);
+					String email = porcelain.get(PKeys.authormail);
+					DeveloperNode dev = new DeveloperNode(name, email);
+					cBlame.setLine(linenumber);
+					blameResult.addLineAuthor(linenumber, dev);
+					blameResult.addLineContent(linenumber, content);
 					continue;
 				} else {
 					continue;
 				}
 
 				// we are at separator or end of a conflict, processing
-				// authors
-				// found in chunk
+				// authors found in chunk
 
-				String revision = location == -1 ? revisions[1] : revisions[0];
-				blames.add(new ChunkBlame(revision, blameResult));
+				RevCommit revision = location == -1 ? scenario.getRight() : scenario.getLeft();
+				cBlame.setRevision(revision);
+				blames.add(cBlame);
 			}
 
 			buf.close();
@@ -196,4 +219,49 @@ public class ExternalGitCommand {
 		return blames;
 	}
 
+	private Map<PKeys, String> nextPorcelainBlock(List<String> filelines) {
+		Map<PKeys, String> map = new HashMap<PKeys, String>();
+		for (String str; (str = filelines.remove(0))!=null;) {
+			int firstBlankSpace = str.indexOf(" ");
+			String firsttoken = str.substring(0, firstBlankSpace).trim();
+			String value = str.substring(firstBlankSpace).trim();
+			if(firsttoken.length()==40){
+				// the first line of the block
+				value = str.split(" ")[2];
+				map.put(PKeys.linenumber, value);
+				continue;
+			}else if (firsttoken.equals("author")){
+				map.put(PKeys.authorname, value);
+				continue;
+			}else if(firsttoken.equals("author-mail")){
+				map.put(PKeys.authormail, value);
+				continue;
+			}else if(str.startsWith("\t")) {
+				map.put(PKeys.content, value);
+				return map;
+			}
+		}
+		return map;
+	}
+
+//	@Deprecated
+//	private boolean isContentLine(String key){
+//		return (!key.equals("author-time") && !key.equals("author-tz")
+//				&& !key.equals("committer") && !key.equals("comitter-mail")
+//				&& !key.equals("committer-time") && !key.equals("committer-tz")
+//				&& !key.equals("summary") && !key.equals("previous")
+//				&& !key.equals("filename"))?true:false;
+//	}
+	
+	enum PKeys{
+		 content,
+		 linenumber,
+		 authorname,
+		 authormail
+	}
+
+	public ExternalGitCommand setMergeScenario(MergeScenario aScenario) {
+		this.scenario = aScenario;
+		return this;
+	}
 }

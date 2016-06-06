@@ -52,7 +52,9 @@ public class ConflictBasedNetworkTest extends RepositoryTestCase {
 	
 	@Test
 	public void checkWithEdgesButEmptyNodes() {
-		connet.add(new DeveloperEdge(new DeveloperNode(1, null, null, null),new DeveloperNode(2, null, null, null)
+		connet.add(new DeveloperEdge(
+				new DeveloperNode(1, null, null, null),
+				new DeveloperNode(2, null, null, null), null, null
 		));
 		assertTrue(connet.getNodes().isEmpty());
 		assertFalse(connet.getEdges().isEmpty());
