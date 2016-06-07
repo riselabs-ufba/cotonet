@@ -100,7 +100,7 @@ CREATE TABLE IF NOT EXISTS `cotonet-test`.`edges` (
   `dev_a` INT UNSIGNED NOT NULL,
   `dev_b` INT UNSIGNED NOT NULL,
   `weight` INT UNSIGNED NOT NULL,
-  `chunk_range` VARCHAR(10) NOT NULL,
+  `chunk_range` VARCHAR(12) NOT NULL,
   `filepath` VARCHAR(300) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE INDEX `id_UNIQUE` (`id` ASC),
