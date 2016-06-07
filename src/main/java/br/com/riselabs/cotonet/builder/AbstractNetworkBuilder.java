@@ -301,36 +301,37 @@ public abstract class AbstractNetworkBuilder<T> {
 			Map<Blame<T>, List<DeveloperNode>> nodesPerBlame) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
-		for (Blame<T> b : nodesPerBlame.keySet()) {
-			List<DeveloperNode> bNodes = nodesPerBlame.get(b);
+		for (Entry<Blame<T>, List<DeveloperNode>> e: nodesPerBlame.entrySet()) {
+			Blame<T> key = e.getKey();
+			List<DeveloperNode> value = e.getValue();
 			
 			// if there is only one developer, create loop
-			if (bNodes.size() == 1) {
-				DeveloperNode node = bNodes.get(0);
+			if (value.size() == 1) {
+				DeveloperNode node = value.get(0);
 				DeveloperEdge newEdge;
 				if (type == NetworkType.CHUNK_BASED) {
-					CommandLineBlameResult r = ((CommandLineBlameResult)b.getResult());
-					newEdge = new DeveloperEdge(node, node, b.getChunkRange(), r.getFilePath() );
+					CommandLineBlameResult r = ((CommandLineBlameResult)key.getResult());
+					newEdge = new DeveloperEdge(node, node, key.getChunkRange(), r.getFilePath() );
 				}else{
-					BlameResult r = ((BlameResult)b.getResult());
-					newEdge = new DeveloperEdge(node, node, b.getChunkRange(), r.getResultPath());
+					BlameResult r = ((BlameResult)key.getResult());
+					newEdge = new DeveloperEdge(node, node, key.getChunkRange(), r.getResultPath());
 				}
 				edges.add(newEdge);
 				continue;
 			}
 			// create a fully connected graph
-			for (DeveloperNode from : bNodes) {
-				for (DeveloperNode to : bNodes) {
+			for (DeveloperNode from : value) {
+				for (DeveloperNode to : value) {
 					if (from.equals(to)) {
 						continue;
 					}
 					DeveloperEdge newEdge;
 					if (type == NetworkType.CHUNK_BASED) {
-						CommandLineBlameResult r = ((CommandLineBlameResult)b.getResult());
-						newEdge = new DeveloperEdge(from, to, b.getChunkRange(), r.getFilePath() );
+						CommandLineBlameResult r = ((CommandLineBlameResult)key.getResult());
+						newEdge = new DeveloperEdge(from, to, key.getChunkRange(), r.getFilePath() );
 					}else{
-						BlameResult r = ((BlameResult)b.getResult());
-						newEdge = new DeveloperEdge(from, to, b.getChunkRange(), r.getResultPath());
+						BlameResult r = ((BlameResult)key.getResult());
+						newEdge = new DeveloperEdge(from, to, key.getChunkRange(), r.getResultPath());
 					}
 					if (!edges.contains(newEdge)) {
 						edges.add(newEdge);

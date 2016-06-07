@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
-import org.eclipse.jgit.revwalk.RevCommit;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
@@ -48,6 +47,13 @@ public class ExternalGitCommand {
 	public enum CommandType {
 		BLAME, RESET
 	}
+	
+	private enum PKeys{
+		content,
+		linenumber,
+		authorname,
+		authormail
+	}
 
 	private CommandType type;
 	private MergeScenario scenario;
@@ -56,6 +62,11 @@ public class ExternalGitCommand {
 	public ExternalGitCommand() {
 	}
 
+	public ExternalGitCommand setMergeScenario(MergeScenario aScenario) {
+		this.scenario = aScenario;
+		return this;
+	}
+	
 	public ExternalGitCommand setType(CommandType aType) {
 		this.type = aType;
 		return this;
@@ -79,7 +90,7 @@ public class ExternalGitCommand {
 		String cmd;
 		String[] env = {};
 		BufferedReader buf;
-		List<Blame<CommandLineBlameResult>> blames = null;
+		List<Blame<CommandLineBlameResult>> fileBlames = null;
 		switch (type) {
 		case RESET:
 			cmd = "git reset --hard";
@@ -88,95 +99,54 @@ public class ExternalGitCommand {
 
 		case BLAME:
 		default:
-			/*
-			 * -e prints the email addresses, -n the original line numbers, -f
-			 * shows the name of the file.
-			 */
-			cmd = "git blame -f -e -n ";
+			cmd = "git blame -p --line-porcelain";
 			env = new String[1];
 			// we need this to disable the pager
 			env[0] = "GIT_PAGER=cat";
 			pr = run.exec(cmd + " " + file, env, file.getParentFile());
 			// parse output
 			buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
+			fileBlames = new ArrayList<Blame<CommandLineBlameResult>>();
 
-			blames = new ArrayList<Blame<CommandLineBlameResult>>();
-			CommandLineBlameResult blameResult = new CommandLineBlameResult(
-					file.getCanonicalPath());
-
-			/*
-			 * Track location by using the following encoding for the values: -1
-			 * = out of conflict 0 = in variant1 1 = in variant2
-			 */
-			int location = -1;
-			// no octopus merges supported for now ;)
-			String[] revisions = new String[2];
 			final String CONFLICT_START = "<<<<<<<";
 			final String CONFLICT_SEP = "=======";
 			final String CONFLICT_END = ">>>>>>>";
-			String line;
-			
-			while ((line = buf.readLine()) != null) {
+			boolean addBlame = false;
+			CommandLineBlameResult bResult;
+			bResult = new CommandLineBlameResult(file.getCanonicalPath());
+			Blame<CommandLineBlameResult> cBlame;
+			cBlame = new Blame<CommandLineBlameResult>(scenario.getLeft(), bResult);
+			List<String> block;
+			while ((block = readPorcelainBlock(buf)) != null) {
 				
-				List<String> block =  new ArrayList<String>();
-				if (line.split(" ")[0].length()==40) {
-					block.add(line);
-					do{
-						block.add(buf.readLine());
-					}while((line = buf.readLine()).startsWith("\t"));
-					block.add(line);
-				}
-				Map<PKeys, String> porcelain = nextPorcelainBlock(block);
-				String content =  porcelain.get(PKeys.content);
-				
-//				// =====
-//				// hack lines by blame into useful output
-//				line = line.trim().replaceAll("\\s+|\\t", " ");
-//				String author = line.substring(line.indexOf('<') + 1,
-//						line.indexOf('>'));
-//				Integer number = Integer.valueOf(line.split(" ")[2]);
-//				int firstchar = line.indexOf(')') + 1;
-//				int lastchar = line.length();
-//				if (lastchar > firstchar) {
-//					content = line.substring(firstchar, lastchar);
-//				} else {
-//					content = "";
-//				}
+				Map<PKeys, String> data = getDataFromPorcelainBlock(block);
 
-				// control flow seems a bit odd, I did this to collect the
-				// revision names before pushing the authors into the hashmap
-				Blame<CommandLineBlameResult> cBlame = 
-						new Blame<CommandLineBlameResult>(null, blameResult);
-				String[] markers = content.trim().split(" ", 2);
-				if (markers[0].startsWith(CONFLICT_START)) {
-					location = 0;
-					revisions[0] = markers[1];
+				String contentLine =  data.get(PKeys.content);
+				
+				if(contentLine.startsWith(CONFLICT_START)){
+					addBlame =  true;
 					continue;
-				} else if (markers[0].startsWith(CONFLICT_SEP)) {
-					location = 1;
-				} else if (markers[0].startsWith(CONFLICT_END)) {
-					revisions[1] = markers[1];
-					location = -1;
-				} else if (location >= 0) {
+				}else if(contentLine.startsWith(CONFLICT_SEP)) {
+					addBlame = true;
+					cBlame.setRevision(scenario.getLeft());
+					fileBlames.add(cBlame);
+					bResult =  new CommandLineBlameResult(file.getCanonicalPath());
+					cBlame =  new Blame<CommandLineBlameResult>(scenario.getRight(), bResult);
+					continue;
+				}else if (contentLine.startsWith(CONFLICT_END)) {
+					fileBlames.add(cBlame);
+					addBlame = false;
+				}else if (addBlame){
 					// we are in one of the conflicting chunks
-					Integer linenumber = Integer.valueOf(porcelain.get(PKeys.linenumber));
-					String name = porcelain.get(PKeys.authorname);
-					String email = porcelain.get(PKeys.authormail);
+					Integer linenumber = Integer.valueOf(data.get(PKeys.linenumber));
+					String name = data.get(PKeys.authorname);
+					String email = data.get(PKeys.authormail);
 					DeveloperNode dev = new DeveloperNode(name, email);
 					cBlame.setLine(linenumber);
-					blameResult.addLineAuthor(linenumber, dev);
-					blameResult.addLineContent(linenumber, content);
-					continue;
-				} else {
+					bResult.addLineAuthor(linenumber, dev);
+					bResult.addLineContent(linenumber, contentLine);
 					continue;
 				}
-
-				// we are at separator or end of a conflict, processing
-				// authors found in chunk
-
-				RevCommit revision = location == -1 ? scenario.getRight() : scenario.getLeft();
-				cBlame.setRevision(revision);
-				blames.add(cBlame);
 			}
 
 			buf.close();
@@ -216,12 +186,44 @@ public class ExternalGitCommand {
 					"Error on external call with exit code %d", pr.exitValue()));
 		}
 
-		return blames;
+		return fileBlames;
 	}
 
-	private Map<PKeys, String> nextPorcelainBlock(List<String> filelines) {
+	/**
+	 * returns the the output block concerning a line blame.
+	 * @param buf
+	 * @return
+	 * @throws IOException
+	 */
+	private List<String> readPorcelainBlock(BufferedReader buf)
+			throws IOException {
+		List<String> block = null;
+		String aLine = buf.readLine();
+		if (aLine == null) {
+			return null;
+		}else if (aLine.split(" ")[0].length()==40) {
+			block = new ArrayList<String>();
+			block.add(aLine);
+			while(!(aLine = buf.readLine()).startsWith("\t")){
+				block.add(aLine);
+			}
+			block.add(aLine);
+		}
+		return block;
+	}
+
+	/**
+	 * creates a map with the data needed from a given output block.
+	 * @param filelines
+	 * @return
+	 */
+	private Map<PKeys, String> getDataFromPorcelainBlock(List<String> filelines) {
 		Map<PKeys, String> map = new HashMap<PKeys, String>();
 		for (String str; (str = filelines.remove(0))!=null;) {
+			if (str.trim().isEmpty() || str.startsWith("\t")) {
+				map.put(PKeys.content, str.trim());
+				return map;
+			}
 			int firstBlankSpace = str.indexOf(" ");
 			String firsttoken = str.substring(0, firstBlankSpace).trim();
 			String value = str.substring(firstBlankSpace).trim();
@@ -234,34 +236,12 @@ public class ExternalGitCommand {
 				map.put(PKeys.authorname, value);
 				continue;
 			}else if(firsttoken.equals("author-mail")){
+				value = value.substring(2, value.length()-1);
 				map.put(PKeys.authormail, value);
 				continue;
-			}else if(str.startsWith("\t")) {
-				map.put(PKeys.content, value);
-				return map;
 			}
 		}
 		return map;
 	}
-
-//	@Deprecated
-//	private boolean isContentLine(String key){
-//		return (!key.equals("author-time") && !key.equals("author-tz")
-//				&& !key.equals("committer") && !key.equals("comitter-mail")
-//				&& !key.equals("committer-time") && !key.equals("committer-tz")
-//				&& !key.equals("summary") && !key.equals("previous")
-//				&& !key.equals("filename"))?true:false;
-//	}
 	
-	enum PKeys{
-		 content,
-		 linenumber,
-		 authorname,
-		 authormail
-	}
-
-	public ExternalGitCommand setMergeScenario(MergeScenario aScenario) {
-		this.scenario = aScenario;
-		return this;
-	}
 }
