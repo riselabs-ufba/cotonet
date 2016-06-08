@@ -72,7 +72,7 @@ public class ConflictBasedNetworkDAOTest extends ConflictBasedRepositoryTestCase
 		dao =  (ConflictBasedNetworkDAO) DAOFactory.getDAO(CotonetBean.CONFLICT_NETWORK);
 		p =  new Project("http://github.com/test", null);
 		((ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT)).save(p);
-		ms = new MergeScenario( 1, commit(), commit(), commit());
+		ms = new MergeScenario( 1, commit(), commit(), commit(), null);
 		msdao = ((MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO));
 		msdao.save(ms);
 	}

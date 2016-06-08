@@ -105,7 +105,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 	
 	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutBaseCommit() throws Exception {
-		MergeScenario ms = new MergeScenario(1, null, commit(), commit());
+		MergeScenario ms = new MergeScenario(1, null, commit(), commit(), null);
 		assertNull(ms.getID());
 		assertTrue(ms.getProjectID()==1);
 		assertNull(ms.getBase());
@@ -119,7 +119,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 	
 	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutLeftCommit() throws Exception {
-		MergeScenario ms = new MergeScenario(1, commit(), null, commit());
+		MergeScenario ms = new MergeScenario(1, commit(), null, commit(), null);
 		assertNull(ms.getID());
 		assertTrue(ms.getProjectID()==1);
 		assertNotNull(ms.getBase());
@@ -133,7 +133,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 	
 	@Test(expected = InvalidCotonetBeanException.class)
 	public void saveMergeScenarioWithoutRightCommit() throws Exception {
-		MergeScenario ms = new MergeScenario(1, commit(), commit(), null);
+		MergeScenario ms = new MergeScenario(1, commit(), commit(), null, null);
 		assertNull(ms.getID());
 		assertTrue(ms.getProjectID()==1);
 		assertNotNull(ms.getBase());
@@ -147,7 +147,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 	
 	@Test
 	public void saveMergeScenarioSuccessfully() throws Exception {
-		MergeScenario ms = new MergeScenario(1, commit(), commit(), commit());
+		MergeScenario ms = new MergeScenario(1, commit(), commit(), commit(), null);
 		assertNull(ms.getID());
 		assertTrue(ms.getProjectID()==1);
 		assertNotNull(ms.getBase());
@@ -164,7 +164,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		RevCommit base = commit();
 		RevCommit left =  commit();
 		RevCommit right = commit();
-		MergeScenario ms = new MergeScenario(1, base, left, right);
+		MergeScenario ms = new MergeScenario(1, base, left, right, null);
 		assertTrue(dao.save(ms));
 		
 		MergeScenario retrieved = dao.get(new MergeScenario(null, base, left, right));
@@ -179,7 +179,7 @@ public class MergeScenarioDAOTest extends ConflictBasedRepositoryTestCase  {
 		RevCommit base = commit();
 		RevCommit left =  commit();
 		RevCommit right = commit();
-		MergeScenario ms = new MergeScenario(1, base, left, right);
+		MergeScenario ms = new MergeScenario(1, base, left, right, null);
 		assertTrue(dao.save(ms));
 		
 		MergeScenario retrieved = dao.get(new MergeScenario(1, null, null, null, null));

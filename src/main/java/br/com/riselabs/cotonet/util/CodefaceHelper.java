@@ -183,7 +183,7 @@ public class CodefaceHelper {
 
 				try (RevWalk walk = new RevWalk(repository)) {
 
-					git.tag().setObjectId(s.getBase()).setName(tagB).call();
+					git.tag().setObjectId(s.getMerge()).setName(tagB).call();
 					git.tag().setObjectId(earlier).setName(tagT).call();
 
 					walk.dispose();

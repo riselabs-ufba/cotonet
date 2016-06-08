@@ -36,30 +36,34 @@ public class MergeScenario {
 	private String SHA1Left;
 	private RevCommit right;
 	private String SHA1Right;
+	private RevCommit merge;
+	private String SHA1Merge;
 	
 	public MergeScenario() {
 		this(null, null, null, null, null);
 	}
 
-	public MergeScenario(RevCommit base, RevCommit left, RevCommit right) {
-		this(null, base, left, right);
+	public MergeScenario(RevCommit base, RevCommit left, RevCommit right, RevCommit merge) {
+		this(null, base, left, right, merge);
 	}
 	
 	public MergeScenario(Integer projectID, RevCommit baseCommit, RevCommit leftParent,
-			RevCommit rightParent) {
+			RevCommit rightParent, RevCommit merge) {
 		setProjectID(projectID);
 		setBase(baseCommit);
 		setLeft(leftParent);
 		setRight(rightParent);
+		setMerge(merge);
 	}
 
 	public MergeScenario(Integer id, Integer projectID, String sha1Base,
-			String sha1Left, String sha1Right) {
+			String sha1Left, String sha1Right, String sha1Merge) {
 		setID(id);
 		setProjectID(projectID);
 		setSHA1Base(sha1Base);
 		setSHA1Left(sha1Left);
 		setSHA1Right(sha1Right);
+		setSHA1Merge(sha1Merge);
 	}
 
 	public void setID(Integer id) {
@@ -116,6 +120,22 @@ public class MergeScenario {
 
 	public void setSHA1Right(String sHA1Right) {
 		SHA1Right = sHA1Right;
+	}
+
+	public void setMerge(RevCommit aCommmit) {
+		this.merge = aCommmit;
+	}
+
+	public RevCommit getMerge(){
+		return this.merge;
+	}
+
+	public void setSHA1Merge(String sha1Merge) {
+		this.SHA1Merge = sha1Merge;
+	}
+	
+	public String getSHA1Merge(){
+		return this.SHA1Merge;
 	}
 
 	@Override

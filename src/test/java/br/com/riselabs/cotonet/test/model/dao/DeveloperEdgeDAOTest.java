@@ -72,7 +72,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 		((DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE)).save(node);
 		node = new DeveloperNode(1, "dev2", "dev2@project.com");
 		((DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE)).save(node);
-		MergeScenario ms = new MergeScenario(1, commit(), commit(), commit());
+		MergeScenario ms = new MergeScenario(1, commit(), commit(), commit(), null);
 		((MergeScenarioDAO) DAOFactory.getDAO(CotonetBean.MERGE_SCENARIO))
 				.save(ms);
 		ConflictBasedNetwork conet = new ConflictBasedNetwork(1, 1,

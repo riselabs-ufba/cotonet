@@ -61,12 +61,13 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			conn = Database.getConnection();
 			ps = conn
 					.prepareStatement("insert into `merge_scenarios` "
-							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`) "
-							+ "values (?,?,?,?);");
+							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`, `commit_merge`) "
+							+ "values (?,?,?,?,?);");
 			ps.setInt(1, ms.getProjectID());
 			ps.setString(2, ms.getBase().getName());
 			ps.setString(3, ms.getLeft().getName());
 			ps.setString(4, ms.getRight().getName());
+			ps.setString(5, ms.getMerge().getName());
 			hasSaved = ps.executeUpdate() > 0 ? true : false;
 		} catch (SQLException e) {
 			try {
@@ -116,6 +117,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				ms.setSHA1Base(rs.getString("commit_base"));
 				ms.setSHA1Left(rs.getString("commit_left"));
 				ms.setSHA1Right(rs.getString("commit_right"));
+				ms.setSHA1Merge(rs.getString("commit_merge"));
 				result.add(ms);
 			}
 
@@ -176,8 +178,9 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				String left = rs.getString("commit_left");
 				String base = rs.getString("commit_base");
 				String right = rs.getString("commit_right");
+				String merge = rs.getString("commit_merge");
 				MergeScenario pResult = new MergeScenario(id, systemID, base,
-						left, right);
+						left, right, merge);
 				return pResult;
 			}
 		} catch (SQLException e) {

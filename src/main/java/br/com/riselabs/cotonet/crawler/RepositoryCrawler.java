@@ -57,7 +57,6 @@ public class RepositoryCrawler implements Runnable {
 	private File repositoryDir;
 	private boolean skipNetworks;
 	private NetworkType type;
-
 	private File log;
 
 	public RepositoryCrawler(String systemURL, boolean mustClone,

@@ -23,7 +23,6 @@ package br.com.riselabs.cotonet.builder;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 
@@ -43,8 +42,8 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
-import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
@@ -133,15 +132,15 @@ public abstract class AbstractNetworkBuilder<T> {
 	 */
 	private List<MergeScenario> getMergeScenarios() throws IOException {
 		List<MergeScenario> result = new ArrayList<MergeScenario>();
-		// collecting merge commits
-		List<RevCommit> merges = new LinkedList<>();
+		List<RevCommit> mergeCommits = new ArrayList<RevCommit>();
 		Iterable<RevCommit> gitlog;
 		try {
 			Git git = Git.wrap(getProject().getRepository());
 			gitlog = git.log().call();
 			for (RevCommit commit : gitlog) {
 				if (commit.getParentCount() == 2) {
-					merges.add(commit);
+					mergeCommits.add(commit);
+					// collecting merge commits
 					// we know there is only to parents
 					RevCommit leftParent = commit.getParent(0);
 					RevCommit rightParent = commit.getParent(1);
@@ -183,7 +182,7 @@ public abstract class AbstractNetworkBuilder<T> {
 					walk.close();
 
 					result.add(new MergeScenario(baseCommit, leftParent,
-							rightParent));
+							rightParent, commit));
 				}
 			}
 		} catch (GitAPIException e) {
@@ -272,10 +271,10 @@ public abstract class AbstractNetworkBuilder<T> {
 
 		for (File file : files) {
 			List<ConflictChunk<T>> cchunks;
-			try{
-				 cchunks = getConflictChunks(scenario, file);
-			}catch(BlameException | IOException e){
-				Logger.log(log,	"[" + project.getName() + "]" + e.getMessage() );
+			try {
+				cchunks = getConflictChunks(scenario, file);
+			} catch (BlameException | IOException e) {
+				Logger.log(log, "[" + project.getName() + "]" + e.getMessage());
 				continue;
 			}
 			List<DeveloperNode> fNodes = null;
@@ -329,7 +328,7 @@ public abstract class AbstractNetworkBuilder<T> {
 	 */
 	protected abstract List<ConflictChunk<T>> getConflictChunks(
 			MergeScenario aScenario, File file) throws BlameException,
-			 IOException;
+			IOException;
 
 	/**
 	 * Creates the nodes for a given file.
