@@ -33,6 +33,7 @@ import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 
 /**
  * This class emulates a recursive git blame for a given time range.
@@ -74,19 +75,22 @@ public class RecursiveBlame {
 		return this;
 	}
 
-	public List<Blame<BlameResult>> call() throws IOException, GitAPIException {
+	public List<ConflictChunk<BlameResult>> call() throws IOException, GitAPIException {
 		if (this.path == null
 				|| this.beginRevision == null
 				|| this.endRevision == null) {
 			return null;
 		}
 		
-		List<Blame<BlameResult>> result = new ArrayList<Blame<BlameResult>>();
+		List<ConflictChunk<BlameResult>> result = new ArrayList<ConflictChunk<BlameResult>>();
 		try (RevWalk rw = new RevWalk(this.repo)) {
 		    rw.markStart(rw.parseCommit(this.beginRevision));
 		    rw.markUninteresting(rw.parseCommit(this.endRevision));
+		    ConflictChunk<BlameResult> conflict = new ConflictChunk<>(path);
 		    for (RevCommit curr; (curr = rw.next()) != null;){
-		    	result.add(new Blame<BlameResult>(curr, blameCommit(curr)));
+		    	conflict.setLeft(new Blame<BlameResult>(curr, blameCommit(curr)));
+		    	conflict.setLine(1);
+		    	result.add(conflict);
 		    }
 		}
 		

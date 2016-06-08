@@ -34,6 +34,7 @@ import org.apache.commons.io.IOUtils;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.util.Logger;
@@ -84,13 +85,13 @@ public class ExternalGitCommand {
 	 * @return
 	 * @throws IOException
 	 */
-	public List<Blame<CommandLineBlameResult>> call() throws IOException, RuntimeException {
+	public List<ConflictChunk<CommandLineBlameResult>> call() throws IOException, RuntimeException {
 		Runtime run = Runtime.getRuntime();
 		Process pr;
 		String cmd;
 		String[] env = {};
 		BufferedReader buf;
-		List<Blame<CommandLineBlameResult>> fileBlames = null;
+		List<ConflictChunk<CommandLineBlameResult>> conflicts = null;
 		switch (type) {
 		case RESET:
 			cmd = "git reset --hard";
@@ -106,12 +107,15 @@ public class ExternalGitCommand {
 			pr = run.exec(cmd + " " + file, env, file.getParentFile());
 			// parse output
 			buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-			fileBlames = new ArrayList<Blame<CommandLineBlameResult>>();
+			conflicts = new ArrayList<ConflictChunk<CommandLineBlameResult>>();
 
 			final String CONFLICT_START = "<<<<<<<";
 			final String CONFLICT_SEP = "=======";
 			final String CONFLICT_END = ">>>>>>>";
 			boolean addBlame = false;
+			
+			ConflictChunk<CommandLineBlameResult> conflict = null;
+			
 			CommandLineBlameResult bResult;
 			bResult = new CommandLineBlameResult(file.getCanonicalPath());
 			Blame<CommandLineBlameResult> cBlame;
@@ -129,12 +133,14 @@ public class ExternalGitCommand {
 				}else if(contentLine.startsWith(CONFLICT_SEP)) {
 					addBlame = true;
 					cBlame.setRevision(scenario.getLeft());
-					fileBlames.add(cBlame);
+					conflict =	new ConflictChunk<CommandLineBlameResult>(file.getCanonicalPath());
+					conflict.setLeft(cBlame);
 					bResult =  new CommandLineBlameResult(file.getCanonicalPath());
 					cBlame =  new Blame<CommandLineBlameResult>(scenario.getRight(), bResult);
 					continue;
 				}else if (contentLine.startsWith(CONFLICT_END)) {
-					fileBlames.add(cBlame);
+					conflict.setRight(cBlame);
+					conflicts.add(conflict);
 					addBlame = false;
 				}else if (addBlame){
 					// we are in one of the conflicting chunks
@@ -142,7 +148,7 @@ public class ExternalGitCommand {
 					String name = data.get(PKeys.authorname);
 					String email = data.get(PKeys.authormail);
 					DeveloperNode dev = new DeveloperNode(name, email);
-					cBlame.setLine(linenumber);
+					conflict.setLine(linenumber);
 					bResult.addLineAuthor(linenumber, dev);
 					bResult.addLineContent(linenumber, contentLine);
 					continue;
@@ -186,7 +192,7 @@ public class ExternalGitCommand {
 					"Error on external call with exit code %d", pr.exitValue()));
 		}
 
-		return fileBlames;
+		return conflicts;
 	}
 
 	/**

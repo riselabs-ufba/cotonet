@@ -18,52 +18,26 @@
  * DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package br.com.riselabs.cotonet.model.beans;
+package br.com.riselabs.cotonet.model.exceptions;
 
-import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
  * @author Alcemir R. Santos
  *
  */
-public class Blame<T> {
-	
-	private RevCommit revision; 
-	private T result;
-	
-	public Blame(RevCommit aCommit, T aResult){
-		setRevision(aCommit);
-		setResult(aResult);
-	}
-	
-	public RevCommit getRevision() {
-		return revision;
-	}
+public class BlameException extends Exception {
 
-	public void setRevision(RevCommit commit) {
-		this.revision = commit;
-	}
+	private static final long serialVersionUID = 1L;
 	
-	public T getResult() {
-		return result;
-	}
+	private String filepath;
 
-	public void setResult(T result) {
-		this.result = result;
+	public BlameException(String path, String description, Throwable cause){
+		super(description, cause);
+		this.filepath = path;
 	}
 	
 	@Override
-	public String toString() {
-		String filepath = null;
-		if (result instanceof CommandLineBlameResult) {
-			filepath = ((CommandLineBlameResult)result).getFilePath();
-		}else if (result instanceof BlameResult) {
-			filepath = ((BlameResult)result).getResultPath();
-		}
-		return "['"+ filepath +"' blame @ "
-				+ "Commit ('"
-				+ this.revision.getFullMessage() + "')]";
+	public String getMessage(){
+		return "Couldn't blame \'"+filepath+ "\' due to" + super.getCause()+".";
 	}
-	
 }

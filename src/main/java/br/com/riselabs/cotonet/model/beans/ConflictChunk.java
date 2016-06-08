@@ -20,50 +20,67 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
-import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.revwalk.RevCommit;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author Alcemir R. Santos
  *
  */
-public class Blame<T> {
+public class ConflictChunk<T> {
+
+	private String path;
+	private Integer beginLine;
+	private Integer endLine;
 	
-	private RevCommit revision; 
-	private T result;
-	
-	public Blame(RevCommit aCommit, T aResult){
-		setRevision(aCommit);
-		setResult(aResult);
-	}
-	
-	public RevCommit getRevision() {
-		return revision;
+	private Blame<T> left;
+	private Blame<T> right;
+
+	public ConflictChunk(String filepath){
+		setPath(filepath);
 	}
 
-	public void setRevision(RevCommit commit) {
-		this.revision = commit;
-	}
-	
-	public T getResult() {
-		return result;
+	public String getPath() {
+		return path;
 	}
 
-	public void setResult(T result) {
-		this.result = result;
+	public void setPath(String path) {
+		this.path = path;
 	}
-	
-	@Override
-	public String toString() {
-		String filepath = null;
-		if (result instanceof CommandLineBlameResult) {
-			filepath = ((CommandLineBlameResult)result).getFilePath();
-		}else if (result instanceof BlameResult) {
-			filepath = ((BlameResult)result).getResultPath();
+
+	public Blame<T> getRight() {
+		return right;
+	}
+
+	public void setRight(Blame<T> right) {
+		this.right = right;
+	}
+
+	public Blame<T> getLeft() {
+		return left;
+	}
+
+	public void setLeft(Blame<T> left) {
+		this.left = left;
+	}
+
+	public void setLine(Integer linenumber) {
+		if (beginLine == null) {
+			beginLine = linenumber;
 		}
-		return "['"+ filepath +"' blame @ "
-				+ "Commit ('"
-				+ this.revision.getFullMessage() + "')]";
+		endLine = linenumber;
 	}
 	
+	public String getChunkRange(){
+		return beginLine + "-" + endLine;
+	}
+
+	public List<Blame<T>> getBlames() {
+		List<Blame<T>> blames =  new ArrayList<Blame<T>>();
+		blames.add(left);
+		blames.add(right);
+		return blames;
+	}
+	
+
 }

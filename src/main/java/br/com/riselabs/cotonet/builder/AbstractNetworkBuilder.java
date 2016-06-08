@@ -25,8 +25,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -37,7 +35,6 @@ import org.eclipse.jgit.api.ResetCommand.ResetType;
 import org.eclipse.jgit.api.errors.CheckoutConflictException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.JGitInternalException;
-import org.eclipse.jgit.blame.BlameResult;
 import org.eclipse.jgit.errors.NoMergeBaseException;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.merge.ThreeWayMerger;
@@ -46,8 +43,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
-import br.com.riselabs.cotonet.model.beans.Blame;
-import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -55,6 +51,7 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.db.DBWritter;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.BlameException;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
@@ -266,85 +263,81 @@ public abstract class AbstractNetworkBuilder<T> {
 
 	private ConflictBasedNetwork getConflictNetwork(MergeScenario scenario)
 			throws IOException, GitAPIException, InterruptedException {
-		ConflictBasedNetwork connet = null;
 		List<File> files = getConflictingFiles(scenario);
 		if (files == null) {
 			return null; // dealing with ghost scenarios or fail to hard reset.
 		}
 		List<DeveloperNode> nodes = new ArrayList<DeveloperNode>();
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+
 		for (File file : files) {
-			Map<Blame<T>, List<DeveloperNode>> fileNodes = null;
-			try {
-				fileNodes = getDeveloperNodes(scenario, file);
-			} catch (IOException | InterruptedException e) {
-				Logger.log(
-						log,
-						"[" + project.getName() + "] Exception ("
-								+ e.getMessage() + ");");
+			List<ConflictChunk<T>> cchunks;
+			try{
+				 cchunks = getConflictChunks(scenario, file);
+			}catch(BlameException | IOException e){
+				Logger.log(log,	"[" + project.getName() + "]" + e.getMessage() );
 				continue;
 			}
-			for (Entry<Blame<T>, List<DeveloperNode>> e : fileNodes.entrySet()) {
-				for (DeveloperNode dev : e.getValue()) {
-					if (!nodes.contains(dev)) {
-						nodes.add(dev);
-					}
-				}
+			List<DeveloperNode> fNodes = null;
+			List<DeveloperEdge> fEdges = null;
+			for (ConflictChunk<T> cChunk : cchunks) {
+				fNodes = getDeveloperNodes(cChunk);
+				fEdges = getDeveloperEdges(fNodes, cChunk);
 			}
-			edges.addAll(getDeveloperEdges(fileNodes));
+			nodes.addAll(fNodes);
+			edges.addAll(fEdges);
 		}
-		connet = new ConflictBasedNetwork(project, scenario, nodes, edges, type);
-		return connet;
+		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
-	private List<DeveloperEdge> getDeveloperEdges(
-			Map<Blame<T>, List<DeveloperNode>> nodesPerBlame) {
+	private List<DeveloperEdge> getDeveloperEdges(List<DeveloperNode> nodes,
+			ConflictChunk<T> cChunk) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
-		for (Entry<Blame<T>, List<DeveloperNode>> e: nodesPerBlame.entrySet()) {
-			Blame<T> key = e.getKey();
-			List<DeveloperNode> value = e.getValue();
-			
-			// if there is only one developer, create loop
-			if (value.size() == 1) {
-				DeveloperNode node = value.get(0);
-				DeveloperEdge newEdge;
-				if (type == NetworkType.CHUNK_BASED) {
-					CommandLineBlameResult r = ((CommandLineBlameResult)key.getResult());
-					newEdge = new DeveloperEdge(node, node, key.getChunkRange(), r.getFilePath() );
-				}else{
-					BlameResult r = ((BlameResult)key.getResult());
-					newEdge = new DeveloperEdge(node, node, key.getChunkRange(), r.getResultPath());
-				}
-				edges.add(newEdge);
-				continue;
-			}
-			// create a fully connected graph
-			for (DeveloperNode from : value) {
-				for (DeveloperNode to : value) {
-					if (from.equals(to)) {
-						continue;
-					}
-					DeveloperEdge newEdge;
-					if (type == NetworkType.CHUNK_BASED) {
-						CommandLineBlameResult r = ((CommandLineBlameResult)key.getResult());
-						newEdge = new DeveloperEdge(from, to, key.getChunkRange(), r.getFilePath() );
-					}else{
-						BlameResult r = ((BlameResult)key.getResult());
-						newEdge = new DeveloperEdge(from, to, key.getChunkRange(), r.getResultPath());
-					}
-					if (!edges.contains(newEdge)) {
-						edges.add(newEdge);
-					}
-				}
-			}
-			
+		// if there is only one developer, create loop
+		if (nodes.size() == 1) {
+			DeveloperNode node = nodes.get(0);
+			edges.add(new DeveloperEdge(node, node, cChunk.getChunkRange(),
+					cChunk.getPath().toString()));
+			return edges;
 		}
+		// create a fully connected graph
+		for (DeveloperNode from : nodes) {
+			for (DeveloperNode to : nodes) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, cChunk.getChunkRange(),
+						cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
 		return edges;
 	}
 
-	protected abstract Map<Blame<T>, List<DeveloperNode>> getDeveloperNodes(
-			MergeScenario scenario, File file) throws IOException,
-			GitAPIException, InterruptedException;
+	/**
+	 * Returns the conflict chunks of a given file.
+	 * 
+	 * @param scenario
+	 *            - the scenario that as merged
+	 * @param file
+	 *            - a file with conflicts
+	 */
+	protected abstract List<ConflictChunk<T>> getConflictChunks(
+			MergeScenario aScenario, File file) throws BlameException,
+			 IOException;
+
+	/**
+	 * Creates the nodes for a given file.
+	 * 
+	 * @param cChunk
+	 * @return
+	 */
+	protected abstract List<DeveloperNode> getDeveloperNodes(
+			ConflictChunk<T> cChunk);
 
 }

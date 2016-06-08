@@ -25,9 +25,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -47,10 +45,13 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 
 import br.com.riselabs.cotonet.builder.commands.RecursiveBlame;
 import br.com.riselabs.cotonet.model.beans.Blame;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
+import br.com.riselabs.cotonet.model.exceptions.BlameException;
+import br.com.riselabs.cotonet.util.Logger;
 
 /**
  * @author Alcemir R. Santos
@@ -65,51 +66,59 @@ public class FileBasedNetworkBuilder extends
 	}
 
 	@Override
-	protected Map<Blame<BlameResult>, List<DeveloperNode>> getDeveloperNodes(
-			MergeScenario scenario, File file) throws IOException,
-			InterruptedException, GitAPIException {
-		Map<Blame<BlameResult>, List<DeveloperNode>> devs = new HashMap<Blame<BlameResult>, List<DeveloperNode>>();
-
+	protected List<ConflictChunk<BlameResult>> getConflictChunks(
+			MergeScenario aScenario, File file) throws BlameException,
+			IOException {
 		RecursiveBlame blamer = new RecursiveBlame(getProject().getRepository());
-		List<Blame<BlameResult>> blames = null;
-		blames = blamer.setRepository(getProject().getRepository())
-				.setBeginRevision(scenario.getRight())
-				.setEndRevision(scenario.getBase()).setFilePath(file.getName())
-				.call();
-		blames.addAll(blamer.setRepository(getProject().getRepository())
-				.setBeginRevision(scenario.getLeft())
-				.setEndRevision(scenario.getBase()).setFilePath(file.getName())
-				.call());
+		List<ConflictChunk<BlameResult>> blames = null;
+		try {
+			blames = blamer.setRepository(getProject().getRepository())
+					.setBeginRevision(aScenario.getRight())
+					.setEndRevision(aScenario.getBase())
+					.setFilePath(file.getName()).call();
+			blames.addAll(blamer.setRepository(getProject().getRepository())
+					.setBeginRevision(aScenario.getLeft())
+					.setEndRevision(aScenario.getBase())
+					.setFilePath(file.getName()).call());
+		} catch (GitAPIException e) {
+			throw new BlameException(file.getCanonicalPath(),
+					"Failed to blame.", e);
+		}
+		return blames;
+	}
 
-		List<RevCommit> commits = getCommitsFrom(scenario);
+	@Override
+	protected List<DeveloperNode> getDeveloperNodes(
+			ConflictChunk<BlameResult> cChunk) {
+		List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
+		Blame<BlameResult> b = cChunk.getLeft();
+		RevCommit key = b.getRevision();
+		BlameResult value = b.getResult();
 
-		for (Blame<BlameResult> b : blames) {
-			RevCommit key = b.getRevision();
-			BlameResult value = b.getResult();
+		// read the number of lines from the commit to not look at
+		// changes in the working copy
+		int lines;
+		try {
+			lines = countFileLines(key.getId(), value.getResultPath());
+		} catch (IOException e) {
+			Logger.logStackTrace(log, e);
+			return new ArrayList<DeveloperNode>();
+		}
+		for (int i = 0; i < lines; i++) {
+			// TODO if (commits.contains(value.getSourceCommit(i))) {
 
-			// read the number of lines from the commit to not look at
-			// changes in the working copy
-			int lines = countFileLines(key.getId(), value.getResultPath());
-
-			List<DeveloperNode> lDevs =  new ArrayList<DeveloperNode>();
-			for (int i = 0; i < lines; i++) {
-				if (commits.contains(value.getSourceCommit(i))) {
-					PersonIdent person = value.getSourceAuthor(i);
-					DeveloperNode dev = new DeveloperNode();
-					dev.setName(person.getName());
-					dev.setEmail(person.getEmailAddress());
-					if (!getProject().getDevs().values().contains(dev)) {
-						getProject().add(dev);
-					} else {
-						dev = getProject().getDevByMail(
-								person.getEmailAddress());
-					}
-					if (!lDevs.contains(dev)) {
-						lDevs.add(dev);
-					}
-				}
+			PersonIdent person = value.getSourceAuthor(i);
+			DeveloperNode dev = new DeveloperNode();
+			dev.setName(person.getName());
+			dev.setEmail(person.getEmailAddress());
+			if (!getProject().getDevs().values().contains(dev)) {
+				getProject().add(dev);
+			} else {
+				dev = getProject().getDevByMail(person.getEmailAddress());
 			}
-			devs.put(b, lDevs);
+			if (!devs.contains(dev)) {
+				devs.add(dev);
+			}
 		}
 		return devs;
 	}

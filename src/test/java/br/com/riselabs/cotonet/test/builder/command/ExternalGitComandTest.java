@@ -32,8 +32,8 @@ import org.junit.Test;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
-import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
+import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
@@ -52,12 +52,12 @@ public class ExternalGitComandTest extends ConflictBasedRepositoryTestCase {
 		
 		String mergedfilepath = db.getDirectory().getParent().concat(File.separator+"Bar.java");
 		ExternalGitCommand egit = new ExternalGitCommand();
-		List<Blame<CommandLineBlameResult>> chunksBlames = egit.setType(CommandType.BLAME).setDirectory(new File(mergedfilepath)).call();
+		List<ConflictChunk<CommandLineBlameResult>> chunksBlames = egit.setType(CommandType.BLAME).setDirectory(new File(mergedfilepath)).call();
 		
-		Iterator<Blame<CommandLineBlameResult>> iBlames = chunksBlames.iterator();
-		Blame<CommandLineBlameResult> aBlame = iBlames.next();
-		assertTrue(aBlame.getRevision().equals("HEAD"));
-		Iterator<Entry<Integer, DeveloperNode>> iLines = aBlame.getResult().getLineAuthorsMap().entrySet().iterator();
+		Iterator<ConflictChunk<CommandLineBlameResult>> iBlames = chunksBlames.iterator();
+		ConflictChunk<CommandLineBlameResult> aBlame = iBlames.next();
+		assertTrue(aBlame.getLeft().getRevision().equals("HEAD"));
+		Iterator<Entry<Integer, DeveloperNode>> iLines = aBlame.getLeft().getResult().getLineAuthorsMap().entrySet().iterator();
 		Entry<Integer, DeveloperNode> anEntry = iLines.next();
 		assertTrue(anEntry.getKey()==3);
 		DeveloperNode dev =  new DeveloperNode("devb@project.com");
@@ -69,7 +69,7 @@ public class ExternalGitComandTest extends ConflictBasedRepositoryTestCase {
 		assertFalse(iLines.hasNext());
 		
 		aBlame = iBlames.next();
-		iLines = aBlame.getResult().getLineAuthorsMap().entrySet().iterator();
+		iLines = aBlame.getLeft().getResult().getLineAuthorsMap().entrySet().iterator();
 		anEntry = iLines.next();
 		assertTrue(anEntry.getKey()==3);
 		dev =  new DeveloperNode("deva@project.com");
