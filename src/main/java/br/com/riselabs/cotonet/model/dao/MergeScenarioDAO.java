@@ -104,10 +104,19 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 
 	@Override
 	public List<MergeScenario> list() throws InvalidCotonetBeanException {
+		return list(null);
+	}
+
+	public List<MergeScenario> list(Integer projectID) throws InvalidCotonetBeanException {
 		List<MergeScenario> result = new ArrayList<MergeScenario>();
 		try {
 			conn = Database.getConnection();
-			ps = conn.prepareStatement("select * from `merge_scenarios`;");
+			String sql = "select * from `merge_scenarios`;";
+			if (projectID!=null) {
+				sql = "select * from `merge_scenarios` where `system_id`=?;";
+			}
+			ps = conn.prepareStatement(sql);
+			ps.setInt(1, projectID);
 			rs = ps.executeQuery();
 
 			while (rs.next()) {
@@ -133,7 +142,6 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 		}
 		return result;
 	}
-
 	@Override
 	public MergeScenario get(MergeScenario ms)
 			throws InvalidCotonetBeanException {

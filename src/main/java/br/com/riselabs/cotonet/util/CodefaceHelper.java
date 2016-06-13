@@ -42,6 +42,7 @@ import org.eclipse.jgit.api.errors.NoHeadException;
 import org.eclipse.jgit.errors.IncorrectObjectTypeException;
 import org.eclipse.jgit.errors.MissingObjectException;
 import org.eclipse.jgit.errors.RevisionSyntaxException;
+import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
@@ -49,7 +50,9 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
 
 /**
@@ -153,9 +156,14 @@ public class CodefaceHelper {
 	private static void createMergeBasedTags(Project project)
 			throws IOException {
 		Map<String, String> tagsMap;
+		MergeScenarioDAO dao =  new MergeScenarioDAO();
 		Repository repository = project.getRepository();
-		List<MergeScenario> scenarios = new ArrayList<MergeScenario>(
-				project.getMergeScenarios());
+		List<MergeScenario> scenarios = new ArrayList<MergeScenario>();
+		try {
+			scenarios = dao.list(project.getID());
+		} catch (InvalidCotonetBeanException e1) {
+			Logger.logStackTrace(e1);
+		}
 		try (Git git = new Git(repository)) {
 			// remove existing tags
 			for (String tag : repository.getTags().keySet()) {
@@ -166,24 +174,22 @@ public class CodefaceHelper {
 		}
 
 		tagsMap = new HashMap<String, String>();
-		for (MergeScenario s : scenarios) {
-			if (s.getID() == null) {
-				continue; // XXX handling ghosts exceptions
-			}
-			String tagT = project.getName() + "T" + s.getID();
-			String tagB = project.getName() + "B" + s.getID();
+		for (MergeScenario scenario : scenarios) {
+			String tagT = project.getName() + "T" + scenario.getID();
+			String tagB = project.getName() + "B" + scenario.getID();
 
-			tagsMap.put(tagB, s.getBase().getName());
+			tagsMap.put(tagB, scenario.getSHA1Merge());
 			RevCommit earlier = getEarlierCommit(project.getRepository(),
-					s.getBase(), 3);
+					scenario.getSHA1Merge(), 3);
 			tagsMap.put(tagT, earlier.getName());
 
 			// prepare test-repository
 			try (Git git = new Git(repository)) {
 
 				try (RevWalk walk = new RevWalk(repository)) {
-
-					git.tag().setObjectId(s.getMerge()).setName(tagB).call();
+					ObjectId refCommitID = ObjectId.fromString(scenario.getSHA1Merge());
+					RevCommit refCommit = walk.parseCommit(refCommitID);
+					git.tag().setObjectId(refCommit).setName(tagB).call();
 					git.tag().setObjectId(earlier).setName(tagT).call();
 
 					walk.dispose();
@@ -214,7 +220,7 @@ public class CodefaceHelper {
 	 * earlier.
 	 * 
 	 * @param repo
-	 * @param baseCommit
+	 * @param refCommit
 	 * @param i
 	 * @return
 	 * @throws IOException
@@ -222,11 +228,12 @@ public class CodefaceHelper {
 	 * @throws MissingObjectException
 	 */
 	private static RevCommit getEarlierCommit(Repository repo,
-			RevCommit baseCommit, int i) throws MissingObjectException,
+			String refCommit, int i) throws MissingObjectException,
 			IncorrectObjectTypeException, IOException {
 		RevCommit result = null;
 		try (RevWalk rw = new RevWalk(repo)) {
-			RevCommit base = rw.parseCommit(baseCommit.getId());
+			ObjectId refID = ObjectId.fromString(refCommit);
+			RevCommit base = rw.parseCommit(refID);
 			rw.markStart(base);
 			Date baseDate = base.getAuthorIdent().getWhen();
 			Instant instant = baseDate.toInstant();
@@ -247,6 +254,7 @@ public class CodefaceHelper {
 					result = aux;
 				}
 			}
+			rw.close();
 		}
 		return result;
 	}
