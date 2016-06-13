@@ -48,12 +48,18 @@ public class ExternalGitCommand {
 	public enum CommandType {
 		BLAME, RESET
 	}
-	
-	private enum PKeys{
-		content,
-		linenumber,
-		authorname,
-		authormail
+
+	private enum PKeys {
+		content("content"),
+		linenumber("linenumber"),
+		authorname("author"), 
+		authormail("author-mail");
+		
+		private String description;
+		
+		private PKeys(String desc){
+			this.description = desc;
+		}
 	}
 
 	private CommandType type;
