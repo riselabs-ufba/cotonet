@@ -124,33 +124,60 @@ public class ExternalGitCommand {
 				final String CONFLICT_END = ">>>>>>>";
 				boolean addBlame = false;
 
-				String contentLine =  data.get(PKeys.content);
 				
-				if(contentLine.startsWith(CONFLICT_START)){
-					addBlame =  true;
-					continue;
-				}else if(contentLine.startsWith(CONFLICT_SEP)) {
-					addBlame = true;
-					cBlame.setRevision(scenario.getLeft());
-					conflict =	new ConflictChunk<CommandLineBlameResult>(file.getCanonicalPath());
-					conflict.setLeft(cBlame);
-					bResult =  new CommandLineBlameResult(file.getCanonicalPath());
-					cBlame =  new Blame<CommandLineBlameResult>(scenario.getRight(), bResult);
-					continue;
-				}else if (contentLine.startsWith(CONFLICT_END)) {
-					conflict.setRight(cBlame);
-					conflicts.add(conflict);
-					addBlame = false;
-				}else if (addBlame){
-					// we are in one of the conflicting chunks
-					Integer linenumber = Integer.valueOf(data.get(PKeys.linenumber));
-					String name = data.get(PKeys.authorname);
-					String email = data.get(PKeys.authormail);
-					DeveloperNode dev = new DeveloperNode(name, email);
-					conflict.setLine(linenumber);
-					bResult.addLineAuthor(linenumber, dev);
-					bResult.addLineContent(linenumber, contentLine);
-					continue;
+				ConflictChunk<CommandLineBlameResult> conflict = new ConflictChunk<CommandLineBlameResult>(
+						file.getCanonicalPath());
+
+				CommandLineBlameResult bResult;
+				bResult = new CommandLineBlameResult(file.getCanonicalPath());
+				Blame<CommandLineBlameResult> cBlame;
+				cBlame = new Blame<CommandLineBlameResult>(scenario.getLeft(),
+						bResult);
+				List<String> block;
+				while ((block = readPorcelainBlock(buf)) != null) {
+
+					Map<PKeys, String> data = getDataFromPorcelainBlock(block);
+
+					String contentLine = data.get(PKeys.content);
+					
+					int n;
+					if((n = contentLine.trim().indexOf(" "))==-1){
+						// line without blank space
+						contentLine =  contentLine.trim();
+					}else {
+						contentLine = contentLine.trim().substring(0,n);
+					}
+					
+					if (contentLine.equals(CONFLICT_START)) {
+						addBlame = true;
+						continue;
+					} else if (contentLine.equals(CONFLICT_SEP)) {
+						addBlame = true;
+						cBlame.setRevision(scenario.getLeft());
+						conflict.setLeft(cBlame);
+						bResult = new CommandLineBlameResult(
+								file.getCanonicalPath());
+						cBlame = new Blame<CommandLineBlameResult>(
+								scenario.getRight(), bResult);
+						continue;
+					} else if (contentLine.equals(CONFLICT_END)) {
+						conflict.setRight(cBlame);
+						conflict.setLine(Integer.valueOf(data.get(PKeys.linenumber)));
+						conflicts.add(conflict);
+						addBlame = false;
+					} else if (addBlame) {
+						// we are in one of the conflicting chunks
+						Integer linenumber = Integer.valueOf(data
+								.get(PKeys.linenumber));
+						contentLine = data.get(PKeys.content);
+						String name = data.get(PKeys.authorname);
+						String email = data.get(PKeys.authormail); 
+						DeveloperNode dev = new DeveloperNode(name, email);
+						conflict.setLine(linenumber);
+						bResult.addLineAuthor(linenumber, dev);
+						bResult.addLineContent(linenumber, contentLine);
+						continue;
+					}
 				}
 
 				buf.close();
