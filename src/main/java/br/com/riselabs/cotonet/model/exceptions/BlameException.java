@@ -38,6 +38,6 @@ public class BlameException extends Exception {
 	
 	@Override
 	public String getMessage(){
-		return "Couldn't blame \'"+filepath+ "\' due to" + super.getCause()+".";
+		return "Couldn't blame \'"+filepath+ "\' due to " + super.getCause()+".";
 	}
 }
