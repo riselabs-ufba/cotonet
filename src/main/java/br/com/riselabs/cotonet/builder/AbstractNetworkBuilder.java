@@ -105,7 +105,9 @@ public abstract class AbstractNetworkBuilder<T> {
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
 			ConflictBasedNetwork connet = getConflictNetwork(scenario);
-			project.add(scenario, connet);
+			if (connet!=null) {
+				project.add(scenario, connet);
+			}
 		}
 		Logger.log(log, "[" + project.getName()
 				+ "] Network building finished.");
@@ -217,7 +219,7 @@ public abstract class AbstractNetworkBuilder<T> {
 						.setDirectory(
 								project.getRepository().getDirectory()
 										.getParentFile()).call();
-			} catch (IOException e1) {
+			} catch (BlameException e1) {
 				Logger.logStackTrace(log, e1);
 				return null;
 			}
@@ -273,7 +275,7 @@ public abstract class AbstractNetworkBuilder<T> {
 			List<ConflictChunk<T>> cchunks;
 			try {
 				cchunks = getConflictChunks(scenario, file);
-			} catch (BlameException | IOException e) {
+			} catch (BlameException  e) {
 				Logger.log(log, "[" + project.getName() + "]" + e.getMessage());
 				continue;
 			}
@@ -283,8 +285,13 @@ public abstract class AbstractNetworkBuilder<T> {
 				fNodes = getDeveloperNodes(cChunk);
 				fEdges = getDeveloperEdges(fNodes, cChunk);
 			}
-			nodes.addAll(fNodes);
-			edges.addAll(fEdges);
+			if(fNodes!=null && fEdges!=null){
+				nodes.addAll(fNodes);
+				edges.addAll(fEdges);
+			}
+		}
+		if(nodes.isEmpty()||edges.isEmpty()){
+			return null;
 		}
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
@@ -327,8 +334,7 @@ public abstract class AbstractNetworkBuilder<T> {
 	 *            - a file with conflicts
 	 */
 	protected abstract List<ConflictChunk<T>> getConflictChunks(
-			MergeScenario aScenario, File file) throws BlameException,
-			IOException;
+			MergeScenario aScenario, File file) throws BlameException;
 
 	/**
 	 * Creates the nodes for a given file.

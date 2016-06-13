@@ -21,7 +21,6 @@
 package br.com.riselabs.cotonet.builder;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,17 +56,11 @@ public class ChunkBasedNetworkBuilder extends
 	 */
 	@Override
 	protected List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(
-			MergeScenario scenario, File file) throws BlameException,
-			 IOException {
+			MergeScenario scenario, File file) throws BlameException {
 		ExternalGitCommand egit = new ExternalGitCommand();
 		List<ConflictChunk<CommandLineBlameResult>> blames = null;
-		try {
-			blames = egit.setMergeScenario(scenario).setDirectory(file)
+		blames = egit.setMergeScenario(scenario).setDirectory(file)
 					.setType(CommandType.BLAME).call();
-		} catch (RuntimeException | IOException e) {
-			throw new BlameException(file.getCanonicalPath(), "Fail to blame",
-					e);
-		}
 		return blames;
 	}
 

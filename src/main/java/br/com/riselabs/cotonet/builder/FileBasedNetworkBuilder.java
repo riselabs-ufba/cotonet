@@ -67,8 +67,7 @@ public class FileBasedNetworkBuilder extends
 
 	@Override
 	protected List<ConflictChunk<BlameResult>> getConflictChunks(
-			MergeScenario aScenario, File file) throws BlameException,
-			IOException {
+			MergeScenario aScenario, File file) throws BlameException{
 		RecursiveBlame blamer = new RecursiveBlame(getProject().getRepository());
 		List<ConflictChunk<BlameResult>> blames = null;
 		try {
@@ -80,9 +79,13 @@ public class FileBasedNetworkBuilder extends
 					.setBeginRevision(aScenario.getLeft())
 					.setEndRevision(aScenario.getBase())
 					.setFilePath(file.getName()).call());
-		} catch (GitAPIException e) {
-			throw new BlameException(file.getCanonicalPath(),
-					"Failed to blame.", e);
+		} catch (GitAPIException | IOException e) {
+			try {
+				throw new BlameException(file.getCanonicalPath(),
+						"Failed to blame.", e);
+			} catch (IOException e1) {
+				Logger.logStackTrace(log, e1);
+			}
 		}
 		return blames;
 	}

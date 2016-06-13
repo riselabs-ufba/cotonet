@@ -37,6 +37,7 @@ import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
+import br.com.riselabs.cotonet.model.exceptions.BlameException;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
@@ -73,7 +74,7 @@ public class ExternalGitCommand {
 		this.scenario = aScenario;
 		return this;
 	}
-	
+
 	public ExternalGitCommand setType(CommandType aType) {
 		this.type = aType;
 		return this;
@@ -91,45 +92,37 @@ public class ExternalGitCommand {
 	 * @return
 	 * @throws IOException
 	 */
-	public List<ConflictChunk<CommandLineBlameResult>> call() throws IOException, RuntimeException {
+	public List<ConflictChunk<CommandLineBlameResult>> call()
+			throws BlameException {
 		Runtime run = Runtime.getRuntime();
-		Process pr;
+		Process pr = null;
 		String cmd;
 		String[] env = {};
 		BufferedReader buf;
 		List<ConflictChunk<CommandLineBlameResult>> conflicts = null;
-		switch (type) {
-		case RESET:
-			cmd = "git reset --hard";
-			pr = run.exec(cmd, env, file);
-			break;
+		try {
+			switch (type) {
+			case RESET:
+				cmd = "git reset --hard";
+				pr = run.exec(cmd, env, file);
+				break;
 
-		case BLAME:
-		default:
-			cmd = "git blame -p --line-porcelain";
-			env = new String[1];
-			// we need this to disable the pager
-			env[0] = "GIT_PAGER=cat";
-			pr = run.exec(cmd + " " + file, env, file.getParentFile());
-			// parse output
-			buf = new BufferedReader(new InputStreamReader(pr.getInputStream()));
-			conflicts = new ArrayList<ConflictChunk<CommandLineBlameResult>>();
+			case BLAME:
+			default:
+				cmd = "git blame -p --line-porcelain";
+				env = new String[1];
+				// we need this to disable the pager
+				env[0] = "GIT_PAGER=cat";
+				pr = run.exec(cmd + " " + file, env, file.getParentFile());
+				// parse output
+				buf = new BufferedReader(new InputStreamReader(
+						pr.getInputStream()));
+				conflicts = new ArrayList<ConflictChunk<CommandLineBlameResult>>();
 
-			final String CONFLICT_START = "<<<<<<<";
-			final String CONFLICT_SEP = "=======";
-			final String CONFLICT_END = ">>>>>>>";
-			boolean addBlame = false;
-			
-			ConflictChunk<CommandLineBlameResult> conflict = null;
-			
-			CommandLineBlameResult bResult;
-			bResult = new CommandLineBlameResult(file.getCanonicalPath());
-			Blame<CommandLineBlameResult> cBlame;
-			cBlame = new Blame<CommandLineBlameResult>(scenario.getLeft(), bResult);
-			List<String> block;
-			while ((block = readPorcelainBlock(buf)) != null) {
-				
-				Map<PKeys, String> data = getDataFromPorcelainBlock(block);
+				final String CONFLICT_START = "<<<<<<<";
+				final String CONFLICT_SEP = "=======";
+				final String CONFLICT_END = ">>>>>>>";
+				boolean addBlame = false;
 
 				String contentLine =  data.get(PKeys.content);
 				
@@ -159,50 +152,59 @@ public class ExternalGitCommand {
 					bResult.addLineContent(linenumber, contentLine);
 					continue;
 				}
+
+				buf.close();
+				break;
+			}
+
+			/*
+			 * already finished to execute the process. now, we should process
+			 * the error output.
+			 */
+			buf = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
+
+			String stdErr = IOUtils.toString(pr.getErrorStream(),
+					StandardCharsets.UTF_8).trim();
+
+			IOUtils.closeQuietly(pr.getInputStream());
+			IOUtils.closeQuietly(pr.getErrorStream());
+			IOUtils.closeQuietly(pr.getOutputStream());
+
+			int exitCode;
+			try {
+				exitCode = pr.waitFor();
+			} catch (InterruptedException e) {
+				exitCode = 666;
+				Logger.log(String
+						.format("Interrupted while waiting for '%s' to finish. Error code: '%s'",
+								cmd, exitCode));
+				pr.destroyForcibly();
 			}
 
 			buf.close();
-			break;
-		}
-
-		/*
-		 * already finished to execute the process. now, we should process the
-		 * error output.
-		 */
-		buf = new BufferedReader(new InputStreamReader(pr.getErrorStream()));
-
-		String stdErr = IOUtils.toString(pr.getErrorStream(),
-				StandardCharsets.UTF_8).trim();
-
-		IOUtils.closeQuietly(pr.getInputStream());
-		IOUtils.closeQuietly(pr.getErrorStream());
-		IOUtils.closeQuietly(pr.getOutputStream());
-
-		int exitCode;
-		try {
-			exitCode = pr.waitFor();
-		} catch (InterruptedException e) {
-			exitCode = 666;
-			Logger.log(String
-					.format("Interrupted while waiting for '%s' to finish. Error code: '%s'",
-							cmd, exitCode));
+			if (!stdErr.isEmpty()) {
+				Logger.log(String
+						.format("Execution of '%s' returned standard error output:%n%s",
+								cmd, stdErr));
+				throw new RuntimeException(String.format(
+						"Error on external call with exit code %d",
+						pr.exitValue()));
+			}
+		} catch (IOException e1) {
 			pr.destroyForcibly();
+			run.freeMemory();
+			try {
+				throw new BlameException(file.getCanonicalPath(), "IO Exception", e1);
+			} catch (IOException e) {
+			}
 		}
-
-		buf.close();
-		if (!stdErr.isEmpty()) {
-			Logger.log(String.format(
-					"Execution of '%s' returned standard error output:%n%s",
-					cmd, stdErr));
-			throw new RuntimeException(String.format(
-					"Error on external call with exit code %d", pr.exitValue()));
-		}
-
+		pr.destroyForcibly();
 		return conflicts;
 	}
 
 	/**
 	 * returns the the output block concerning a line blame.
+	 * 
 	 * @param buf
 	 * @return
 	 * @throws IOException
@@ -213,10 +215,10 @@ public class ExternalGitCommand {
 		String aLine = buf.readLine();
 		if (aLine == null) {
 			return null;
-		}else if (aLine.split(" ")[0].length()==40) {
+		} else if (aLine.split(" ")[0].length() == 40) {
 			block = new ArrayList<String>();
 			block.add(aLine);
-			while(!(aLine = buf.readLine()).startsWith("\t")){
+			while (!(aLine = buf.readLine()).startsWith("\t")) {
 				block.add(aLine);
 			}
 			block.add(aLine);
@@ -226,34 +228,36 @@ public class ExternalGitCommand {
 
 	/**
 	 * creates a map with the data needed from a given output block.
+	 * 
 	 * @param filelines
 	 * @return
 	 */
 	private Map<PKeys, String> getDataFromPorcelainBlock(List<String> filelines) {
 		Map<PKeys, String> map = new HashMap<PKeys, String>();
-		for (String str; (str = filelines.remove(0))!=null;) {
+		for (String str; (str = filelines.remove(0)) != null;) {
 			if (str.trim().isEmpty() || str.startsWith("\t")) {
 				map.put(PKeys.content, str.trim());
 				return map;
 			}
 			int firstBlankSpace = str.indexOf(" ");
+			if(firstBlankSpace<0)continue;
 			String firsttoken = str.substring(0, firstBlankSpace).trim();
 			String value = str.substring(firstBlankSpace).trim();
-			if(firsttoken.length()==40){
+			if (firsttoken.length() == 40) {
 				// the first line of the block
 				value = str.split(" ")[2];
 				map.put(PKeys.linenumber, value);
 				continue;
-			}else if (firsttoken.equals("author")){
+			} else if (firsttoken.equals("author")) {
 				map.put(PKeys.authorname, value);
 				continue;
-			}else if(firsttoken.equals("author-mail")){
-				value = value.substring(2, value.length()-1);
+			} else if (firsttoken.equals("author-mail")) {
+				value = value.substring(2, value.length() - 1);
 				map.put(PKeys.authormail, value);
 				continue;
 			}
 		}
 		return map;
 	}
-	
+
 }
