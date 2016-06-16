@@ -30,6 +30,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import javafx.scene.control.cell.MapValueFactory;
+
 import org.apache.commons.io.IOUtils;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
@@ -56,6 +58,7 @@ public class ExternalGitCommand {
 		authorname("author"), 
 		authormail("author-mail");
 		
+		@SuppressWarnings("unused")
 		private String description;
 		
 		private PKeys(String desc){
@@ -96,10 +99,11 @@ public class ExternalGitCommand {
 			throws BlameException {
 		Runtime run = Runtime.getRuntime();
 		Process pr = null;
-		String cmd;
+		String cmd = null;
 		String[] env = {};
 		BufferedReader buf;
 		List<ConflictChunk<CommandLineBlameResult>> conflicts = null;
+		int exitCode;
 		try {
 			switch (type) {
 			case RESET:
@@ -197,17 +201,8 @@ public class ExternalGitCommand {
 			IOUtils.closeQuietly(pr.getErrorStream());
 			IOUtils.closeQuietly(pr.getOutputStream());
 
-			int exitCode;
-			try {
-				exitCode = pr.waitFor();
-			} catch (InterruptedException e) {
-				exitCode = 666;
-				Logger.log(String
-						.format("Interrupted while waiting for '%s' to finish. Error code: '%s'",
-								cmd, exitCode));
-				pr.destroyForcibly();
-			}
-
+			exitCode = pr.waitFor();
+				
 			buf.close();
 			if (!stdErr.isEmpty()) {
 				Logger.log(String
@@ -217,13 +212,27 @@ public class ExternalGitCommand {
 						"Error on external call with exit code %d",
 						pr.exitValue()));
 			}
-		} catch (IOException e1) {
-			pr.destroyForcibly();
-			run.freeMemory();
+		} catch (IOException  io) {
 			try {
-				throw new BlameException(file.getCanonicalPath(), "IO Exception", e1);
+				throw new BlameException(file.getCanonicalPath(), "IO Exception", io);
 			} catch (IOException e) {
 			}
+		} catch(InterruptedException ie){
+			// waitFor() exception
+			exitCode = 666;
+			try{
+				throw new BlameException(file.getCanonicalPath(),String
+					.format("Interrupted while waiting for '%s' to finish. Error code: '%s'",
+							cmd, exitCode),ie);
+			} catch(IOException io){
+			}
+		}catch (RuntimeException re) {
+			try {
+				throw new BlameException(file.getCanonicalPath(), "Runtime Exception", re);
+			} catch (IOException e) {
+			}
+		}finally{
+			run.freeMemory();			
 		}
 		pr.destroyForcibly();
 		return conflicts;
@@ -279,8 +288,31 @@ public class ExternalGitCommand {
 				map.put(PKeys.authorname, value);
 				continue;
 			} else if (firsttoken.equals("author-mail")) {
-				value = value.substring(2, value.length() - 1);
-				map.put(PKeys.authormail, value);
+				if(value.trim().length()>2){
+					value = value.substring(2, value.length() - 1);
+					map.put(PKeys.authormail, value);
+				}else{
+					System.out.print("author without email. ");
+					for (String s : filelines) {
+						if(s.startsWith("committer")){
+							map.put(PKeys.authorname, s.split(" ",2)[1]);
+						}else if(s.startsWith("committer-mail")){
+							String aux = s.split(" ", 2)[1].trim();
+							map.put(PKeys.authormail, aux.substring(2 ,aux.length()-1));
+						}
+					}
+				}
+				if(!map.containsKey(PKeys.authormail)){
+					try {
+						StringBuilder sb = new StringBuilder(firsttoken+"@L");
+						sb.append(map.get(PKeys.linenumber));
+						sb.append(file.getCanonicalPath().split("repos", 2)[1]);
+						map.put(PKeys.authormail, sb.toString());
+					} catch (IOException e) {
+						Logger.logStackTrace(e);
+					}
+				}
+				System.out.println("then, set: "+map.get(PKeys.authormail));
 				continue;
 			}
 		}
