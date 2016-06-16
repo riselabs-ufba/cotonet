@@ -20,6 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
+import java.sql.Timestamp;
+
 import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
@@ -38,32 +40,35 @@ public class MergeScenario {
 	private String SHA1Right;
 	private RevCommit merge;
 	private String SHA1Merge;
+	private Timestamp megeDate;
 	
 	public MergeScenario() {
-		this(null, null, null, null, null);
+		this(null, null, null, null, null, null);
 	}
 
-	public MergeScenario(RevCommit base, RevCommit left, RevCommit right, RevCommit merge) {
-		this(null, base, left, right, merge);
+	public MergeScenario(RevCommit base, RevCommit left, RevCommit right, RevCommit merge, Timestamp mergeDate) {
+		this(null, base, left, right, merge, mergeDate);
 	}
 	
 	public MergeScenario(Integer projectID, RevCommit baseCommit, RevCommit leftParent,
-			RevCommit rightParent, RevCommit merge) {
+			RevCommit rightParent, RevCommit merge, Timestamp mergeDate) {
 		setProjectID(projectID);
 		setBase(baseCommit);
 		setLeft(leftParent);
 		setRight(rightParent);
 		setMerge(merge);
+		setMegeDate(mergeDate);
 	}
 
 	public MergeScenario(Integer id, Integer projectID, String sha1Base,
-			String sha1Left, String sha1Right, String sha1Merge) {
+			String sha1Left, String sha1Right, String sha1Merge, Timestamp mergeDate) {
 		setID(id);
 		setProjectID(projectID);
 		setSHA1Base(sha1Base);
 		setSHA1Left(sha1Left);
 		setSHA1Right(sha1Right);
 		setSHA1Merge(sha1Merge);
+		setMegeDate(mergeDate);
 	}
 
 	public void setID(Integer id) {
@@ -150,6 +155,14 @@ public class MergeScenario {
 	
 	public Integer getProjectID(){
 		return this.projectID;
+	}
+
+	public Timestamp getMegeDate() {
+		return megeDate;
+	}
+
+	public void setMegeDate(Timestamp megeDate) {
+		this.megeDate = megeDate;
 	}
 	
 	

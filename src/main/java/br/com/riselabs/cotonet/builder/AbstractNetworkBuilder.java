@@ -22,6 +22,7 @@ package br.com.riselabs.cotonet.builder;
 
 import java.io.File;
 import java.io.IOException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
@@ -182,9 +183,10 @@ public abstract class AbstractNetworkBuilder<T> {
 					RevCommit baseCommit = walk.lookupCommit(merger
 							.getBaseCommitId());
 					walk.close();
-
+					
+					Timestamp mergeDate = new Timestamp(commit.getAuthorIdent().getWhen().getTime());
 					result.add(new MergeScenario(baseCommit, leftParent,
-							rightParent, commit));
+							rightParent, commit, mergeDate));
 				}
 			}
 		} catch (GitAPIException e) {

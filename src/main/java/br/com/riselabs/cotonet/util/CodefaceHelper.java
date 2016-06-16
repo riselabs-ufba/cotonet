@@ -209,9 +209,7 @@ public class CodefaceHelper {
 		try {
 			createTagToSHA1MappingFile(project.getName(), tagsMap);
 		} catch (NullPointerException | EmptyContentException e) {
-			Logger.logStackTrace(
-					io.getDirectory(new File(Directories.getLogDir(), project
-							.getName() + ".log")), e);
+			Logger.logStackTrace(e);
 		}
 	}
 

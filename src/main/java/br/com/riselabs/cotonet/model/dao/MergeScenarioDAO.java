@@ -22,9 +22,11 @@ package br.com.riselabs.cotonet.model.dao;
 
 import java.io.File;
 import java.sql.Connection;
+import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -61,13 +63,14 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			conn = Database.getConnection();
 			ps = conn
 					.prepareStatement("insert into `merge_scenarios` "
-							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`, `commit_merge`) "
-							+ "values (?,?,?,?,?);");
+							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`, `commit_merge`, `merge_date`) "
+							+ "values (?,?,?,?,?,?);");
 			ps.setInt(1, ms.getProjectID());
 			ps.setString(2, ms.getBase().getName());
 			ps.setString(3, ms.getLeft().getName());
 			ps.setString(4, ms.getRight().getName());
 			ps.setString(5, ms.getMerge().getName());
+			ps.setDate(6, new Date(ms.getMegeDate().getTime()));
 			hasSaved = ps.executeUpdate() > 0 ? true : false;
 		} catch (SQLException e) {
 			try {
@@ -127,6 +130,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				ms.setSHA1Left(rs.getString("commit_left"));
 				ms.setSHA1Right(rs.getString("commit_right"));
 				ms.setSHA1Merge(rs.getString("commit_merge"));
+				ms.setMegeDate(new Timestamp(rs.getDate("merge_date").getTime()));
 				result.add(ms);
 			}
 
@@ -187,8 +191,9 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				String base = rs.getString("commit_base");
 				String right = rs.getString("commit_right");
 				String merge = rs.getString("commit_merge");
+				Timestamp mergeDate = new Timestamp(rs.getDate("merge_date").getTime());
 				MergeScenario pResult = new MergeScenario(id, systemID, base,
-						left, right, merge);
+						left, right, merge, mergeDate);
 				return pResult;
 			}
 		} catch (SQLException e) {

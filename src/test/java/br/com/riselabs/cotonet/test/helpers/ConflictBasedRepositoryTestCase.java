@@ -178,7 +178,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 				.setAuthor(devs.get("devA")).call();
 
 		return new MergeScenario(null, mergeBaseCommit, lastMasterCommit,
-				lastSideCommit);
+				lastSideCommit, null, null);
 	}
 
 	/**
@@ -243,7 +243,7 @@ public abstract class ConflictBasedRepositoryTestCase extends
 
 		git.checkout().setName("master").setStartPoint(lastMasterCommit).call();
 		return new MergeScenario(null, mergeBaseCommit, lastMasterCommit,
-				lastSideCommit);
+				lastSideCommit, null, null);
 	}
 
 	/**
