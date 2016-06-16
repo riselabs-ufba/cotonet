@@ -61,6 +61,7 @@ CREATE TABLE IF NOT EXISTS `cotonet-test`.`merge_scenarios` (
   `commit_left` VARCHAR(40) NOT NULL,
   `commit_right` VARCHAR(40) NOT NULL,
   `commit_merge` VARCHAR(40) NOT NULL,
+  `merge_date` DATETIME NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_mergescenarios_systems_idx` (`system_id` ASC),
   CONSTRAINT `fk_mergescenarios_systems`
