@@ -10,3 +10,4 @@ target
 src/main/resources/ERD.mwb.bak
 *.prefs
 cotonet-files/*
+*.bak
