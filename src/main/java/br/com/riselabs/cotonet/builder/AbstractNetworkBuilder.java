@@ -292,7 +292,6 @@ public abstract class AbstractNetworkBuilder<T> {
 				fNodes = getDeveloperNodes(cChunk);
 				fEdges = getDeveloperEdges(fNodes, cChunk);
 				
-				//just moved this if inside for
 				if(fNodes!=null && fEdges!=null){
 					nodes.addAll(fNodes);
 					edges.addAll(fEdges);
@@ -321,9 +320,6 @@ public abstract class AbstractNetworkBuilder<T> {
 		for (DeveloperNode from : nodes) {
 			for (DeveloperNode to : nodes) {
 				
-				/*
-				 * the problem can be here
-				 */
 				if (from.equals(to)) { 
 					continue;
 				}
