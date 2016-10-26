@@ -290,7 +290,7 @@ public class ExternalGitCommand {
 			} else if (firsttoken.equals("author-mail")) {
 				if(value.trim().length()>2){
 					//it was missing the first emails' letter (value.substring(2, value.lenght() - 1)) 
-					value = value.substring(2, value.length() - 1);
+					value = value.substring(1, value.length() - 1);
 					map.put(PKeys.authormail, value);
 				}else{
 					System.out.print("author without email. ");
