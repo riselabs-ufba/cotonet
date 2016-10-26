@@ -169,6 +169,11 @@ public class ExternalGitCommand {
 						conflict.setLine(Integer.valueOf(data.get(PKeys.linenumber)));
 						conflicts.add(conflict);
 						addBlame = false;
+						
+						//@gustavo added this line
+						conflict = new ConflictChunk<CommandLineBlameResult>(
+								file.getCanonicalPath());
+						
 					} else if (addBlame) {
 						// we are in one of the conflicting chunks
 						Integer linenumber = Integer.valueOf(data
