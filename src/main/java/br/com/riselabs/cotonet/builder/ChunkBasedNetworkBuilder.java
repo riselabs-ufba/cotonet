@@ -20,9 +20,11 @@
  */
 package br.com.riselabs.cotonet.builder;
 
+import java.awt.LinearGradientPaint;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
@@ -74,9 +76,31 @@ public class ChunkBasedNetworkBuilder extends
 			ConflictChunk<CommandLineBlameResult> cChunk) {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
 
+		
 		for (Blame<CommandLineBlameResult> blame : cChunk.getBlames()) {
+			
+			//ConflictChunk<CommandLineBlameResult> test = cChunk;
+			//System.out.println(test.getChunkRange() + test.getPath());
+			//System.out.println();
+			
 			CommandLineBlameResult bResult = blame.getResult();
+			
+						
 			for (DeveloperNode aDev : bResult.getAuthors()) {
+				/*
+				Integer[] intervaleChunk = new Integer[cChunk.getEndLine() - cChunk.getBeginLine() + 1];
+				for(int i=0; i< intervaleChunk.length; i++){
+					
+					intervaleChunk[i] = cChunk.getBeginLine() + i;
+				}
+				
+				//Map<Integer, DeveloperNode> varA = bResult.getLineAuthorsMap();
+				
+				//if(varA != null){
+					
+				//}
+				*/
+				
 				if (!getProject().getDevs().values().contains(aDev)) {
 					// if there is no such dev in the project, then add it
 					getProject().add(aDev);
@@ -84,8 +108,21 @@ public class ChunkBasedNetworkBuilder extends
 					// else update the reference with the project one
 					aDev = getProject().getDevByMail(aDev.getEmail());
 				}
-				if (!result.contains(aDev)) {
-					result.add(aDev);
+				
+				if (!result.contains(aDev)) { //O ERRO ESTA AQUI. FALTA ADICIONAR aDev SÓ SE O QUE ELE ADICIONOU ESTÁ ENTRE AS LINHAS DE COMECO E FINAL DO CHUNK
+					for (int line : bResult.getLineAuthorsMap().keySet()) {
+						if (line >= cChunk.getBeginLine()
+								&& line <= cChunk.getEndLine()
+								&& bResult.getLineAuthorsMap().get(line).equals(aDev)
+								// TODO: we have to check whether bResult.getLineCommitMap().get(line) is between
+								// cChunk.getBase() and (cchunk.getLeft or cchunk.getRight)
+								// (using jgit, using revwalk or something)
+								) {
+							result.add(aDev);
+							break;
+						}
+					}
+					
 				}
 			}
 		}
