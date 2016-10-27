@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-//import javafx.scene.control.cell.MapValueFactory;
-
 import org.apache.commons.io.IOUtils;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
