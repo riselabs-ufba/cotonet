@@ -25,6 +25,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.io.IOException;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
@@ -36,6 +37,9 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
+
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
 /**
  * @author Alcemir R. Santos
@@ -91,12 +95,16 @@ public class ChunkBasedNetworkBuilder extends
 				
 				if (!result.contains(aDev)) {
 					for (int line : bResult.getLineAuthorsMap().keySet()) {
+						String blameCommit = bResult.getLineCommitMap().get(line);
+						RevCommit baseCommit = cChunk.getBase();
+						RevCommit leftCommit = cChunk.getLeft().getRevision();
+						RevCommit rightCommit = cChunk.getRight().getRevision();
+
 						if (line >= cChunk.getBeginLine()
 								&& line <= cChunk.getEndLine()
 								&& bResult.getLineAuthorsMap().get(line).equals(aDev)
-								// TODO: we have to check whether bResult.getLineCommitMap().get(line) is between
-								// cChunk.getBase() and (cchunk.getLeft or cchunk.getRight)
-								// (using jgit, using revwalk or something)
+								&& (inRange(blameCommit, baseCommit, leftCommit)
+									|| inRange(blameCommit, baseCommit, rightCommit))
 								) {
 							result.add(aDev);
 							break;
@@ -107,6 +115,27 @@ public class ChunkBasedNetworkBuilder extends
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Determines whether a commit in in a specified range of commits.
+	 *
+	 * TODO: This should be done in some kind of GitHelper class or somewhere else.
+	 */
+	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
+		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
+			rw.markStart(rw.parseCommit(end));
+			rw.markUninteresting(rw.parseCommit(begin));
+
+			for (RevCommit cur; (cur = rw.next()) != null;) {
+				if (cur.getName().equals(commit)) {
+					return true;
+				}
+			}
+		} catch (IOException e) {
+		}
+
+		return false;
 	}
 
 }
