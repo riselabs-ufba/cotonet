@@ -12,3 +12,4 @@ src/main/resources/ERD.mwb.bak
 cotonet-files/*
 *.bak
 .idea/
+*.swp
