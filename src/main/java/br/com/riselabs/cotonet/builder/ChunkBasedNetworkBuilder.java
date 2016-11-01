@@ -95,16 +95,21 @@ public class ChunkBasedNetworkBuilder extends
 				
 				if (!result.contains(aDev)) {
 					for (int line : bResult.getLineAuthorsMap().keySet()) {
-						String blameCommit = bResult.getLineCommitMap().get(line);
-						RevCommit baseCommit = cChunk.getBase();
-						RevCommit leftCommit = cChunk.getLeft().getRevision();
-						RevCommit rightCommit = cChunk.getRight().getRevision();
+//						String blameCommit = bResult.getLineCommitMap().get(line);
+//						RevCommit baseCommit = cChunk.getBase();
+//						RevCommit leftCommit = cChunk.getLeft().getRevision();
+//						RevCommit rightCommit = cChunk.getRight().getRevision();
 
 						if (line >= cChunk.getBeginLine()
 								&& line <= cChunk.getEndLine()
 								&& bResult.getLineAuthorsMap().get(line).equals(aDev)
-								&& (inRange(blameCommit, baseCommit, leftCommit)
-									|| inRange(blameCommit, baseCommit, rightCommit))
+								
+								// TODO: we have to check whether bResult.getLineCommitMap().get(line) is between
+								// cChunk.getBase() and (cchunk.getLeft or cchunk.getRight)
+								// (using jgit, using revwalk or something)
+								
+//								&& (inRange(blameCommit, baseCommit, leftCommit)
+//									|| inRange(blameCommit, baseCommit, rightCommit))
 								) {
 							result.add(aDev);
 							break;
@@ -121,7 +126,7 @@ public class ChunkBasedNetworkBuilder extends
 	 * Determines whether a commit in in a specified range of commits.
 	 *
 	 * TODO: This should be done in some kind of GitHelper class or somewhere else.
-	 */
+	 *
 	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
 		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
 			rw.markStart(rw.parseCommit(end));
@@ -137,5 +142,5 @@ public class ChunkBasedNetworkBuilder extends
 
 		return false;
 	}
-
+*/
 }
