@@ -283,14 +283,21 @@ public abstract class AbstractNetworkBuilder<T> {
 			}
 			List<DeveloperNode> fNodes = null;
 			List<DeveloperEdge> fEdges = null;
-			for (ConflictChunk<T> cChunk : cchunks) {
+			
+			/*
+			 * iterates in each chunk of the file
+			 */
+			
+			for (ConflictChunk<T> cChunk : cchunks) { 
 				fNodes = getDeveloperNodes(cChunk);
 				fEdges = getDeveloperEdges(fNodes, cChunk);
+				
+				if(fNodes!=null && fEdges!=null){
+					nodes.addAll(fNodes);
+					edges.addAll(fEdges);
+				}
 			}
-			if(fNodes!=null && fEdges!=null){
-				nodes.addAll(fNodes);
-				edges.addAll(fEdges);
-			}
+			
 		}
 		if(nodes.isEmpty()||edges.isEmpty()){
 			return null;
@@ -312,7 +319,8 @@ public abstract class AbstractNetworkBuilder<T> {
 		// create a fully connected graph
 		for (DeveloperNode from : nodes) {
 			for (DeveloperNode to : nodes) {
-				if (from.equals(to)) {
+				
+				if (from.equals(to)) { 
 					continue;
 				}
 				DeveloperEdge newEdge;

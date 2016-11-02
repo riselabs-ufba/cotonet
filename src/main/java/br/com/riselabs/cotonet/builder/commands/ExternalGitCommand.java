@@ -30,8 +30,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javafx.scene.control.cell.MapValueFactory;
-
 import org.apache.commons.io.IOUtils;
 
 import br.com.riselabs.cotonet.model.beans.Blame;
@@ -169,6 +167,11 @@ public class ExternalGitCommand {
 						conflict.setLine(Integer.valueOf(data.get(PKeys.linenumber)));
 						conflicts.add(conflict);
 						addBlame = false;
+						
+						//@gustavo added this line
+						conflict = new ConflictChunk<CommandLineBlameResult>(
+								file.getCanonicalPath());
+						
 					} else if (addBlame) {
 						// we are in one of the conflicting chunks
 						Integer linenumber = Integer.valueOf(data
@@ -289,7 +292,8 @@ public class ExternalGitCommand {
 				continue;
 			} else if (firsttoken.equals("author-mail")) {
 				if(value.trim().length()>2){
-					value = value.substring(2, value.length() - 1);
+					//it was missing the first emails' letter (value.substring(2, value.lenght() - 1)) 
+					value = value.substring(1, value.length() - 1);
 					map.put(PKeys.authormail, value);
 				}else{
 					System.out.print("author without email. ");
