@@ -137,6 +137,9 @@ public class ExternalGitCommand {
 						bResult);
 				List<String> block;
 				while ((block = readPorcelainBlock(buf)) != null) {
+					String commit = block.get(0).split(" ")[0];
+					for (String line : block)
+						System.out.println(line);
 
 					Map<PKeys, String> data = getDataFromPorcelainBlock(block);
 
@@ -156,6 +159,7 @@ public class ExternalGitCommand {
 					} else if (contentLine.equals(CONFLICT_SEP)) {
 						addBlame = true;
 						cBlame.setRevision(scenario.getLeft());
+						conflict.setBase(scenario.getBase());
 						conflict.setLeft(cBlame);
 						bResult = new CommandLineBlameResult(
 								file.getCanonicalPath());
@@ -183,6 +187,7 @@ public class ExternalGitCommand {
 						conflict.setLine(linenumber);
 						bResult.addLineAuthor(linenumber, dev);
 						bResult.addLineContent(linenumber, contentLine);
+						bResult.addLineCommit(linenumber, commit);
 						continue;
 					}
 				}
@@ -316,7 +321,7 @@ public class ExternalGitCommand {
 						Logger.logStackTrace(e);
 					}
 				}
-				System.out.println("then, set: "+map.get(PKeys.authormail));
+				//System.out.println("then, set: "+map.get(PKeys.authormail));
 				continue;
 			}
 		}

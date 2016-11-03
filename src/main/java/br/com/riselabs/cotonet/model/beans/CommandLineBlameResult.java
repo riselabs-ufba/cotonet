@@ -25,6 +25,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.eclipse.jgit.revwalk.RevCommit;
+
 /**
  * @author Alcemir R. Santos
  *
@@ -34,15 +36,17 @@ public class CommandLineBlameResult {
 	private String filePath;
 	private Map<Integer, DeveloperNode> lineAuthorsMap;
 	private Map<Integer, String> lineContentMap;
+	private Map<Integer, String> lineCommitMap;
 	
 	public CommandLineBlameResult (String aPath){
-		this(aPath, new HashMap<Integer, DeveloperNode>(), new HashMap<Integer, String>());
+		this(aPath, new HashMap<Integer, DeveloperNode>(), new HashMap<Integer, String>(), new HashMap<>());
 	}
 	
-	public CommandLineBlameResult(String aPath, Map<Integer, DeveloperNode> aLineToAuthorMap, Map<Integer, String> aLineToContentMap) {
+	public CommandLineBlameResult(String aPath, Map<Integer, DeveloperNode> aLineToAuthorMap, Map<Integer, String> aLineToContentMap, Map<Integer, String> aLinetoCommitMap) {
 		this.filePath = aPath;
 		this.lineAuthorsMap = aLineToAuthorMap;
 		this.lineContentMap = aLineToContentMap;
+		this.lineCommitMap = aLinetoCommitMap;
 	}
 	
 	/**
@@ -73,8 +77,19 @@ public class CommandLineBlameResult {
 		lineContentMap.put(lineNumber,content);
 	}
 	
+	public void addLineCommit(Integer lineNumber, String commit) {
+		if (lineCommitMap == null) {
+			lineCommitMap = new HashMap<Integer, String>();
+		}
+		lineCommitMap.put(lineNumber,commit);
+	}
+	
 	public Map<Integer, DeveloperNode> getLineAuthorsMap(){
 		return lineAuthorsMap;
+	}
+	
+	public Map<Integer, String> getLineCommitMap() {
+		return lineCommitMap;
 	}
 	
 	public List<String> getSourceContents(){

@@ -20,9 +20,12 @@
  */
 package br.com.riselabs.cotonet.builder;
 
+import java.awt.LinearGradientPaint;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.io.IOException;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
@@ -34,6 +37,9 @@ import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
+
+import org.eclipse.jgit.revwalk.RevCommit;
+import org.eclipse.jgit.revwalk.RevWalk;
 
 /**
  * @author Alcemir R. Santos
@@ -73,9 +79,11 @@ public class ChunkBasedNetworkBuilder extends
 	protected List<DeveloperNode> getDeveloperNodes(
 			ConflictChunk<CommandLineBlameResult> cChunk) {
 		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
-
+		
 		for (Blame<CommandLineBlameResult> blame : cChunk.getBlames()) {
+			
 			CommandLineBlameResult bResult = blame.getResult();
+									
 			for (DeveloperNode aDev : bResult.getAuthors()) {
 				if (!getProject().getDevs().values().contains(aDev)) {
 					// if there is no such dev in the project, then add it
@@ -84,12 +92,50 @@ public class ChunkBasedNetworkBuilder extends
 					// else update the reference with the project one
 					aDev = getProject().getDevByMail(aDev.getEmail());
 				}
+				
 				if (!result.contains(aDev)) {
-					result.add(aDev);
+					for (int line : bResult.getLineAuthorsMap().keySet()) {
+						String blameCommit = bResult.getLineCommitMap().get(line);
+						RevCommit baseCommit = cChunk.getBase();
+						RevCommit leftCommit = cChunk.getLeft().getRevision();
+						RevCommit rightCommit = cChunk.getRight().getRevision();
+
+						if (line >= cChunk.getBeginLine()
+								&& line <= cChunk.getEndLine()
+								&& bResult.getLineAuthorsMap().get(line).equals(aDev)
+								&& (inRange(blameCommit, baseCommit, leftCommit)
+									|| inRange(blameCommit, baseCommit, rightCommit))
+								) {
+							result.add(aDev);
+							break;
+						}
+					}
+					
 				}
 			}
 		}
 		return result;
+	}
+
+	/**
+	 * Determines whether a commit in in a specified range of commits.
+	 *
+	 * TODO: This should be done in some kind of GitHelper class or somewhere else.
+	 */
+	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
+		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
+			rw.markStart(rw.parseCommit(end));
+			rw.markUninteresting(rw.parseCommit(begin));
+
+			for (RevCommit cur; (cur = rw.next()) != null;) {
+				if (cur.getName().equals(commit)) {
+					return true;
+				}
+			}
+		} catch (IOException e) {
+		}
+
+		return false;
 	}
 
 }

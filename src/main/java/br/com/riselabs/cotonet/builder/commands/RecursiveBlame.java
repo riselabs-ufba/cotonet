@@ -88,6 +88,9 @@ public class RecursiveBlame {
 		    rw.markUninteresting(rw.parseCommit(this.endRevision));
 		    ConflictChunk<BlameResult> conflict = new ConflictChunk<>(path);
 		    for (RevCommit curr; (curr = rw.next()) != null;){
+		    	// TODO: verify that endRevision is actually base of merge scenario (ask alcemir)
+		    	conflict.setBase(endRevision);
+		    	
 		    	conflict.setLeft(new Blame<BlameResult>(curr, blameCommit(curr)));
 		    	conflict.setLine(1);
 		    	result.add(conflict);
