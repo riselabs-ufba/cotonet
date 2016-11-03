@@ -101,5 +101,16 @@ public class ConflictChunk<T> {
 		return blames;
 	}
 	
+	
+	@Override
+	public String toString(){
+		StringBuilder sb =  new StringBuilder("[");
+		sb.append(this.beginLine);
+		sb.append("-");
+		sb.append(this.endLine);
+		sb.append("]");
+		
+		return sb.toString();
+	}
 
 }
