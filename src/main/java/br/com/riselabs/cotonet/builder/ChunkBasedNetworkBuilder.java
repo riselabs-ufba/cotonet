@@ -20,16 +20,16 @@
  */
 package br.com.riselabs.cotonet.builder;
 
-import java.awt.LinearGradientPaint;
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.io.IOException;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
-import br.com.riselabs.cotonet.model.beans.Blame;
+//import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -76,53 +76,54 @@ public class ChunkBasedNetworkBuilder extends
 	 * (java.util.List)
 	 */
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(
-			ConflictChunk<CommandLineBlameResult> cChunk) {
-		List<DeveloperNode> result = new ArrayList<DeveloperNode>();
-		
-		for (Blame<CommandLineBlameResult> blame : cChunk.getBlames()) {
+	protected Map<String, List<DeveloperNode>> getDeveloperNodes(
+			MergeScenario scenario, ConflictChunk<CommandLineBlameResult> cChunk) {
+			Map<String, List<DeveloperNode>> result = new HashMap<>();		
 			
-			CommandLineBlameResult bResult = blame.getResult();
-									
-			for (DeveloperNode aDev : bResult.getAuthors()) {
-				if (!getProject().getDevs().values().contains(aDev)) {
-					// if there is no such dev in the project, then add it
-					getProject().add(aDev);
-				} else {
-					// else update the reference with the project one
-					aDev = getProject().getDevByMail(aDev.getEmail());
-				}
-				
-				if (!result.contains(aDev)) {
-					for (int line : bResult.getLineAuthorsMap().keySet()) {
-						String blameCommit = bResult.getLineCommitMap().get(line);
-						RevCommit baseCommit = cChunk.getBase();
-						RevCommit leftCommit = cChunk.getLeft().getRevision();
-						RevCommit rightCommit = cChunk.getRight().getRevision();
-						
-						if (line >= cChunk.getBeginLine() 
-								&& line <= cChunk.getEndLine()
-//								&& !result.contains(aDev)
-								&& bResult.getLineAuthorsMap().get(line).equals(aDev)
-								
-								// TODO: we have to check whether bResult.getLineCommitMap().get(line) is between
-								// cChunk.getBase() and (cchunk.getLeft or cchunk.getRight)
-								// (using jgit, using revwalk or something)
-								
-								&& (inRange(blameCommit, baseCommit, leftCommit)
-									|| inRange(blameCommit, baseCommit, rightCommit))
-								) {
-							result.add(aDev);
-							break;
-						}
-					}
-					
-				}
-			}
-		}
+			// getting nodes from the upper part of the conflict
+			CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
+			result.put(
+			scenario.getLeft().getName(),
+			extractNodes(scenario.getBase(), scenario.getLeft(), leftResult));
+			// getting nodes from the bottom part of the conflict
+			CommandLineBlameResult rightResult = cChunk.getRight().getResult();
+			result.put(
+			scenario.getRight().getName(),
+			extractNodes(scenario.getBase(), scenario.getRight(),
+			rightResult));	
+			
+		
 		return result;
 	}
 
+	
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side,
+			CommandLineBlameResult aResult) {
+				List<DeveloperNode> result = new ArrayList<>();
+					for (DeveloperNode aDev : aResult.getAuthors()) {
+						if (!getProject().getDevs().values().contains(aDev)) {
+							// if there is no such dev in the project, then add it
+							getProject().add(aDev);
+						} else {
+							// else update the reference with the project one
+							aDev = getProject().getDevByMail(aDev.getEmail());
+						}
+			
+						if (!result.contains(aDev)) {
+							for (int line : aResult.getLineAuthorsMap().keySet()) {
+								String lineCommit = aResult.getLineCommitMap().get(line);
+			 					
+								if (aResult.getLineAuthorsMap().get(line).equals(aDev)
+										&& inRange(lineCommit, base, side)) {
+									result.add(aDev);
+									break;
+								}
+			 				}
+			 			}
+			 		}
+			 		
+					return result;
+			 	}
 	/**
 	 * Determines whether a commit in in a specified range of commits.
 	 *
@@ -134,7 +135,8 @@ public class ChunkBasedNetworkBuilder extends
 			rw.markUninteresting(rw.parseCommit(begin));
 
 			for (RevCommit cur; (cur = rw.next()) != null;) {
-				if (cur.getName().equals(commit)) {
+				if (!(cur.getName().equals(begin.getName())) 
+						&& cur.getName().equals(commit)) {
 					return true;
 				}
 			}

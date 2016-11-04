@@ -24,7 +24,10 @@ import java.io.File;
 import java.io.IOException;
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.eclipse.jgit.api.CheckoutCommand;
@@ -281,7 +284,7 @@ public abstract class AbstractNetworkBuilder<T> {
 				Logger.log(log, "[" + project.getName() + "]" + e.getMessage());
 				continue;
 			}
-			List<DeveloperNode> fNodes = null;
+			HashMap<String, List<DeveloperNode>> fNodes = null;
 			List<DeveloperEdge> fEdges = null;
 			
 			/*
@@ -289,11 +292,13 @@ public abstract class AbstractNetworkBuilder<T> {
 			 */
 			
 			for (ConflictChunk<T> cChunk : cchunks) { 
-				fNodes = getDeveloperNodes(cChunk);
+				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
 				fEdges = getDeveloperEdges(fNodes, cChunk);
 				
 				if(fNodes!=null && fEdges!=null){
-					nodes.addAll(fNodes);
+					Iterator<List<DeveloperNode>> igroups = fNodes.values().iterator();
+					nodes.addAll(igroups.next());
+					nodes.addAll(igroups.next());
 					edges.addAll(fEdges);
 				}
 			}
@@ -305,21 +310,17 @@ public abstract class AbstractNetworkBuilder<T> {
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
-	private List<DeveloperEdge> getDeveloperEdges(List<DeveloperNode> nodes,
+	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
 			ConflictChunk<T> cChunk) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
-		// if there is only one developer, create loop
-		if (nodes.size() == 1) {
-			DeveloperNode node = nodes.get(0);
-			edges.add(new DeveloperEdge(node, node, cChunk.getChunkRange(),
-					cChunk.getPath().toString()));
-			return edges;
-		}
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+		
 		// create a fully connected graph
-		for (DeveloperNode from : nodes) {
-			for (DeveloperNode to : nodes) {
-				
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {	
 				if (from.equals(to)) { 
 					continue;
 				}
@@ -352,7 +353,7 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @param cChunk
 	 * @return
 	 */
-	protected abstract List<DeveloperNode> getDeveloperNodes(
+	protected abstract Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<T> cChunk);
 
 }

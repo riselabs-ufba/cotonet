@@ -25,7 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -91,39 +93,46 @@ public class FileBasedNetworkBuilder extends
 	}
 
 	@Override
-	protected List<DeveloperNode> getDeveloperNodes(
+	protected Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<BlameResult> cChunk) {
-		List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
-		Blame<BlameResult> b = cChunk.getLeft();
-		RevCommit key = b.getRevision();
-		BlameResult value = b.getResult();
-
+		
 		// read the number of lines from the commit to not look at
 		// changes in the working copy
 		int lines;
-		try {
-			lines = countFileLines(key.getId(), value.getResultPath());
-		} catch (IOException e) {
-			Logger.logStackTrace(log, e);
-			return new ArrayList<DeveloperNode>();
-		}
-		for (int i = 0; i < lines; i++) {
-			// TODO if (commits.contains(value.getSourceCommit(i))) {
-
-			PersonIdent person = value.getSourceAuthor(i);
-			DeveloperNode dev = new DeveloperNode();
-			dev.setName(person.getName());
-			dev.setEmail(person.getEmailAddress());
-			if (!getProject().getDevs().values().contains(dev)) {
-				getProject().add(dev);
-			} else {
-				dev = getProject().getDevByMail(person.getEmailAddress());
+		Map<String, List<DeveloperNode>> aMap = new HashMap<String, List<DeveloperNode>>();
+			
+			for (Blame<BlameResult> b : cChunk.getBlames()) {
+				List<DeveloperNode> devs = new ArrayList<DeveloperNode>();
+				RevCommit key = b.getRevision();
+				BlameResult value = b.getResult();
+				try {
+						lines = countFileLines(key.getId(), value.getResultPath());
+					} catch (IOException e) {
+						Logger.logStackTrace(log, e);
+						return aMap;
+					}
+					
+				for (int i = 0; i < lines; i++) {
+					// TODO if (commits.contains(value.getSourceCommit(i))) {
+					
+					PersonIdent person = value.getSourceAuthor(i);
+					DeveloperNode dev = new DeveloperNode();
+					dev.setName(person.getName());
+					dev.setEmail(person.getEmailAddress());
+					if (!getProject().getDevs().values().contains(dev)) {
+						getProject().add(dev);
+					} else {
+						dev = getProject().getDevByMail(person.getEmailAddress());
+					}
+					if (!devs.contains(dev)) {
+						devs.add(dev);
+					}
+				}
+				
+				// TODO set the correct name to the side.
+				aMap.put("", devs);
 			}
-			if (!devs.contains(dev)) {
-				devs.add(dev);
-			}
-		}
-		return devs;
+		return aMap;
 	}
 
 	public List<RevCommit> getCommitsFrom(MergeScenario aScenario)
