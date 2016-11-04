@@ -138,9 +138,11 @@ public class ChunkBasedNetworkBuilder extends
 
 			if (!result.contains(aDev)) {
 				for (int line : aResult.getLineAuthorsMap().keySet()) {
+
 					String lineCommit = aResult.getLineCommitMap().get(line);
-					
-					if (inRange(lineCommit, base, side)) {
+
+					if (aResult.getLineAuthorsMap().get(line).equals(aDev)
+							&& inRange(lineCommit, base, side)) {
 						result.add(aDev);
 						break;
 					}
@@ -163,7 +165,8 @@ public class ChunkBasedNetworkBuilder extends
 
 			System.out.println("++");
 			for (RevCommit cur; (cur = rw.next()) != null;) {
-				if (!(cur.getName().equals(begin.getName()) ) && cur.getName().equals(commit)) {
+				if (!(cur.getName().equals(begin.getName()))
+						&& cur.getName().equals(commit)) {
 					return true;
 				}
 			}
