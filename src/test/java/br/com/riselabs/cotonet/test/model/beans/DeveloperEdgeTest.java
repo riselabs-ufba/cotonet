@@ -38,9 +38,9 @@ public class DeveloperEdgeTest {
 	@Test
 	public void indeedEquals() {
 		DeveloperEdge a = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge b = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge[] edges = { a, b };
 		assertTrue("edges are bidiretional. equals() should return true.",
 				edges[0].equals(edges[1]));
@@ -49,9 +49,9 @@ public class DeveloperEdgeTest {
 	@Test
 	public void bidiretionality() {
 		DeveloperEdge a = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge b = new DeveloperEdge(new DeveloperNode(2, null, null,
-				null), new DeveloperNode(1, null, null, null), null, null);
+				null), new DeveloperNode(1, null, null, null), null, null, null);
 		DeveloperEdge[] edges = { a, b };
 		assertTrue("edges are bidiretional. equals() should return true.",
 				edges[0].equals(edges[1]));
@@ -60,9 +60,9 @@ public class DeveloperEdgeTest {
 	@Test
 	public void devToDiffeferent() {
 		DeveloperEdge a = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge b = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(22, null, null, null), null, null);
+				null), new DeveloperNode(22, null, null, null), null, null, null);
 		DeveloperEdge[] edges = { a, b };
 		assertFalse("dev to is different. equals() should return false.",
 				edges[0].equals(edges[1]));
@@ -71,9 +71,9 @@ public class DeveloperEdgeTest {
 	@Test
 	public void devFromDiffeferent() {
 		DeveloperEdge a = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge b = new DeveloperEdge(new DeveloperNode(11, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge[] edges = { a, b };
 		assertFalse("dev from is different. equals() should return false.",
 				edges[0].equals(edges[1]));
@@ -82,9 +82,9 @@ public class DeveloperEdgeTest {
 	@Test
 	public void bothDiffeferent() {
 		DeveloperEdge a = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		DeveloperEdge b = new DeveloperEdge(new DeveloperNode(11, null, null,
-				null), new DeveloperNode(22, null, null, null), null, null);
+				null), new DeveloperNode(22, null, null, null), null, null, null);
 		DeveloperEdge[] edges = { a, b };
 		assertFalse("both devs are different. equals() should return false.",
 				edges[0].equals(edges[1]));

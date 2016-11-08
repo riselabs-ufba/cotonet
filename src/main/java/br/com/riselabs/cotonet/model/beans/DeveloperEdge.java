@@ -38,15 +38,15 @@ public class DeveloperEdge {
 	private String filepath;
 	
 	public DeveloperEdge() {
-		this(null, null, null, null, 1, null, null);
+		this(null, null, null, null, null, null, null);
 	}
 	
 	public DeveloperEdge(Integer id) {
-		this(id, null, null, null, 1, null, null);
+		this(id, null, null, null, null, null, null);
 	}
 
-	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB, String chunkRange, String filepath) {
-		this(null, null, devA, devB, 1, chunkRange, filepath);
+	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB, Integer weightEdge, String chunkRange, String filepath) {
+		this(null, null, devA, devB, weightEdge, chunkRange, filepath);
 	}
 	
 	public DeveloperEdge(Integer id, Integer networkID, DeveloperNode devA, DeveloperNode devB, Integer weight, String chunkRange, String filepath) {

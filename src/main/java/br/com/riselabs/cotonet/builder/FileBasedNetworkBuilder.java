@@ -48,6 +48,7 @@ import org.eclipse.jgit.treewalk.filter.PathFilter;
 import br.com.riselabs.cotonet.builder.commands.RecursiveBlame;
 import br.com.riselabs.cotonet.model.beans.Blame;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
+import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
@@ -214,6 +215,13 @@ public class FileBasedNetworkBuilder extends
 						new ByteArrayInputStream(stream.toByteArray())).size();
 			}
 		}
+	}
+
+	@Override
+	protected List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<BlameResult> cChunk) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 }

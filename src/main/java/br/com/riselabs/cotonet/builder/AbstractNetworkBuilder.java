@@ -304,14 +304,15 @@ public abstract class AbstractNetworkBuilder<T> {
 			}
 			
 		}
+					
 		if(nodes.isEmpty()||edges.isEmpty()){
 			return null;
 		}
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
-	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
-			ConflictChunk<T> cChunk) {
+	protected abstract List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<T> cChunk); /*{
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
 		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
@@ -335,6 +336,7 @@ public abstract class AbstractNetworkBuilder<T> {
 
 		return edges;
 	}
+*/
 
 	/**
 	 * Returns the conflict chunks of a given file.
