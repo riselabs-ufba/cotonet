@@ -40,7 +40,7 @@ public class MergeScenario {
 	private String SHA1Right;
 	private RevCommit merge;
 	private String SHA1Merge;
-	private Timestamp megeDate;
+	private Timestamp mergeDate;
 	
 	public MergeScenario() {
 		this(null, null, null, null, null, null);
@@ -157,12 +157,12 @@ public class MergeScenario {
 		return this.projectID;
 	}
 
-	public Timestamp getMegeDate() {
-		return megeDate;
+	public Timestamp getMergeDate() {
+		return mergeDate;
 	}
 
-	public void setMegeDate(Timestamp megeDate) {
-		this.megeDate = megeDate;
+	public void setMergeDate(Timestamp mergeDate) {
+		this.mergeDate = mergeDate;
 	}
 	
 	

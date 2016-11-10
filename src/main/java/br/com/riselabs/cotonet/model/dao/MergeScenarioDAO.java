@@ -70,7 +70,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			ps.setString(3, ms.getLeft().getName());
 			ps.setString(4, ms.getRight().getName());
 			ps.setString(5, ms.getMerge().getName());
-			ps.setDate(6, new Date(ms.getMegeDate().getTime()));
+			ps.setDate(6, new Date(ms.getMergeDate().getTime()));
 			hasSaved = ps.executeUpdate() > 0 ? true : false;
 		} catch (SQLException e) {
 			try {
@@ -130,7 +130,7 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				ms.setSHA1Left(rs.getString("commit_left"));
 				ms.setSHA1Right(rs.getString("commit_right"));
 				ms.setSHA1Merge(rs.getString("commit_merge"));
-				ms.setMegeDate(new Timestamp(rs.getDate("merge_date").getTime()));
+				ms.setMergeDate(new Timestamp(rs.getDate("merge_date").getTime()));
 				result.add(ms);
 			}
 
