@@ -22,7 +22,6 @@ package br.com.riselabs.cotonet.model.dao;
 
 import java.io.File;
 import java.sql.Connection;
-import java.sql.Date;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -30,7 +29,9 @@ import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
+import br.com.riselabs.cotonet.model.beans.Commit;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
+import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.validators.MergeScenarioValidator;
 import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
@@ -63,14 +64,13 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			conn = Database.getConnection();
 			ps = conn
 					.prepareStatement("insert into `merge_scenarios` "
-							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`, `commit_merge`, `merge_date`) "
-							+ "values (?,?,?,?,?,?);");
+							+ "(`system_id`, `commit_base`,`commit_left`,`commit_right`, `commit_merge`) "
+							+ "values (?,?,?,?,?);");
 			ps.setInt(1, ms.getProjectID());
-			ps.setString(2, ms.getBase().getName());
-			ps.setString(3, ms.getLeft().getName());
-			ps.setString(4, ms.getRight().getName());
-			ps.setString(5, ms.getMerge().getName());
-			ps.setDate(6, new Date(ms.getMergeDate().getTime()));
+			ps.setInt(2, ms.getBaseID());
+			ps.setInt(3, ms.getLeftID());
+			ps.setInt(4, ms.getRightID());
+			ps.setInt(5, ms.getMergeID());
 			hasSaved = ps.executeUpdate() > 0 ? true : false;
 		} catch (SQLException e) {
 			try {
@@ -126,11 +126,10 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				MergeScenario ms = new MergeScenario();
 				ms.setID(rs.getInt("id"));
 				ms.setProjectID(rs.getInt("system_id"));
-				ms.setSHA1Base(rs.getString("commit_base"));
-				ms.setSHA1Left(rs.getString("commit_left"));
-				ms.setSHA1Right(rs.getString("commit_right"));
-				ms.setSHA1Merge(rs.getString("commit_merge"));
-				ms.setMergeDate(new Timestamp(rs.getDate("merge_date").getTime()));
+				ms.setBaseID(rs.getInt("commit_base"));
+				ms.setLeftID(rs.getInt("commit_left"));
+				ms.setRightID(rs.getInt("commit_right"));
+				ms.setMergeID(rs.getInt("commit_merge"));
 				result.add(ms);
 			}
 
@@ -158,20 +157,25 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 				ps = conn.prepareStatement(sql);
 				if (ms.getBase() == null && ms.getLeft() == null
 						&& ms.getRight() == null) {
-					if (ms.getSHA1Base() == null && ms.getSHA1Left() == null
-							&& ms.getSHA1Right() == null) {
-						ps.setString(1, "");
-						ps.setString(2, "");
-						ps.setString(3, "");
+					if (ms.getBaseID() == null && ms.getLeftID() == null
+							&& ms.getRightID() == null) {
+						ps.setInt(1, Integer.MAX_VALUE);
+						ps.setInt(2, Integer.MAX_VALUE);
+						ps.setInt(3, Integer.MAX_VALUE);
 					} else {
-						ps.setString(1, ms.getSHA1Base());
-						ps.setString(2, ms.getSHA1Left());
-						ps.setString(3, ms.getSHA1Right());
+						ps.setInt(1, ms.getBaseID());
+						ps.setInt(2, ms.getLeftID());
+						ps.setInt(3, ms.getRightID());
 					}
 				} else {
-					ps.setString(1, ms.getBase().getName());
-					ps.setString(2, ms.getLeft().getName());
-					ps.setString(3, ms.getRight().getName());
+					CommitDAO tmpDAO = (CommitDAO) DAOFactory.getDAO(CotonetBean.COMMIT);
+					
+					Commit tmp = new Commit(ms.getBase().getName());
+					ps.setInt(1, tmpDAO.get(tmp).getID());
+					tmp = new Commit(ms.getLeft().getName());
+					ps.setInt(2, tmpDAO.get(tmp).getID());
+					tmp = new Commit(ms.getRight().getName());
+					ps.setInt(3, tmpDAO.get(tmp).getID());
 				}
 				// get with ID
 			} else {
@@ -187,13 +191,12 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			if (rs.next()) {
 				Integer id = rs.getInt("id");
 				Integer systemID = rs.getInt("system_id");
-				String left = rs.getString("commit_left");
-				String base = rs.getString("commit_base");
-				String right = rs.getString("commit_right");
-				String merge = rs.getString("commit_merge");
-				Timestamp mergeDate = new Timestamp(rs.getDate("merge_date").getTime());
+				Integer left = rs.getInt("commit_left");
+				Integer base = rs.getInt("commit_base");
+				Integer right = rs.getInt("commit_right");
+				Integer merge = rs.getInt("commit_merge");
 				MergeScenario pResult = new MergeScenario(id, systemID, base,
-						left, right, merge, mergeDate);
+						left, right, merge);
 				return pResult;
 			}
 		} catch (SQLException e) {

@@ -33,52 +33,49 @@ public class MergeScenario {
 	private Integer id;
 	private Integer projectID;
 	private RevCommit base;
-	private String SHA1Base;
+	private Integer baseID;
 	private RevCommit left;
-	private String SHA1Left;
+	private Integer leftID;
 	private RevCommit right;
-	private String SHA1Right;
+	private Integer rightID;
 	private RevCommit merge;
-	private String SHA1Merge;
-	private Timestamp mergeDate;
-	
+	private Integer mergeID;
+
 	public MergeScenario() {
 		this(null, null, null, null, null, null);
 	}
 
-	public MergeScenario(RevCommit base, RevCommit left, RevCommit right, RevCommit merge, Timestamp mergeDate) {
-		this(null, base, left, right, merge, mergeDate);
+	public MergeScenario(RevCommit base, RevCommit left, RevCommit right,
+			RevCommit merge, Timestamp mergeDate) {
+		this(null, base, left, right, merge);
 	}
-	
-	public MergeScenario(Integer projectID, RevCommit baseCommit, RevCommit leftParent,
-			RevCommit rightParent, RevCommit merge, Timestamp mergeDate) {
+
+	public MergeScenario(Integer projectID, RevCommit baseCommit,
+			RevCommit leftParent, RevCommit rightParent, RevCommit merge) {
 		setProjectID(projectID);
 		setBase(baseCommit);
 		setLeft(leftParent);
 		setRight(rightParent);
 		setMerge(merge);
-		setMergeDate(mergeDate);
 	}
 
-	public MergeScenario(Integer id, Integer projectID, String sha1Base,
-			String sha1Left, String sha1Right, String sha1Merge, Timestamp mergeDate) {
+	public MergeScenario(Integer id, Integer projectID, Integer baseID, Integer leftID,Integer rightID, Integer mergeID) {
 		setID(id);
 		setProjectID(projectID);
-		setSHA1Base(sha1Base);
-		setSHA1Left(sha1Left);
-		setSHA1Right(sha1Right);
-		setSHA1Merge(sha1Merge);
-		setMergeDate(mergeDate);
+		setBaseID(baseID);
+		setLeftID(leftID);
+		setRightID(rightID);
+		setMergeID(mergeID);
 	}
 
 	public void setID(Integer id) {
 		this.id = id;
 	}
-	
-	public Integer getID(){
+
+	public Integer getID() {
 		return this.id;
 	}
-	
+
 	public RevCommit getBase() {
 		return base;
 	}
@@ -102,69 +99,58 @@ public class MergeScenario {
 	public void setRight(RevCommit right) {
 		this.right = right;
 	}
-	
-	public String getSHA1Base() {
-		return SHA1Base;
+
+	public Integer getBaseID() {
+		return baseID;
 	}
 
-	public void setSHA1Base(String sHA1Base) {
-		SHA1Base = sHA1Base;
+	public void setBaseID(Integer anID) {
+		baseID = anID;
 	}
 
-	public String getSHA1Left() {
-		return SHA1Left;
+	public Integer getLeftID() {
+		return leftID;
 	}
 
-	public void setSHA1Left(String sHA1Left) {
-		SHA1Left = sHA1Left;
+	public void setLeftID(Integer anID) {
+		leftID = anID;
 	}
 
-	public String getSHA1Right() {
-		return SHA1Right;
+	public Integer getRightID() {
+		return rightID;
 	}
 
-	public void setSHA1Right(String sHA1Right) {
-		SHA1Right = sHA1Right;
+	public void setRightID(Integer anID) {
+		rightID = anID;
 	}
 
 	public void setMerge(RevCommit aCommmit) {
 		this.merge = aCommmit;
 	}
 
-	public RevCommit getMerge(){
+	public void setMergeID(Integer anID) {
+		this.mergeID = anID;
+	}
+
+	public Integer getMergeID() {
+		return this.mergeID;
+	}
+
+	public RevCommit getMerge() {
 		return this.merge;
-	}
-
-	public void setSHA1Merge(String sha1Merge) {
-		this.SHA1Merge = sha1Merge;
-	}
-	
-	public String getSHA1Merge(){
-		return this.SHA1Merge;
-	}
-
-	@Override
-	public String toString() {
-		return "MergeScenario [base=" + base + ", left=" + left
-				+ ", right=" + right + "]";
 	}
 
 	public void setProjectID(Integer projectID) {
 		this.projectID = projectID;
 	}
-	
-	public Integer getProjectID(){
+
+	public Integer getProjectID() {
 		return this.projectID;
 	}
 
-	public Timestamp getMergeDate() {
-		return mergeDate;
+	@Override
+	public String toString() {
+		return "MergeScenario [base=" + base + ", left=" + left + ", right="
+				+ right + "]";
 	}
-
-	public void setMergeDate(Timestamp mergeDate) {
-		this.mergeDate = mergeDate;
-	}
-	
-	
-
 }

@@ -32,7 +32,8 @@ public abstract class DAOFactory {
 		MERGE_SCENARIO,
 		CONFLICT_NETWORK, 
 		EDGE,
-		NODE
+		NODE, 
+		COMMIT
 	}
 
 	public static DAO<?> getDAO(CotonetBean type) {
@@ -47,6 +48,10 @@ public abstract class DAOFactory {
 			return new DeveloperEdgeDAO();
 		case NODE:
 			return new DeveloperNodeDAO();
+		case COMMIT:
+			return new CommitDAO();
+		default:
+			break;
 		}
 		return null;
 	}
