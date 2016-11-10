@@ -104,6 +104,7 @@ public class ProjectDAO implements DAO<Project> {
 
 	@Override
 	public List<Project> list() throws InvalidCotonetBeanException {
+		// TODO implement list all projects
 		return null;
 	}
 
