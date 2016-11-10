@@ -47,12 +47,12 @@ import org.eclipse.jgit.revwalk.RevWalk;
  * @author Alcemir R. Santos
  *
  */
-public class ChunkBasedNetworkBuilder extends
-		AbstractNetworkBuilder<CommandLineBlameResult> {
+public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder<CommandLineBlameResult> {
 
-	public ChunkBasedNetworkBuilder(Project project) {
+	public ChunkBasedNetworkBuilder(Project project, String programType) {
 		setProject(project);
 		setType(NetworkType.CHUNK_BASED);
+		setProgramType(programType);
 	}
 
 	/*
@@ -63,12 +63,11 @@ public class ChunkBasedNetworkBuilder extends
 	 * (br.com.riselabs.cotonet.model.beans.MergeScenario, java.io.File)
 	 */
 	@Override
-	protected List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(
-			MergeScenario scenario, File file) throws BlameException {
+	protected List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(MergeScenario scenario, File file)
+			throws BlameException {
 		ExternalGitCommand egit = new ExternalGitCommand();
 		List<ConflictChunk<CommandLineBlameResult>> blames = null;
-		blames = egit.setMergeScenario(scenario).setDirectory(file)
-					.setType(CommandType.BLAME).call();
+		blames = egit.setMergeScenario(scenario).setDirectory(file).setType(CommandType.BLAME).call();
 		return blames;
 	}
 
@@ -78,30 +77,23 @@ public class ChunkBasedNetworkBuilder extends
 	 * (java.util.List)
 	 */
 	@Override
-	protected Map<String, List<DeveloperNode>> getDeveloperNodes(
-			MergeScenario scenario, ConflictChunk<CommandLineBlameResult> cChunk) {
-		
-		Map<String, List<DeveloperNode>> result = new HashMap<>();		
-		
+	protected Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+
+		Map<String, List<DeveloperNode>> result = new HashMap<>();
+
 		// getting nodes from the upper part of the conflict
 		CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
-		result.put(
-		scenario.getLeft().getName(),
-		extractNodes(scenario.getBase(), scenario.getLeft(), leftResult));
+		result.put(scenario.getLeft().getName(), extractNodes(scenario.getBase(), scenario.getLeft(), leftResult));
 		// getting nodes from the bottom part of the conflict
 		CommandLineBlameResult rightResult = cChunk.getRight().getResult();
-		result.put(
-		scenario.getRight().getName(),
-		extractNodes(scenario.getBase(), scenario.getRight(),
-		rightResult));	
-		
+		result.put(scenario.getRight().getName(), extractNodes(scenario.getBase(), scenario.getRight(), rightResult));
+
 		return result;
 	}
 
-	
-	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side,
-			CommandLineBlameResult aResult) {
-		
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult) {
+
 		List<DeveloperNode> result = new ArrayList<>();
 		for (DeveloperNode aDev : aResult.getAuthors()) {
 			if (!getProject().getDevs().values().contains(aDev)) {
@@ -115,23 +107,23 @@ public class ChunkBasedNetworkBuilder extends
 			if (!result.contains(aDev)) {
 				for (int line : aResult.getLineAuthorsMap().keySet()) {
 					String lineCommit = aResult.getLineCommitMap().get(line);
- 					
-					if (aResult.getLineAuthorsMap().get(line).equals(aDev)
-							&& inRange(lineCommit, base, side)) {
+
+					if (aResult.getLineAuthorsMap().get(line).equals(aDev) && inRange(lineCommit, base, side)) {
 						result.add(aDev);
 						break;
 					}
- 				}
- 			}
- 		}
- 		
+				}
+			}
+		}
+
 		return result;
- 	}
-	
+	}
+
 	/**
 	 * Determines whether a commit in in a specified range of commits.
 	 *
-	 * TODO: This should be done in some kind of GitHelper class or somewhere else.
+	 * TODO: This should be done in some kind of GitHelper class or somewhere
+	 * else.
 	 */
 	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
 		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
@@ -139,8 +131,7 @@ public class ChunkBasedNetworkBuilder extends
 			rw.markUninteresting(rw.parseCommit(begin));
 
 			for (RevCommit cur; (cur = rw.next()) != null;) {
-				if (!(cur.getName().equals(begin.getName())) 
-						&& cur.getName().equals(commit)) {
+				if (!(cur.getName().equals(begin.getName())) && cur.getName().equals(commit)) {
 					return true;
 				}
 			}
@@ -149,8 +140,7 @@ public class ChunkBasedNetworkBuilder extends
 
 		return false;
 	}
-	
-	
+
 	/*
 	 * @see
 	 * br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#getDeveloperEdges
@@ -164,53 +154,77 @@ public class ChunkBasedNetworkBuilder extends
 		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
 		List<DeveloperNode> groupA = ilist.next();
 		List<DeveloperNode> groupB = ilist.next();
-		
-		System.out.println();
+
+		// create a conflict chunk graph -> Edge's weight 1
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		return edges;
+	}
+
+	/*
+	 * @see br.com.riselabs.cotonet.builder.AbstractNetworkBuilder#
+	 * getFullDeveloperEdges (java.util.List)
+	 */
+	@Override
+	protected List<DeveloperEdge> getFullDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+
 		/*
 		 * Get each Chunk
 		 */
-		
-		System.out.println(cChunk.getPath());
-		
+
 		// create a fully connected graph -> Edge's weight 0
 		for (DeveloperNode from : groupA) {
-			for (DeveloperNode to : groupA) {	
-				if (from.equals(to)) { 
+			for (DeveloperNode to : groupA) {
+				if (from.equals(to)) {
 					continue;
 				}
 				DeveloperEdge newEdge;
-				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(),
-						cChunk.getPath().toString());
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
 				if (!edges.contains(newEdge)) {
 					edges.add(newEdge);
 				}
 			}
 		}
-		
+
 		// create a fully connected graph -> Edge's weight 0
 		for (DeveloperNode from : groupB) {
-			for (DeveloperNode to : groupB) {	
-				if (from.equals(to)) { 
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
 					continue;
 				}
 				DeveloperEdge newEdge;
-				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(),
-						cChunk.getPath().toString());
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
 				if (!edges.contains(newEdge)) {
 					edges.add(newEdge);
 				}
 			}
 		}
-		
+
 		// create a conflict chunk graph -> Edge's weight 1
 		for (DeveloperNode from : groupA) {
-			for (DeveloperNode to : groupB) {	
-				if (from.equals(to)) { 
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
 					continue;
 				}
 				DeveloperEdge newEdge;
-				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(),
-						cChunk.getPath().toString());
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
 				if (!edges.contains(newEdge)) {
 					edges.add(newEdge);
 				}

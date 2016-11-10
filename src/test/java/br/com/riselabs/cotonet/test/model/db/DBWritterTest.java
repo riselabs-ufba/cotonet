@@ -63,7 +63,8 @@ public class DBWritterTest extends ConflictBasedRepositoryTestCase {
 	public void saveChunckBasedNetwork() throws Exception {
 		setResolvedMergeConflictScenario();
 		Project aProject = new Project("http://github.com/test", db);
-		builder = new ChunkBasedNetworkBuilder(aProject);
+		String programTypeTest = "l";
+		builder = new ChunkBasedNetworkBuilder(aProject, programTypeTest);
 		builder.build();
 		builder.persist();
 		

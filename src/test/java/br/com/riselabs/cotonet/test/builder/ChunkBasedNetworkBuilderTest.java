@@ -52,7 +52,7 @@ public class ChunkBasedNetworkBuilderTest extends
 	public void setup() throws Exception {
 		super.setUp();
 		DBTestCase.resetTestDB();
-		builder =  new ChunkBasedNetworkBuilder(new Project("", db));
+		builder =  new ChunkBasedNetworkBuilder(new Project("", db), "l");
 	}
 	
 	@After

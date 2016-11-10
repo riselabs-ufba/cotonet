@@ -224,4 +224,11 @@ public class FileBasedNetworkBuilder extends
 		return null;
 	}
 
+	@Override
+	protected List<DeveloperEdge> getFullDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<BlameResult> cChunk) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 }

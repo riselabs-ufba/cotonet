@@ -42,10 +42,11 @@ import br.com.riselabs.cotonet.util.Directories;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
- * This Runnable class can execute four activities: </br>- it clones the
- * repository; </br>- it persists the tags mapping file; </br>- it creates the
- * <code>codeface</code> configuration file; and </br>- it triggers the conflict
- * based network construction.
+ * This Runnable class can execute four activities: </br>
+ * - it clones the repository; </br>
+ * - it persists the tags mapping file; </br>
+ * - it creates the <code>codeface</code> configuration file; and </br>
+ * - it triggers the conflict based network construction.
  * 
  * @author Alcemir R. Santos
  *
@@ -58,15 +59,24 @@ public class RepositoryCrawler implements Runnable {
 	private boolean skipNetworks;
 	private NetworkType type;
 	private File log;
+	private String programType;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone,
-			NetworkType type) throws IOException {
+	public RepositoryCrawler(String systemURL, boolean mustClone, String programType, NetworkType type)
+			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
-		setLogFile(new File(Directories.getLogDir(), "thread-"
-				+ getProject().getName() + ".log"));
+		setLogFile(new File(Directories.getLogDir(), "thread-" + getProject().getName() + ".log"));
 		setRepositoryDir(new File(Directories.getReposDir(), project.getName()));
 		setType(type);
+		setProgramType(programType);
+	}
+
+	public String getProgramType() {
+		return programType;
+	}
+
+	public void setProgramType(String programType) {
+		this.programType = programType;
 	}
 
 	private void setType(NetworkType type) {
@@ -113,7 +123,7 @@ public class RepositoryCrawler implements Runnable {
 					break;
 				case CHUNK_BASED:
 				default:
-					builder = new ChunkBasedNetworkBuilder(getProject());
+					builder = new ChunkBasedNetworkBuilder(getProject(), getProgramType());
 					break;
 				}
 				builder.setLogFile(log);
@@ -122,8 +132,8 @@ public class RepositoryCrawler implements Runnable {
 			}
 			// persisting aux files
 			CodefaceHelper.createCodefaceConfFiles(project);
-		} catch (NullPointerException | EmptyContentException | GitAPIException
-				| InterruptedException | IOException e) {
+		} catch (NullPointerException | EmptyContentException | GitAPIException | InterruptedException
+				| IOException e) {
 			Logger.logStackTrace(log, e);
 		}
 		System.gc();
@@ -145,10 +155,8 @@ public class RepositoryCrawler implements Runnable {
 		Git result;
 		try {
 			Logger.log(log, "[" + getProject().getName() + "] Cloning Start.");
-			result = Git.cloneRepository().setURI(project.getUrl() + ".git")
-					.setDirectory(repositoryDir).call();
-			Logger.log(log, "[" + getProject().getName()
-					+ "] Cloning Finished.");
+			result = Git.cloneRepository().setURI(project.getUrl() + ".git").setDirectory(repositoryDir).call();
+			Logger.log(log, "[" + getProject().getName() + "] Cloning Finished.");
 			return result.getRepository();
 		} catch (GitAPIException e) {
 			Logger.log(log, "[" + getProject().getName() + "] Cloning Failed.");

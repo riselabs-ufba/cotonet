@@ -60,27 +60,19 @@ public class Main {
 		CommandLineParser parser = new DefaultParser();
 		Options options = new Options();
 
-		options.addOption(Option
-				.builder("l")
-				.longOpt("list")
-				.desc("The path to the file containig the repository's URL of the target systems.")
-				.hasArg().required().build());
+		options.addOption(Option.builder("l").longOpt("list")
+				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
-		options.addOption(Option
-				.builder("rw")
-				.longOpt("rewrite-aux")
-				.desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
-						+ "_WITHOUT_ "
-						+ "the recreation of the merge scenarios based tags.")
-				.hasArg(false).build());
+		options.addOption(Option.builder("fc").longOpt("fullChunk")
+				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
-		options.addOption(Option
-				.builder("rwt")
-				.longOpt("rewrite-tagfile")
-				.desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
-						+ "_INCLUDING_ "
-						+ "the recreation of the merge scenarios based tags.")
-				.hasArg(false).build());
+		options.addOption(
+				Option.builder("rw").longOpt("rewrite-aux").desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
+						+ "_WITHOUT_ " + "the recreation of the merge scenarios based tags.").hasArg(false).build());
+
+		options.addOption(
+				Option.builder("rwt").longOpt("rewrite-tagfile").desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
+						+ "_INCLUDING_ " + "the recreation of the merge scenarios based tags.").hasArg(false).build());
 
 		options.addOption("h", "help", false, "Print this help page");
 
@@ -88,42 +80,50 @@ public class Main {
 		Boolean skipCloneAndNetworks = false;
 		try {
 			CommandLine cmd = parser.parse(options, args);
-
+			String programType;
 			// user is looking for help
 			if (cmd.hasOption("h")) {
 				new HelpFormatter().printHelp("java ", options);
 				System.exit(0);
 			}
 
-			// the "l" option is required
-			if (!cmd.hasOption("l")) {
-				System.out
-						.println("COTONET ended without retrive any repository.\n\n"
-								+ "You should use 'h' if you are looking for help. Otherwise,"
-								+ " the 'l' option is mandatory.");
-				System.exit(1);
-			} else {
-				// running to download the repositories
-				String urlsFilePath = cmd.getOptionValue("l");
+			// "l" and "fc" are the two available options
+			if (cmd.hasOption("l") || cmd.hasOption("fc")) {
+
+				String urlsFilePath = null;
+				if (cmd.hasOption("l")) {
+					urlsFilePath = cmd.getOptionValue("l");
+					programType = "l";
+				} else {
+					urlsFilePath = cmd.getOptionValue("fc");
+					programType = "fc";
+				}
+
+				System.out.println(urlsFilePath);
+
 				reposListFile = new File(urlsFilePath);
 
 				// Ends execution if file not found.
 				if (!reposListFile.exists()) {
-					System.out
-							.println("COTONET ended without retrive any repository.\n\n"
-									+ "The file containig the repository's URL of the target systems was not found. "
-									+ "Check wether the file \""
-									+ urlsFilePath
-									+ "\" exists.");
+					System.out.println("COTONET ended without retrive any repository.\n\n"
+							+ "The file containig the repository's URL of the target systems was not found. "
+							+ "Check wether the file \"" + urlsFilePath + "\" exists.");
 					System.exit(1);
 				}
 
-				skipCloneAndNetworks = (cmd.hasOption("rw") || cmd.hasOption("rwt")) ? true:false;
+				skipCloneAndNetworks = (cmd.hasOption("rw") || cmd.hasOption("rwt")) ? true : false;
 
-				MainThread m = new MainThread(reposListFile,skipCloneAndNetworks);
+				MainThread m = new MainThread(programType, reposListFile, skipCloneAndNetworks);
 				m.start();
 				m.join();
 				Logger.log("COTONET finished. Files rewritten.");
+
+			} else {
+				System.out.println("COTONET ended without retrive any repository.\n\n"
+						+ "You should use 'h' if you are looking for help. Otherwise,"
+						+ " the 'l' or 'fc' option is mandatory.");
+				System.exit(1);
+
 			}
 
 		} catch (ParseException e) {
@@ -133,42 +133,45 @@ public class Main {
 		}
 	}
 
-	static class MainThread extends Thread{
+	static class MainThread extends Thread {
 		private File list;
 		private boolean skip;
-		
-		public  MainThread(File reposListFile, boolean skipCloneAndNetworks) {
+		private String programType;
+
+		public MainThread(String programType, File reposListFile, boolean skipCloneAndNetworks) {
 			this.list = reposListFile;
 			this.skip = skipCloneAndNetworks;
+			this.programType = programType;
 		}
-			
-		public void run(){
-				IOHandler io = new IOHandler();
-				// reponsable to coordinate the threads for each system
-				RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
-				List<String> systems = io.readFile(list);
-				List<String> systems_name = new ArrayList<String>();
-				
-				for (String url : systems) {
-					try {
-						pool.runTask(new RepositoryCrawler(url, skip, NetworkType.CHUNK_BASED));
-//						pool.runTask(new RepositoryCrawler(url, skip, NetworkType.FILE_BASED));
-					} catch (IOException e) {
-						Logger.logStackTrace(e);
-					}
-					Logger.log("Repository scheduled: " + url);
-					String[] str = url.split("/");
-					systems_name.add(str[str.length-1]);
-				}
-				
-				pool.shutDown();
+
+		public void run() {
+			IOHandler io = new IOHandler();
+			// reponsable to coordinate the threads for each system
+			RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
+			List<String> systems = io.readFile(list);
+			List<String> systems_name = new ArrayList<String>();
+
+			for (String url : systems) {
 				try {
-					CodefaceHelper.createCodefaceRunScript(systems_name);
-				} catch (NullPointerException | IOException |EmptyContentException e) {
+					pool.runTask(new RepositoryCrawler(url, skip, programType, NetworkType.CHUNK_BASED));
+					// pool.runTask(new RepositoryCrawler(url, skip,
+					// NetworkType.FILE_BASED));
+				} catch (IOException e) {
 					Logger.logStackTrace(e);
 				}
+				Logger.log("Repository scheduled: " + url);
+				String[] str = url.split("/");
+				systems_name.add(str[str.length - 1]);
 			}
-			
+
+			pool.shutDown();
+			try {
+				CodefaceHelper.createCodefaceRunScript(systems_name);
+			} catch (NullPointerException | IOException | EmptyContentException e) {
+				Logger.logStackTrace(e);
+			}
 		}
+
+	}
 
 }
