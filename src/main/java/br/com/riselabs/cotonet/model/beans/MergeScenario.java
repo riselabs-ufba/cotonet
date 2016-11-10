@@ -57,7 +57,7 @@ public class MergeScenario {
 		setLeft(leftParent);
 		setRight(rightParent);
 		setMerge(merge);
-		setMegeDate(mergeDate);
+		setMergeDate(mergeDate);
 	}
 
 	public MergeScenario(Integer id, Integer projectID, String sha1Base,
@@ -68,7 +68,7 @@ public class MergeScenario {
 		setSHA1Left(sha1Left);
 		setSHA1Right(sha1Right);
 		setSHA1Merge(sha1Merge);
-		setMegeDate(mergeDate);
+		setMergeDate(mergeDate);
 	}
 
 	public void setID(Integer id) {
