@@ -23,8 +23,6 @@ package br.com.riselabs.cotonet.model.beans;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jgit.revwalk.RevCommit;
-
 /**
  * @author Alcemir R. Santos
  *
@@ -37,13 +35,13 @@ public class ConflictChunk<T> {
 	
 	private Blame<T> left;
 	private Blame<T> right;
-	private RevCommit base;
+	private String base;
 
-	public RevCommit getBase() {
+	public String getBase() {
 		return base;
 	}
 
-	public void setBase(RevCommit base) {
+	public void setBase(String base) {
 		this.base = base;
 	}
 

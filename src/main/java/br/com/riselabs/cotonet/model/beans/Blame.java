@@ -21,7 +21,6 @@
 package br.com.riselabs.cotonet.model.beans;
 
 import org.eclipse.jgit.blame.BlameResult;
-import org.eclipse.jgit.revwalk.RevCommit;
 
 /**
  * @author Alcemir R. Santos
@@ -29,19 +28,19 @@ import org.eclipse.jgit.revwalk.RevCommit;
  */
 public class Blame<T> {
 	
-	private RevCommit revision; 
+	private String revision; 
 	private T result;
 	
-	public Blame(RevCommit aCommit, T aResult){
+	public Blame(String aCommit, T aResult){
 		setRevision(aCommit);
 		setResult(aResult);
 	}
 	
-	public RevCommit getRevision() {
+	public String getRevision() {
 		return revision;
 	}
 
-	public void setRevision(RevCommit commit) {
+	public void setRevision(String commit) {
 		this.revision = commit;
 	}
 	
@@ -63,7 +62,7 @@ public class Blame<T> {
 		}
 		return "['"+ filepath +"' blame @ "
 				+ "Commit ('"
-				+ this.revision.getFullMessage() + "')]";
+				+ this.revision + "')]";
 	}
 	
 }
