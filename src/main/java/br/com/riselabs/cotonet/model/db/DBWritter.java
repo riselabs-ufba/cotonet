@@ -23,18 +23,22 @@ package br.com.riselabs.cotonet.model.db;
 import java.io.File;
 import java.util.Map.Entry;
 
+import br.com.riselabs.cotonet.model.beans.Commit;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.ConflictBasedNetworkDAO;
+import br.com.riselabs.cotonet.model.dao.DAO;
 import br.com.riselabs.cotonet.model.dao.DAOFactory;
 import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
+import br.com.riselabs.cotonet.model.dao.CommitDAO;
 import br.com.riselabs.cotonet.model.dao.DeveloperEdgeDAO;
 import br.com.riselabs.cotonet.model.dao.DeveloperNodeDAO;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
 import br.com.riselabs.cotonet.model.dao.ProjectDAO;
+import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
@@ -51,7 +55,8 @@ public enum DBWritter {
 	private ConflictBasedNetworkDAO cndao;
 	private DeveloperEdgeDAO dedao;
 	private DeveloperNodeDAO dndao;
-
+	private CommitDAO cdao;
+	
 	private Project current;
 
 	private File log;
@@ -111,7 +116,7 @@ public enum DBWritter {
 	 * @return - the project with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized Project persistProject(Project project)
+	public synchronized Project persistProject(Project project)
 			throws InvalidCotonetBeanException {
 		pdao = new ProjectDAO();
 		Project aux;
@@ -131,7 +136,7 @@ public enum DBWritter {
 	 * @return - the scenario with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized MergeScenario persistScenario(MergeScenario scenario)
+	public synchronized MergeScenario persistScenario(MergeScenario scenario)
 			throws InvalidCotonetBeanException {
 		msdao = new MergeScenarioDAO();
 		MergeScenario aux;
@@ -151,7 +156,7 @@ public enum DBWritter {
 	 * @return - the network with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized ConflictBasedNetwork persistNetwork(
+	public synchronized ConflictBasedNetwork persistNetwork(
 			ConflictBasedNetwork connet) throws InvalidCotonetBeanException {
 		cndao = new ConflictBasedNetworkDAO();
 		ConflictBasedNetwork aux;
@@ -171,7 +176,7 @@ public enum DBWritter {
 	 * @return - the edge with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized DeveloperEdge persistEdge(DeveloperEdge edge)
+	public synchronized DeveloperEdge persistEdge(DeveloperEdge edge)
 			throws InvalidCotonetBeanException {
 		dedao = new DeveloperEdgeDAO();
 		DeveloperEdge aux;
@@ -191,9 +196,8 @@ public enum DBWritter {
 	 * @return - the edge with the updated ID.
 	 * @throws InvalidCotonetBeanException
 	 */
-	private synchronized DeveloperNode persistNode(DeveloperNode node)
+	public synchronized DeveloperNode persistNode(DeveloperNode node)
 			throws InvalidCotonetBeanException {
-		// save developers
 		dndao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
 		DeveloperNode aux;
 		if ((aux = dndao.get(node)) == null) {
@@ -203,4 +207,44 @@ public enum DBWritter {
 		node.setID(aux.getID());
 		return node;
 	}
+	
+	/**
+	 * Persists a commit in the database and update the parameter with the its
+	 * respective ID.
+	 * 
+	 * @param aCommit
+	 * @return - the commit with its updated ID.
+	 * @throws InvalidCotonetBeanException
+	 */
+	public synchronized Commit persistCommit(Commit aCommit)
+			throws InvalidCotonetBeanException {
+		cdao = (CommitDAO) DAOFactory.getDAO(CotonetBean.COMMIT);
+		Commit aux;
+		if ((aux = cdao.get(aCommit)) == null) {
+			cdao.save(aCommit);
+		}
+		aux = cdao.get(aCommit);
+		aCommit.setID(aux.getID());
+		return aCommit;
+	}
+
+	/**
+	 * Persists a project in the database and update the parameter with the its
+	 * respective ID.
+	 * 
+	 * @param aProject
+	 * @return - the project with its updated ID.
+	 * @throws InvalidCotonetBeanException
+	 */
+	public synchronized Project persistOnly(Project aProject) throws InvalidCotonetBeanException {
+		pdao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
+		Project aux;
+		if ((aux = pdao.get(aProject)) == null) {
+			pdao.save(aProject);
+		}
+		aux = pdao.get(aProject);
+		aProject.setID(aux.getID());
+		return aProject;
+	}
+
 }
