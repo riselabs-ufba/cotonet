@@ -67,11 +67,14 @@ public class CommitDAO implements DAO<Commit> {
 		try {
 			conn = Database.getConnection();
 			ps = conn.prepareStatement(
-					"insert into `commits` (`sha1`, `date`, `committer_id`, `author_id`) values (?,?,?,?);");
-			ps.setString(1, c.getHash());
+					"insert into `commits` (`sha1`, `date`, `author_id`, `committer_id`) values (?,?,?,?);");
+			ps.setString(1, c.getSHA1());
 			ps.setDate(2, new Date(c.getDatetime().getTime()));
-			ps.setInt(3, c.getCommitterID());
-			ps.setInt(4, c.getAuthorID());
+			ps.setInt(3, c.getAuthorID());
+			if(c.getCommitterID()!=null)
+				ps.setInt(4, c.getCommitterID());
+			else
+				ps.setInt(4, c.getAuthorID());
 			hasSaved = ps.executeUpdate() > 0 ? true : false;
 		} catch (SQLException e) {
 			try {
@@ -118,7 +121,7 @@ public class CommitDAO implements DAO<Commit> {
 			conn = Database.getConnection();
 			ps = conn.prepareStatement(
 					"select * from `commits` where `sha1`=? or `id`=?;");
-			ps.setString(1, c.getHash());
+			ps.setString(1, c.getSHA1());
 			if (c.getID() == null) {
 				ps.setInt(2, Integer.MAX_VALUE);
 			} else {

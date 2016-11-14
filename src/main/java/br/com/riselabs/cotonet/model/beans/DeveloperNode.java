@@ -20,6 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
+import br.com.riselabs.cotonet.model.enums.TypeDeveloper;
+
 /**
  * @author Alcemir R. Santos
  *
@@ -30,28 +32,40 @@ public class DeveloperNode {
 	private Integer systemID;
 	private String name;
 	private String email;
-	
+	private TypeDeveloper type;
+
 	public DeveloperNode() {
-		this(null,null,null);
-	}
-	
-	public DeveloperNode(String anEmail) {
-		this(null, null, anEmail);
-	}
-	
-	public DeveloperNode(String aName, String anEmail) {
-		this(null, aName, anEmail);
+		this(null, null, null, TypeDeveloper.AUTHOR);
 	}
 
-	public DeveloperNode(Integer systemID, String aName, String anEmail) {
-		this(null, systemID, aName, anEmail);
+	public DeveloperNode(String anEmail) {
+		this(null, null, anEmail, TypeDeveloper.AUTHOR);
 	}
-	
-	public DeveloperNode(Integer id, Integer systemID, String aName, String anEmail) {
+
+	public DeveloperNode(String aName, String anEmail) {
+		this(null, aName, anEmail, TypeDeveloper.AUTHOR);
+	}
+
+	public DeveloperNode(Integer systemID, String aName, String anEmail,
+			TypeDeveloper aType) {
+		this(null, systemID, aName, anEmail, aType);
+	}
+
+	public DeveloperNode(Integer id, Integer systemID, String aName,
+			String anEmail, TypeDeveloper aType) {
 		setID(id);
 		setSystemID(systemID);
 		setName(aName);
 		setEmail(anEmail);
+		setType(aType);
+	}
+
+	public Integer getSystemID() {
+		return this.systemID;
+	}
+
+	public void setSystemID(Integer systemID) {
+		this.systemID = systemID;
 	}
 
 	public Integer getID() {
@@ -76,6 +90,14 @@ public class DeveloperNode {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+
+	public void setType(TypeDeveloper aType) {
+		this.type = aType;
+	}
+
+	public TypeDeveloper getType() {
+		return this.type;
 	}
 
 	@Override
@@ -108,13 +130,5 @@ public class DeveloperNode {
 	@Override
 	public String toString() {
 		return this.name + "(#" + this.id + "): " + this.email;
-	}
-
-	public Integer getSystemID() {
-		return this.systemID;
-	}
-	
-	public void setSystemID(Integer systemID){
-		this.systemID = systemID;
 	}
 }
