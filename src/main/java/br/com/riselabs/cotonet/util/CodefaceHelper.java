@@ -48,9 +48,11 @@ import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
 
+import br.com.riselabs.cotonet.model.beans.Commit;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.dao.MergeScenarioDAO;
+import br.com.riselabs.cotonet.model.db.DBReader;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.model.exceptions.InvalidNumberOfTagsException;
@@ -99,10 +101,11 @@ public class CodefaceHelper {
 	 * @throws IOException
 	 * @throws NullPointerException
 	 * @throws EmptyContentException
+	 * @throws InvalidCotonetBeanException 
 	 * @throws InvalidNumberOfTagsException
 	 */
 	public static void createCodefaceConfFiles(Project project)
-			throws IOException, NullPointerException, EmptyContentException {
+			throws IOException, NullPointerException, EmptyContentException, InvalidCotonetBeanException {
 		createMergeBasedTags(project);
 		String releases = null;
 		List<String> tuples = new ArrayList<String>();
@@ -154,7 +157,7 @@ public class CodefaceHelper {
 	}
 
 	private static void createMergeBasedTags(Project project)
-			throws IOException {
+			throws IOException, InvalidCotonetBeanException {
 		Map<String, String> tagsMap;
 		MergeScenarioDAO dao =  new MergeScenarioDAO();
 		Repository repository = project.getRepository();
@@ -178,16 +181,17 @@ public class CodefaceHelper {
 			String tagT = project.getName() + "T" + scenario.getID();
 			String tagB = project.getName() + "B" + scenario.getID();
 
-			tagsMap.put(tagB, scenario.getSHA1Merge());
+			Commit c = DBReader.INSTANCE.getCommitByID(scenario.getMergeID());
+			tagsMap.put(tagB, c.getSHA1());
 			RevCommit earlier = getEarlierCommit(project.getRepository(),
-					scenario.getSHA1Merge(), 3);
+					c.getSHA1(), 3);
 			tagsMap.put(tagT, earlier.getName());
 
 			// prepare test-repository
 			try (Git git = new Git(repository)) {
 
 				try (RevWalk walk = new RevWalk(repository)) {
-					ObjectId refCommitID = ObjectId.fromString(scenario.getSHA1Merge());
+					ObjectId refCommitID = ObjectId.fromString(c.getSHA1());
 					RevCommit refCommit = walk.parseCommit(refCommitID);
 					git.tag().setObjectId(refCommit).setName(tagB).call();
 					git.tag().setObjectId(earlier).setName(tagT).call();

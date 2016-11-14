@@ -37,7 +37,9 @@ import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
+import br.com.riselabs.cotonet.model.db.DBReader;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
@@ -91,10 +93,11 @@ public class ExternalGitCommand {
 	 * {@code git reset --hard}'.
 	 * 
 	 * @return
+	 * @throws InvalidCotonetBeanException 
 	 * @throws IOException
 	 */
 	public List<ConflictChunk<CommandLineBlameResult>> call()
-			throws BlameException {
+			throws BlameException, InvalidCotonetBeanException {
 		Runtime run = Runtime.getRuntime();
 		Process pr = null;
 		String cmd = null;
@@ -133,7 +136,7 @@ public class ExternalGitCommand {
 				CommandLineBlameResult bResult;
 				bResult = new CommandLineBlameResult(file.getCanonicalPath());
 				Blame<CommandLineBlameResult> cBlame;
-				cBlame = new Blame<CommandLineBlameResult>(scenario.getLeft(),
+				cBlame = new Blame<CommandLineBlameResult>(DBReader.INSTANCE.getCommitByID(scenario.getLeftID()).getSHA1(),
 						bResult);
 				List<String> block;
 				while ((block = readPorcelainBlock(buf)) != null) {
@@ -158,13 +161,13 @@ public class ExternalGitCommand {
 						continue;
 					} else if (contentLine.equals(CONFLICT_SEP)) {
 						addBlame = true;
-						cBlame.setRevision(scenario.getLeft());
-						conflict.setBase(scenario.getBase());
+						cBlame.setRevision(DBReader.INSTANCE.getCommitByID(scenario.getLeftID()).getSHA1());
+						conflict.setBase(DBReader.INSTANCE.getCommitByID(scenario.getBaseID()).getSHA1());
 						conflict.setLeft(cBlame);
 						bResult = new CommandLineBlameResult(
 								file.getCanonicalPath());
 						cBlame = new Blame<CommandLineBlameResult>(
-								scenario.getRight(), bResult);
+								DBReader.INSTANCE.getCommitByID(scenario.getRightID()).getSHA1(), bResult);
 						continue;
 					} else if (contentLine.equals(CONFLICT_END)) {
 						conflict.setRight(cBlame);
@@ -174,7 +177,7 @@ public class ExternalGitCommand {
 						bResult = new CommandLineBlameResult(
 								file.getCanonicalPath());
 						cBlame = new Blame<CommandLineBlameResult>(
-								scenario.getLeft(), bResult);
+								DBReader.INSTANCE.getCommitByID(scenario.getLeftID()).getSHA1(), bResult);
 						
 						//@gustavo added this line
 						conflict = new ConflictChunk<CommandLineBlameResult>(

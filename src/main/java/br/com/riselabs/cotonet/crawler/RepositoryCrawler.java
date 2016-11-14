@@ -37,6 +37,7 @@ import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
+import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
 import br.com.riselabs.cotonet.util.CodefaceHelper;
 import br.com.riselabs.cotonet.util.Directories;
 import br.com.riselabs.cotonet.util.Logger;
@@ -93,6 +94,7 @@ public class RepositoryCrawler implements Runnable {
 		this.repositoryDir = directory;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public void run() {
 		try {
@@ -106,6 +108,7 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
+				@SuppressWarnings("rawtypes")
 				AbstractNetworkBuilder builder = null;
 				switch (type) {
 				case FILE_BASED:
@@ -123,7 +126,7 @@ public class RepositoryCrawler implements Runnable {
 			// persisting aux files
 			CodefaceHelper.createCodefaceConfFiles(project);
 		} catch (NullPointerException | EmptyContentException | GitAPIException
-				| InterruptedException | IOException e) {
+				| InterruptedException | IOException | InvalidCotonetBeanException e) {
 			Logger.logStackTrace(log, e);
 		}
 		System.gc();
