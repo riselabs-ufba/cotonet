@@ -36,9 +36,9 @@ public class MergeScenarioValidator implements Validator<MergeScenario> {
 	@Override
 	public boolean validate(MergeScenario ms) throws InvalidCotonetBeanException {
 		if(ms == null
-				|| ms.getRight() == null
-				|| ms.getBase() == null
-				|| ms.getLeft() == null
+				|| ms.getRightID() == null
+				|| ms.getBaseID() == null
+				|| ms.getLeftID() == null
 				|| ms.getProjectID() == null){
 			throw new InvalidCotonetBeanException(
 					MergeScenario.class, 

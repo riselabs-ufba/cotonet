@@ -20,10 +20,6 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
-import java.sql.Timestamp;
-
-import org.eclipse.jgit.revwalk.RevCommit;
-
 /**
  * @author Alcemir R. Santos
  *
@@ -32,33 +28,15 @@ public class MergeScenario {
 
 	private Integer id;
 	private Integer projectID;
-	private RevCommit base;
 	private Integer baseID;
-	private RevCommit left;
 	private Integer leftID;
-	private RevCommit right;
 	private Integer rightID;
-	private RevCommit merge;
 	private Integer mergeID;
 
 	public MergeScenario() {
 		this(null, null, null, null, null, null);
 	}
-
-	public MergeScenario(RevCommit base, RevCommit left, RevCommit right,
-			RevCommit merge, Timestamp mergeDate) {
-		this(null, base, left, right, merge);
-	}
-
-	public MergeScenario(Integer projectID, RevCommit baseCommit,
-			RevCommit leftParent, RevCommit rightParent, RevCommit merge) {
-		setProjectID(projectID);
-		setBase(baseCommit);
-		setLeft(leftParent);
-		setRight(rightParent);
-		setMerge(merge);
-	}
-
+	
 	public MergeScenario(Integer id, Integer projectID, Integer baseID, Integer leftID,Integer rightID, Integer mergeID) {
 		setID(id);
 		setProjectID(projectID);
@@ -74,30 +52,6 @@ public class MergeScenario {
 
 	public Integer getID() {
 		return this.id;
-	}
-
-	public RevCommit getBase() {
-		return base;
-	}
-
-	public void setBase(RevCommit base) {
-		this.base = base;
-	}
-
-	public RevCommit getLeft() {
-		return left;
-	}
-
-	public void setLeft(RevCommit left) {
-		this.left = left;
-	}
-
-	public RevCommit getRight() {
-		return right;
-	}
-
-	public void setRight(RevCommit right) {
-		this.right = right;
 	}
 
 	public Integer getBaseID() {
@@ -124,20 +78,12 @@ public class MergeScenario {
 		rightID = anID;
 	}
 
-	public void setMerge(RevCommit aCommmit) {
-		this.merge = aCommmit;
-	}
-
 	public void setMergeID(Integer anID) {
 		this.mergeID = anID;
 	}
 
 	public Integer getMergeID() {
 		return this.mergeID;
-	}
-
-	public RevCommit getMerge() {
-		return this.merge;
 	}
 
 	public void setProjectID(Integer projectID) {
@@ -150,7 +96,7 @@ public class MergeScenario {
 
 	@Override
 	public String toString() {
-		return "MergeScenario [base=" + base + ", left=" + left + ", right="
-				+ right + "]";
+		return "MergeScenario [base=" + baseID + ", left=" + leftID + ", right="
+				+ rightID + "]";
 	}
 }

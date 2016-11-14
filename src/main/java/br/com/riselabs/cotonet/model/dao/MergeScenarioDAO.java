@@ -25,13 +25,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 
-import br.com.riselabs.cotonet.model.beans.Commit;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
-import br.com.riselabs.cotonet.model.dao.DAOFactory.CotonetBean;
 import br.com.riselabs.cotonet.model.dao.validators.MergeScenarioValidator;
 import br.com.riselabs.cotonet.model.db.Database;
 import br.com.riselabs.cotonet.model.exceptions.InvalidCotonetBeanException;
@@ -155,8 +152,8 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 			if (ms.getID() == null) {
 				sql = "select * from `merge_scenarios` where `commit_base`=? and `commit_left`=? and `commit_right`=?;";
 				ps = conn.prepareStatement(sql);
-				if (ms.getBase() == null && ms.getLeft() == null
-						&& ms.getRight() == null) {
+//				if (ms.getBase() == null && ms.getLeft() == null
+//						&& ms.getRight() == null) {
 					if (ms.getBaseID() == null && ms.getLeftID() == null
 							&& ms.getRightID() == null) {
 						ps.setInt(1, Integer.MAX_VALUE);
@@ -167,16 +164,16 @@ public class MergeScenarioDAO implements DAO<MergeScenario> {
 						ps.setInt(2, ms.getLeftID());
 						ps.setInt(3, ms.getRightID());
 					}
-				} else {
-					CommitDAO tmpDAO = (CommitDAO) DAOFactory.getDAO(CotonetBean.COMMIT);
-					
-					Commit tmp = new Commit(ms.getBase().getName());
-					ps.setInt(1, tmpDAO.get(tmp).getID());
-					tmp = new Commit(ms.getLeft().getName());
-					ps.setInt(2, tmpDAO.get(tmp).getID());
-					tmp = new Commit(ms.getRight().getName());
-					ps.setInt(3, tmpDAO.get(tmp).getID());
-				}
+//				} else {
+//					CommitDAO tmpDAO = (CommitDAO) DAOFactory.getDAO(CotonetBean.COMMIT);
+//					
+//					Commit tmp = new Commit(ms.getBase().getName());
+//					ps.setInt(1, tmpDAO.get(tmp).getID());
+//					tmp = new Commit(ms.getLeft().getName());
+//					ps.setInt(2, tmpDAO.get(tmp).getID());
+//					tmp = new Commit(ms.getRight().getName());
+//					ps.setInt(3, tmpDAO.get(tmp).getID());
+//				}
 				// get with ID
 			} else {
 				sql = "select * from `merge_scenarios` where `id`=?;";
