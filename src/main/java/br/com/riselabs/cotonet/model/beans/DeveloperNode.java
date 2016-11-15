@@ -20,6 +20,8 @@
  */
 package br.com.riselabs.cotonet.model.beans;
 
+import br.com.riselabs.cotonet.model.enums.MergeCommitSide;
+
 /**
  * @author Alcemir R. Santos
  *
@@ -30,6 +32,8 @@ public class DeveloperNode {
 	private Integer systemID;
 	private String name;
 	private String email;
+	
+	private MergeCommitSide sideCommitComesFrom;
 	
 	public DeveloperNode() {
 		this(null,null,null);
@@ -76,6 +80,14 @@ public class DeveloperNode {
 
 	public void setEmail(String email) {
 		this.email = email;
+	}
+	
+	public MergeCommitSide getSideCommitComesFrom() {
+		return sideCommitComesFrom;
+	}
+
+	public void setSideCommitComesFrom(MergeCommitSide sideCommitComesFrom) {
+		this.sideCommitComesFrom = sideCommitComesFrom;
 	}
 
 	@Override

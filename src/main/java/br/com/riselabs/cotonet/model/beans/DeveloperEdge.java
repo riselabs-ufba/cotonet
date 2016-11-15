@@ -48,7 +48,7 @@ public class DeveloperEdge {
 	public DeveloperEdge(DeveloperNode devA, DeveloperNode devB, Integer weightEdge, String chunkRange, String filepath) {
 		this(null, null, devA, devB, weightEdge, chunkRange, filepath);
 	}
-	
+
 	public DeveloperEdge(Integer id, Integer networkID, DeveloperNode devA, DeveloperNode devB, Integer weight, String chunkRange, String filepath) {
 		setID(id);
 		setNetworkID(networkID);

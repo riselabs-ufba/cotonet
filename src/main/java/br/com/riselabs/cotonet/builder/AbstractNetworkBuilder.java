@@ -283,7 +283,7 @@ public abstract class AbstractNetworkBuilder<T> {
 			for (ConflictChunk<T> cChunk : cchunks) {
 				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
 
-				if (getProgramType() == "l") {
+				if (getProgramType().equals("c")) {
 					fEdges = getDeveloperEdges(fNodes, cChunk);
 				} else {
 					fEdges = getFullDeveloperEdges(fNodes, cChunk);
@@ -297,6 +297,11 @@ public abstract class AbstractNetworkBuilder<T> {
 				}
 			}
 
+			if (getProgramType().equals("f")) {
+				
+				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath() , edges);
+			}
+			
 		}
 
 		if (nodes.isEmpty() || edges.isEmpty()) {
@@ -305,6 +310,37 @@ public abstract class AbstractNetworkBuilder<T> {
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
+	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes,
+			String filePath, List<DeveloperEdge> oldEdges) {
+	
+			// if there is only one developer, create loop
+			if (nodes.size() == 1) {
+				return oldEdges;
+			}
+			
+			// create a conflict file graph -> Edge's weight 2 or 3
+			for (DeveloperNode from : nodes) {
+				for (DeveloperNode to : nodes) {
+					if (from.equals(to)) {
+						continue;
+					}
+					DeveloperEdge newEdge;
+					//create edge to developers in which contribute in the same side
+					if (from.getSideCommitComesFrom().equals(to.getSideCommitComesFrom())) {
+						newEdge = new DeveloperEdge(from, to, 2, "-", filePath);
+
+					} else {
+						newEdge = new DeveloperEdge(from, to, 3, "-", filePath);
+					}
+					if (!oldEdges.contains(newEdge)) {
+						oldEdges.add(newEdge);
+					}
+				}
+			}
+		return oldEdges;
+	}
+	
+	
 	protected abstract List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
 			ConflictChunk<T> cChunk);
 

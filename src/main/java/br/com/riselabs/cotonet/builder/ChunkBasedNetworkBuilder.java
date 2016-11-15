@@ -37,6 +37,7 @@ import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
+import br.com.riselabs.cotonet.model.enums.MergeCommitSide;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
 
@@ -84,15 +85,18 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder<CommandLine
 
 		// getting nodes from the upper part of the conflict
 		CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
-		result.put(scenario.getLeft().getName(), extractNodes(scenario.getBase(), scenario.getLeft(), leftResult));
+		result.put(scenario.getLeft().getName(), extractNodes(scenario.getBase(), scenario.getLeft(), 
+				leftResult, MergeCommitSide.LEFT));
 		// getting nodes from the bottom part of the conflict
 		CommandLineBlameResult rightResult = cChunk.getRight().getResult();
-		result.put(scenario.getRight().getName(), extractNodes(scenario.getBase(), scenario.getRight(), rightResult));
+		result.put(scenario.getRight().getName(), extractNodes(scenario.getBase(), scenario.getRight(), 
+				rightResult, MergeCommitSide.RIGHT));
 
 		return result;
 	}
 
-	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult) {
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult, 
+			MergeCommitSide mergeCommitSide) {
 
 		List<DeveloperNode> result = new ArrayList<>();
 		for (DeveloperNode aDev : aResult.getAuthors()) {
@@ -109,6 +113,8 @@ public class ChunkBasedNetworkBuilder extends AbstractNetworkBuilder<CommandLine
 					String lineCommit = aResult.getLineCommitMap().get(line);
 
 					if (aResult.getLineAuthorsMap().get(line).equals(aDev) && inRange(lineCommit, base, side)) {
+						
+						aDev.setSideCommitComesFrom(mergeCommitSide);
 						result.add(aDev);
 						break;
 					}

@@ -60,12 +60,15 @@ public class Main {
 		CommandLineParser parser = new DefaultParser();
 		Options options = new Options();
 
-		options.addOption(Option.builder("l").longOpt("list")
+		options.addOption(Option.builder("c").longOpt("list")
 				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
-		options.addOption(Option.builder("fc").longOpt("fullChunk")
+		options.addOption(Option.builder("cf").longOpt("fullChunk")
 				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
+		options.addOption(Option.builder("f").longOpt("fileBase")
+				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
+		
 		options.addOption(
 				Option.builder("rw").longOpt("rewrite-aux").desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
 						+ "_WITHOUT_ " + "the recreation of the merge scenarios based tags.").hasArg(false).build());
@@ -88,15 +91,21 @@ public class Main {
 			}
 
 			// "l" and "fc" are the two available options
-			if (cmd.hasOption("l") || cmd.hasOption("fc")) {
+			else if (cmd.hasOption("c") || cmd.hasOption("cf") || cmd.hasOption("f")) {
 
 				String urlsFilePath = null;
-				if (cmd.hasOption("l")) {
-					urlsFilePath = cmd.getOptionValue("l");
-					programType = "l";
-				} else {
-					urlsFilePath = cmd.getOptionValue("fc");
-					programType = "fc";
+				if (cmd.hasOption("c")) {
+					urlsFilePath = cmd.getOptionValue("c");
+					programType = "c";
+				} 
+				else if (cmd.hasOption("cf")){
+					urlsFilePath = cmd.getOptionValue("cf");
+					programType = "cf";
+					
+				}
+				else {
+					urlsFilePath = cmd.getOptionValue("f");
+					programType = "f";
 				}
 
 				System.out.println(urlsFilePath);
