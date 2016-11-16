@@ -70,22 +70,10 @@ public class NetworkBuilder<T> {
 	protected NetworkType type;
 	protected Project project;
 	protected File log;
-	
-	protected String programType;
 
-	public NetworkBuilder(Project project, String programType) {
+	public NetworkBuilder(Project project, NetworkType type) {
 		setProject(project);
-		setType(NetworkType.CHUNK_BASED);
-
-		setProgramType(programType);
-	}
-
-	public String getProgramType() {
-		return programType;
-	}
-
-	public void setProgramType(String programType) {
-		this.programType = programType;
+		setType(type);
 	}
 
 	public Project getProject() {
@@ -296,7 +284,7 @@ public class NetworkBuilder<T> {
 
 				// if program type chunk-based get developer edges that
 				// contribute to the conflict
-				if (getProgramType().equals("c")) {
+				if (type == NetworkType.CHUNK_BASED) {
 					fEdges = getDeveloperEdges(fNodes, cChunk);
 					// else (chunk-based full or File-based get the full
 					// developer edges at chunk level)
@@ -315,7 +303,7 @@ public class NetworkBuilder<T> {
 			// case file-based, get developer nodes that contribute to some
 			// chunk in the target file and
 			// make the previous graph full
-			if (getProgramType().equals("f")) {
+			if (type == NetworkType.FILE_BASED) {
 
 				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath(), edges);
 			}

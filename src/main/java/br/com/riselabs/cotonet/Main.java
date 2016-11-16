@@ -85,7 +85,6 @@ public class Main {
 		Boolean skipCloneAndNetworks = false;
 		try {
 			CommandLine cmd = parser.parse(options, args);
-			String programType;
 			// user is looking for help
 			if (cmd.hasOption("h")) {
 				new HelpFormatter().printHelp("java ", options);
@@ -101,15 +100,16 @@ public class Main {
 			else if (cmd.hasOption("c") || cmd.hasOption("cf") || cmd.hasOption("f")) {
 
 				String urlsFilePath = null;
+				NetworkType type;
 				if (cmd.hasOption("c")) {
 					urlsFilePath = cmd.getOptionValue("c");
-					programType = "c";
+					type = NetworkType.CHUNK_BASED;
 				} else if (cmd.hasOption("cf")) {
 					urlsFilePath = cmd.getOptionValue("cf");
-					programType = "cf";
+					type = NetworkType.CHUNK_BASED_FULL;
 				} else {
 					urlsFilePath = cmd.getOptionValue("f");
-					programType = "f";
+					type = NetworkType.FILE_BASED;
 				} 
 
 				System.out.println(urlsFilePath);
@@ -126,7 +126,7 @@ public class Main {
 
 				skipCloneAndNetworks = (cmd.hasOption("rw") || cmd.hasOption("rwt")) ? true : false;
 
-				MainThread m = new MainThread(programType, reposListFile, skipCloneAndNetworks);
+				MainThread m = new MainThread(type, reposListFile, skipCloneAndNetworks);
 				m.start();
 				m.join();
 				Logger.log("COTONET finished. Files rewritten.");
@@ -149,12 +149,12 @@ public class Main {
 	static class MainThread extends Thread {
 		private File list;
 		private boolean skip;
-		private String programType;
+		private NetworkType type;
 
-		public MainThread(String programType, File reposListFile, boolean skipCloneAndNetworks) {
+		public MainThread(NetworkType type, File reposListFile, boolean skipCloneAndNetworks) {
 			this.list = reposListFile;
 			this.skip = skipCloneAndNetworks;
-			this.programType = programType;
+			this.type = type;			
 		}
 
 		public void run() {
@@ -167,7 +167,7 @@ public class Main {
 			for (String url : systems) {
 				try {
 
-					pool.runTask(new RepositoryCrawler(url, skip, programType, NetworkType.CHUNK_BASED));
+					pool.runTask(new RepositoryCrawler(url, skip, type));
 					
 				} catch (IOException e) {
 					Logger.logStackTrace(e);

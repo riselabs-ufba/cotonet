@@ -61,7 +61,7 @@ public class DBWritterTest extends ConflictBasedRepositoryTestCase {
 	public void saveNetwork() throws Exception {
 		setResolvedMergeConflictScenario();
 		Project aProject = new Project("http://github.com/test", db);
-		String programTypeTest = "c";
+		NetworkType programTypeTest = NetworkType.CHUNK_BASED;
 		builder = new NetworkBuilder(aProject, programTypeTest);
 		builder.build();
 		builder.persist();

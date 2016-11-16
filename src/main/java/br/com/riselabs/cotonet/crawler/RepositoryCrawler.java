@@ -55,26 +55,25 @@ public class RepositoryCrawler implements Runnable {
 
 	private File repositoryDir;
 	private boolean skipNetworks;
-	private String programType;
 	private File log;
 	
 	private NetworkType type;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone, String programType, NetworkType type)
+	public RepositoryCrawler(String systemURL, boolean mustClone, NetworkType type)
 			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
 		setLogFile(new File(Directories.getLogDir(), "thread-" + getProject().getName() + ".log"));
 		setRepositoryDir(new File(Directories.getReposDir(), project.getName()));
-		setProgramType(programType);
+		setProgramType(type);
 	}
 
-	public String getProgramType() {
-		return programType;
+	public NetworkType getProgramType() {
+		return type;
 	}
 
-	public void setProgramType(String programType) {
-		this.programType = programType;
+	public void setProgramType(NetworkType type) {
+		this.type = type;
 	}
 
 	public Project getProject() {

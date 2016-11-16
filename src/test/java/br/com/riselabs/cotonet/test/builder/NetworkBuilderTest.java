@@ -53,7 +53,7 @@ public class NetworkBuilderTest extends
 	public void setup() throws Exception {
 		super.setUp();
 		DBTestCase.resetTestDB();
-		builder =  new NetworkBuilder(new Project("", db), "c");
+		builder =  new NetworkBuilder(new Project("", db), NetworkType.CHUNK_BASED);
 	}
 	
 	@After
