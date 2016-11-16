@@ -67,21 +67,24 @@ import br.com.riselabs.cotonet.util.Logger;
  */
 public class NetworkBuilder<T> {
 
-	protected NetworkType programType;
+	protected NetworkType type;
 	protected Project project;
 	protected File log;
 	
-	public NetworkBuilder(Project project, NetworkType programType) {
+	protected String programType;
+
+	public NetworkBuilder(Project project, String programType) {
 		setProject(project);
-		//setType(NetworkType.CHUNK_BASED);
+		setType(NetworkType.CHUNK_BASED);
+
 		setProgramType(programType);
 	}
 
-	public NetworkType getProgramType() {
+	public String getProgramType() {
 		return programType;
 	}
 
-	public void setProgramType(NetworkType programType) {
+	public void setProgramType(String programType) {
 		this.programType = programType;
 	}
 
@@ -92,6 +95,14 @@ public class NetworkBuilder<T> {
 	public void setProject(Project project) {
 		this.project = project;
 	}
+	
+	public NetworkType getType() {
+		return type;
+	}
+
+	public void setType(NetworkType type) {
+		this.type = type;
+	}
 
 	public void setLogFile(File log) {
 		this.log = log;
@@ -99,8 +110,9 @@ public class NetworkBuilder<T> {
 
 	/**
 	 * Builds the conflict based network considering the previously network type
-	 * set and the repository information provided. In case the type was not
-	 * set yet, this method used the <i>default</i> type (<i>i.e.,</i> the
+
+	 * set and the repository information provided. In case the type was not set
+	 * yet, this method used the <i>default</i> type (<i>i.e.,</i> the
 	 * chunk-based {@code NetworkType.CHUNK_BASED}).
 	 * 
 	 * OBS: You should set the repository first, otherwise this method will
@@ -281,11 +293,13 @@ public class NetworkBuilder<T> {
 
 			for (ConflictChunk<CommandLineBlameResult> cChunk : cchunks) {
 				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
-				
-				// if program type chunk-based get developer edges that contribute to the conflict
-				if (getProgramType().equals(NetworkType.CHUNK_BASED)) {
+
+				// if program type chunk-based get developer edges that
+				// contribute to the conflict
+				if (getProgramType().equals("c")) {
 					fEdges = getDeveloperEdges(fNodes, cChunk);
-				// else (chunk-based full or File-based get the full developer edges at chunk level)	
+					// else (chunk-based full or File-based get the full
+					// developer edges at chunk level)
 				} else {
 					fEdges = getFullDeveloperEdges(fNodes, cChunk);
 				}
@@ -298,52 +312,53 @@ public class NetworkBuilder<T> {
 				}
 			}
 
-			// case file-based, get developer nodes that contribute to some chunk in the target file and
-			//make the previous graph full 
-			if (getProgramType().equals(NetworkType.FILE_BASED)) {
-				
-				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath() , edges);
+			// case file-based, get developer nodes that contribute to some
+			// chunk in the target file and
+			// make the previous graph full
+			if (getProgramType().equals("f")) {
+
+				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath(), edges);
 			}
-			
+
 		}
 
 		if (nodes.isEmpty() || edges.isEmpty()) {
 			return null;
 		}
-		return new ConflictBasedNetwork(project, scenario, nodes, edges, programType);
+		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
-	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes,
-			String filePath, List<DeveloperEdge> oldEdges) {
-	
-			// if there is only one developer, create loop
-			if (nodes.size() == 1) {
-				return oldEdges;
-			}
-			
-			// create a conflict file graph -> Edge's weight 2 or 3
-			for (DeveloperNode from : nodes) {
-				for (DeveloperNode to : nodes) {
-					if (from.equals(to)) {
-						continue;
-					}
-					DeveloperEdge newEdge;
-					//create edge with weight 2 to developers in which contribute in the same side
-					if (from.getSideCommitComesFrom().equals(to.getSideCommitComesFrom())) {
-						newEdge = new DeveloperEdge(from, to, 2, "-", filePath);
+	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes, String filePath,
+			List<DeveloperEdge> oldEdges) {
 
-					} else {
-						newEdge = new DeveloperEdge(from, to, 3, "-", filePath);
-					}
-					if (!oldEdges.contains(newEdge)) {
-						oldEdges.add(newEdge);
-					}
+		// if there is only one developer, create loop
+		if (nodes.size() == 1) {
+			return oldEdges;
+		}
+
+		// create a conflict file graph -> Edge's weight 2 or 3
+		for (DeveloperNode from : nodes) {
+			for (DeveloperNode to : nodes) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				// create edge with weight 2 to developers in which contribute
+				// in the same side
+				if (from.getSideCommitComesFrom().equals(to.getSideCommitComesFrom())) {
+					newEdge = new DeveloperEdge(from, to, 2, "-", filePath);
+
+				} else {
+					newEdge = new DeveloperEdge(from, to, 3, "-", filePath);
+				}
+				if (!oldEdges.contains(newEdge)) {
+					oldEdges.add(newEdge);
 				}
 			}
+		}
 		return oldEdges;
 	}
-	
-	
+
 	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
 			ConflictChunk<CommandLineBlameResult> cChunk) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
@@ -434,9 +449,7 @@ public class NetworkBuilder<T> {
 	 * @param file
 	 *            - a file with conflicts
 	 */
-	private /*List<ConflictChunk<T>> getConflictChunks(MergeScenario aScenario, File file)
-			throws BlameException;
-	protected */List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(MergeScenario scenario, File file)
+	private List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(MergeScenario scenario, File file)
 			throws BlameException {
 		ExternalGitCommand egit = new ExternalGitCommand();
 		List<ConflictChunk<CommandLineBlameResult>> blames = null;
@@ -450,26 +463,25 @@ public class NetworkBuilder<T> {
 	 * @param cChunk
 	 * @return
 	 */
-	private /*Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
-			ConflictChunk<T> cChunk);
-	protected */Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
+	private Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<CommandLineBlameResult> cChunk) {
 
 		Map<String, List<DeveloperNode>> result = new HashMap<>();
 
 		// getting nodes from the upper part of the conflict
 		CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
-		result.put(scenario.getLeft().getName(), extractNodes(scenario.getBase(), scenario.getLeft(), 
-				leftResult, MergeCommitSide.LEFT));
+
+		result.put(scenario.getLeft().getName(),
+				extractNodes(scenario.getBase(), scenario.getLeft(), leftResult, MergeCommitSide.LEFT));
 		// getting nodes from the bottom part of the conflict
 		CommandLineBlameResult rightResult = cChunk.getRight().getResult();
-		result.put(scenario.getRight().getName(), extractNodes(scenario.getBase(), scenario.getRight(), 
-				rightResult, MergeCommitSide.RIGHT));
+		result.put(scenario.getRight().getName(),
+				extractNodes(scenario.getBase(), scenario.getRight(), rightResult, MergeCommitSide.RIGHT));
 
 		return result;
 	}
 
-	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult, 
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult,
 			MergeCommitSide mergeCommitSide) {
 
 		List<DeveloperNode> result = new ArrayList<>();
@@ -487,7 +499,6 @@ public class NetworkBuilder<T> {
 					String lineCommit = aResult.getLineCommitMap().get(line);
 
 					if (aResult.getLineAuthorsMap().get(line).equals(aDev) && inRange(lineCommit, base, side)) {
-						
 						aDev.setSideCommitComesFrom(mergeCommitSide);
 						result.add(aDev);
 						break;
@@ -520,6 +531,4 @@ public class NetworkBuilder<T> {
 
 		return false;
 	}
-
-
 }

@@ -55,10 +55,12 @@ public class RepositoryCrawler implements Runnable {
 
 	private File repositoryDir;
 	private boolean skipNetworks;
-	private NetworkType programType;
+	private String programType;
 	private File log;
+	
+	private NetworkType type;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone, NetworkType programType)
+	public RepositoryCrawler(String systemURL, boolean mustClone, String programType, NetworkType type)
 			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
@@ -67,11 +69,11 @@ public class RepositoryCrawler implements Runnable {
 		setProgramType(programType);
 	}
 
-	public NetworkType getProgramType() {
+	public String getProgramType() {
 		return programType;
 	}
 
-	public void setProgramType(NetworkType programType) {
+	public void setProgramType(String programType) {
 		this.programType = programType;
 	}
 
@@ -108,7 +110,8 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-				NetworkBuilder builder = new NetworkBuilder(getProject(), getProgramType());
+
+				NetworkBuilder<Object> builder = new NetworkBuilder<Object>(getProject(), getProgramType());
 				
 				builder.setLogFile(log);
 				builder.build();

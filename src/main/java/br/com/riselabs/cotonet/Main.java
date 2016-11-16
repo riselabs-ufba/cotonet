@@ -85,7 +85,7 @@ public class Main {
 		Boolean skipCloneAndNetworks = false;
 		try {
 			CommandLine cmd = parser.parse(options, args);
-			NetworkType programType;
+			String programType;
 			// user is looking for help
 			if (cmd.hasOption("h")) {
 				new HelpFormatter().printHelp("java ", options);
@@ -103,14 +103,14 @@ public class Main {
 				String urlsFilePath = null;
 				if (cmd.hasOption("c")) {
 					urlsFilePath = cmd.getOptionValue("c");
-					programType = NetworkType.CHUNK_BASED;
+					programType = "c";
 				} else if (cmd.hasOption("cf")) {
 					urlsFilePath = cmd.getOptionValue("cf");
-					programType = NetworkType.CHUNK_BASED_FULL;
+					programType = "cf";
 				} else {
 					urlsFilePath = cmd.getOptionValue("f");
-					programType = NetworkType.FILE_BASED;
-				}
+					programType = "f";
+				} 
 
 				System.out.println(urlsFilePath);
 
@@ -149,9 +149,9 @@ public class Main {
 	static class MainThread extends Thread {
 		private File list;
 		private boolean skip;
-		private NetworkType programType;
+		private String programType;
 
-		public MainThread(NetworkType programType, File reposListFile, boolean skipCloneAndNetworks) {
+		public MainThread(String programType, File reposListFile, boolean skipCloneAndNetworks) {
 			this.list = reposListFile;
 			this.skip = skipCloneAndNetworks;
 			this.programType = programType;
@@ -166,7 +166,9 @@ public class Main {
 
 			for (String url : systems) {
 				try {
-					pool.runTask(new RepositoryCrawler(url, skip, programType));
+
+					pool.runTask(new RepositoryCrawler(url, skip, programType, NetworkType.CHUNK_BASED));
+					
 				} catch (IOException e) {
 					Logger.logStackTrace(e);
 				}

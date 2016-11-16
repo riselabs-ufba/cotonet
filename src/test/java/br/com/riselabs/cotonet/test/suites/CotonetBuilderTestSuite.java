@@ -40,6 +40,7 @@ import br.com.riselabs.cotonet.test.builder.command.RecursiveBlameTest;
 	// Builders
 	NetworkBuilderTest.class,
 })
+
 public class CotonetBuilderTestSuite {
 
 }
