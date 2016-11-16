@@ -60,52 +60,56 @@ public class Main {
 		CommandLineParser parser = new DefaultParser();
 		Options options = new Options();
 
-		options.addOption(Option.builder("c").longOpt("list")
+		options.addOption(Option.builder("c").longOpt("chunkBased")
 				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
-		options.addOption(Option.builder("cf").longOpt("fullChunk")
+		options.addOption(Option.builder("cf").longOpt("chunkBasedFullGraph")
 				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
 
 		options.addOption(Option.builder("f").longOpt("fileBase")
 				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
-		
-		options.addOption(
-				Option.builder("rw").longOpt("rewrite-aux").desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
-						+ "_WITHOUT_ " + "the recreation of the merge scenarios based tags.").hasArg(false).build());
-
-		options.addOption(
-				Option.builder("rwt").longOpt("rewrite-tagfile").desc("Rewrite auxilary files (e.g., *.conf, *.sh) "
-						+ "_INCLUDING_ " + "the recreation of the merge scenarios based tags.").hasArg(false).build());
-
+		/*
+		 * options.addOption( Option.builder("rw").longOpt("rewrite-aux").
+		 * desc("Rewrite auxilary files (e.g., *.conf, *.sh) " + "_WITHOUT_ " +
+		 * "the recreation of the merge scenarios based tags.").hasArg(false).
+		 * build());
+		 * 
+		 * options.addOption( Option.builder("rwt").longOpt("rewrite-tagfile").
+		 * desc("Rewrite auxilary files (e.g., *.conf, *.sh) " + "_INCLUDING_ "
+		 * + "the recreation of the merge scenarios based tags.").hasArg(false).
+		 * build());
+		 */
 		options.addOption("h", "help", false, "Print this help page");
 
 		File reposListFile = null;
 		Boolean skipCloneAndNetworks = false;
 		try {
 			CommandLine cmd = parser.parse(options, args);
-			String programType;
+			NetworkType programType;
 			// user is looking for help
 			if (cmd.hasOption("h")) {
 				new HelpFormatter().printHelp("java ", options);
 				System.exit(0);
 			}
 
-			// "l" and "fc" are the two available options
+			/* "c", "cf", and "f" are the three available options
+			* "c" builds the chunk-based network with developers that contribute to the conflict
+			* "cf" builds the chunk-based network with developers that contribute to the conflict and developers
+			* that are part of the chunk, but don't contribute to the conflict
+			* "f" builds the file-based network with developers that contribute to the chunk into a target file
+			*/
 			else if (cmd.hasOption("c") || cmd.hasOption("cf") || cmd.hasOption("f")) {
 
 				String urlsFilePath = null;
 				if (cmd.hasOption("c")) {
 					urlsFilePath = cmd.getOptionValue("c");
-					programType = "c";
-				} 
-				else if (cmd.hasOption("cf")){
+					programType = NetworkType.CHUNK_BASED;
+				} else if (cmd.hasOption("cf")) {
 					urlsFilePath = cmd.getOptionValue("cf");
-					programType = "cf";
-					
-				}
-				else {
+					programType = NetworkType.CHUNK_BASED_FULL;
+				} else {
 					urlsFilePath = cmd.getOptionValue("f");
-					programType = "f";
+					programType = NetworkType.FILE_BASED;
 				}
 
 				System.out.println(urlsFilePath);
@@ -145,9 +149,9 @@ public class Main {
 	static class MainThread extends Thread {
 		private File list;
 		private boolean skip;
-		private String programType;
+		private NetworkType programType;
 
-		public MainThread(String programType, File reposListFile, boolean skipCloneAndNetworks) {
+		public MainThread(NetworkType programType, File reposListFile, boolean skipCloneAndNetworks) {
 			this.list = reposListFile;
 			this.skip = skipCloneAndNetworks;
 			this.programType = programType;
@@ -155,16 +159,14 @@ public class Main {
 
 		public void run() {
 			IOHandler io = new IOHandler();
-			// reponsable to coordinate the threads for each system
+			// responsible to coordinate the threads for each system
 			RCThreadPoolExecutor pool = new RCThreadPoolExecutor();
 			List<String> systems = io.readFile(list);
 			List<String> systems_name = new ArrayList<String>();
 
 			for (String url : systems) {
 				try {
-					pool.runTask(new RepositoryCrawler(url, skip, programType, NetworkType.CHUNK_BASED));
-					// pool.runTask(new RepositoryCrawler(url, skip,
-					// NetworkType.FILE_BASED));
+					pool.runTask(new RepositoryCrawler(url, skip, programType));
 				} catch (IOException e) {
 					Logger.logStackTrace(e);
 				}
@@ -174,6 +176,7 @@ public class Main {
 			}
 
 			pool.shutDown();
+			
 			try {
 				CodefaceHelper.createCodefaceRunScript(systems_name);
 			} catch (NullPointerException | IOException | EmptyContentException e) {

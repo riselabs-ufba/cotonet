@@ -46,6 +46,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
+import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
@@ -53,6 +54,7 @@ import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.db.DBWritter;
+import br.com.riselabs.cotonet.model.enums.MergeCommitSide;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
 import br.com.riselabs.cotonet.util.Logger;
@@ -63,18 +65,23 @@ import br.com.riselabs.cotonet.util.Logger;
  * @param <T>
  *
  */
-public abstract class AbstractNetworkBuilder<T> {
+public class NetworkBuilder<T> {
 
-	protected String programType;
+	protected NetworkType programType;
 	protected Project project;
-	protected NetworkType type;
 	protected File log;
+	
+	public NetworkBuilder(Project project, NetworkType programType) {
+		setProject(project);
+		//setType(NetworkType.CHUNK_BASED);
+		setProgramType(programType);
+	}
 
-	public String getProgramType() {
+	public NetworkType getProgramType() {
 		return programType;
 	}
 
-	public void setProgramType(String programType) {
+	public void setProgramType(NetworkType programType) {
 		this.programType = programType;
 	}
 
@@ -86,21 +93,13 @@ public abstract class AbstractNetworkBuilder<T> {
 		this.project = project;
 	}
 
-	public NetworkType getType() {
-		return type;
-	}
-
-	public void setType(NetworkType type) {
-		this.type = type;
-	}
-
 	public void setLogFile(File log) {
 		this.log = log;
 	}
 
 	/**
 	 * Builds the conflict based network considering the previously network type
-	 * set and the repository information provided. In case the the type was not
+	 * set and the repository information provided. In case the type was not
 	 * set yet, this method used the <i>default</i> type (<i>i.e.,</i> the
 	 * chunk-based {@code NetworkType.CHUNK_BASED}).
 	 * 
@@ -266,7 +265,7 @@ public abstract class AbstractNetworkBuilder<T> {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
 		for (File file : files) {
-			List<ConflictChunk<T>> cchunks;
+			List<ConflictChunk<CommandLineBlameResult>> cchunks;
 			try {
 				cchunks = getConflictChunks(scenario, file);
 			} catch (BlameException e) {
@@ -280,11 +279,13 @@ public abstract class AbstractNetworkBuilder<T> {
 			 * iterates in each chunk of the file
 			 */
 
-			for (ConflictChunk<T> cChunk : cchunks) {
+			for (ConflictChunk<CommandLineBlameResult> cChunk : cchunks) {
 				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
-
-				if (getProgramType().equals("c")) {
+				
+				// if program type chunk-based get developer edges that contribute to the conflict
+				if (getProgramType().equals(NetworkType.CHUNK_BASED)) {
 					fEdges = getDeveloperEdges(fNodes, cChunk);
+				// else (chunk-based full or File-based get the full developer edges at chunk level)	
 				} else {
 					fEdges = getFullDeveloperEdges(fNodes, cChunk);
 				}
@@ -297,7 +298,9 @@ public abstract class AbstractNetworkBuilder<T> {
 				}
 			}
 
-			if (getProgramType().equals("f")) {
+			// case file-based, get developer nodes that contribute to some chunk in the target file and
+			//make the previous graph full 
+			if (getProgramType().equals(NetworkType.FILE_BASED)) {
 				
 				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath() , edges);
 			}
@@ -307,7 +310,7 @@ public abstract class AbstractNetworkBuilder<T> {
 		if (nodes.isEmpty() || edges.isEmpty()) {
 			return null;
 		}
-		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
+		return new ConflictBasedNetwork(project, scenario, nodes, edges, programType);
 	}
 
 	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes,
@@ -325,7 +328,7 @@ public abstract class AbstractNetworkBuilder<T> {
 						continue;
 					}
 					DeveloperEdge newEdge;
-					//create edge to developers in which contribute in the same side
+					//create edge with weight 2 to developers in which contribute in the same side
 					if (from.getSideCommitComesFrom().equals(to.getSideCommitComesFrom())) {
 						newEdge = new DeveloperEdge(from, to, 2, "-", filePath);
 
@@ -341,11 +344,87 @@ public abstract class AbstractNetworkBuilder<T> {
 	}
 	
 	
-	protected abstract List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
-			ConflictChunk<T> cChunk);
+	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
-	protected abstract List<DeveloperEdge> getFullDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
-			ConflictChunk<T> cChunk);
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+
+		// create a conflict chunk graph -> Edge's weight 1
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		return edges;
+	}
+
+	private List<DeveloperEdge> getFullDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+
+		/*
+		 * Get each Chunk
+		 */
+
+		// create a fully connected graph -> Edge's weight 0
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupA) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		// create a fully connected graph -> Edge's weight 0
+		for (DeveloperNode from : groupB) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		// create a conflict chunk graph -> Edge's weight 1
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		return edges;
+	}
 
 	/**
 	 * Returns the conflict chunks of a given file.
@@ -355,8 +434,15 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @param file
 	 *            - a file with conflicts
 	 */
-	protected abstract List<ConflictChunk<T>> getConflictChunks(MergeScenario aScenario, File file)
+	private /*List<ConflictChunk<T>> getConflictChunks(MergeScenario aScenario, File file)
 			throws BlameException;
+	protected */List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(MergeScenario scenario, File file)
+			throws BlameException {
+		ExternalGitCommand egit = new ExternalGitCommand();
+		List<ConflictChunk<CommandLineBlameResult>> blames = null;
+		blames = egit.setMergeScenario(scenario).setDirectory(file).setType(CommandType.BLAME).call();
+		return blames;
+	}
 
 	/**
 	 * Creates the nodes for a given file.
@@ -364,7 +450,76 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @param cChunk
 	 * @return
 	 */
-	protected abstract Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
+	private /*Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<T> cChunk);
+	protected */Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+
+		Map<String, List<DeveloperNode>> result = new HashMap<>();
+
+		// getting nodes from the upper part of the conflict
+		CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
+		result.put(scenario.getLeft().getName(), extractNodes(scenario.getBase(), scenario.getLeft(), 
+				leftResult, MergeCommitSide.LEFT));
+		// getting nodes from the bottom part of the conflict
+		CommandLineBlameResult rightResult = cChunk.getRight().getResult();
+		result.put(scenario.getRight().getName(), extractNodes(scenario.getBase(), scenario.getRight(), 
+				rightResult, MergeCommitSide.RIGHT));
+
+		return result;
+	}
+
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult, 
+			MergeCommitSide mergeCommitSide) {
+
+		List<DeveloperNode> result = new ArrayList<>();
+		for (DeveloperNode aDev : aResult.getAuthors()) {
+			if (!getProject().getDevs().values().contains(aDev)) {
+				// if there is no such dev in the project, then add it
+				getProject().add(aDev);
+			} else {
+				// else update the reference with the project one
+				aDev = getProject().getDevByMail(aDev.getEmail());
+			}
+
+			if (!result.contains(aDev)) {
+				for (int line : aResult.getLineAuthorsMap().keySet()) {
+					String lineCommit = aResult.getLineCommitMap().get(line);
+
+					if (aResult.getLineAuthorsMap().get(line).equals(aDev) && inRange(lineCommit, base, side)) {
+						
+						aDev.setSideCommitComesFrom(mergeCommitSide);
+						result.add(aDev);
+						break;
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Determines whether a commit in in a specified range of commits.
+	 *
+	 * TODO: This should be done in some kind of GitHelper class or somewhere
+	 * else.
+	 */
+	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
+		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
+			rw.markStart(rw.parseCommit(end));
+			rw.markUninteresting(rw.parseCommit(begin));
+
+			for (RevCommit cur; (cur = rw.next()) != null;) {
+				if (!(cur.getName().equals(begin.getName())) && cur.getName().equals(commit)) {
+					return true;
+				}
+			}
+		} catch (IOException e) {
+		}
+
+		return false;
+	}
+
 
 }

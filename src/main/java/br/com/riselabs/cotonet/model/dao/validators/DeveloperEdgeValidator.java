@@ -55,14 +55,15 @@ public class DeveloperEdgeValidator implements Validator<DeveloperEdge> {
 		}
 		ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory
 				.getDAO(CotonetBean.CONFLICT_NETWORK);
-		if (((cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null,
-				NetworkType.CHUNK_BASED)) != null) && (cndao
-				.get(new ConflictBasedNetwork(edge.getNetworkID(), null,
-						NetworkType.FILE_BASED)) == null))
-				|| ((cndao.get(new ConflictBasedNetwork(edge.getNetworkID(),
-						null, NetworkType.CHUNK_BASED)) == null) && (cndao
-						.get(new ConflictBasedNetwork(edge.getNetworkID(),
-								null, NetworkType.FILE_BASED)) != null))) {
+		if (((cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null,	NetworkType.CHUNK_BASED)) != null) && 
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null,	NetworkType.CHUNK_BASED_FULL)) != null) && 
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null, NetworkType.FILE_BASED)) == null)) ||
+				((cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null, NetworkType.CHUNK_BASED)) == null) &&
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null,	NetworkType.CHUNK_BASED_FULL)) != null) &&
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null, NetworkType.FILE_BASED)) != null)) ||
+				((cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null, NetworkType.CHUNK_BASED)) != null) &&
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null,	NetworkType.CHUNK_BASED_FULL)) == null) &&
+				(cndao.get(new ConflictBasedNetwork(edge.getNetworkID(), null, NetworkType.FILE_BASED)) != null))) {
 			throw new InvalidCotonetBeanException(
 					DeveloperEdge.class, 
 					"There is no network with the given `NetworkID' in the database.",

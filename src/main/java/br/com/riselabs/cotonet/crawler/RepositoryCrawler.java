@@ -31,9 +31,7 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
-import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
-import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.NetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
@@ -57,30 +55,24 @@ public class RepositoryCrawler implements Runnable {
 
 	private File repositoryDir;
 	private boolean skipNetworks;
-	private NetworkType type;
+	private NetworkType programType;
 	private File log;
-	private String programType;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone, String programType, NetworkType type)
+	public RepositoryCrawler(String systemURL, boolean mustClone, NetworkType programType)
 			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
 		setLogFile(new File(Directories.getLogDir(), "thread-" + getProject().getName() + ".log"));
 		setRepositoryDir(new File(Directories.getReposDir(), project.getName()));
-		setType(type);
 		setProgramType(programType);
 	}
 
-	public String getProgramType() {
+	public NetworkType getProgramType() {
 		return programType;
 	}
 
-	public void setProgramType(String programType) {
+	public void setProgramType(NetworkType programType) {
 		this.programType = programType;
-	}
-
-	private void setType(NetworkType type) {
-		this.type = type;
 	}
 
 	public Project getProject() {
@@ -116,16 +108,8 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-				AbstractNetworkBuilder builder = null;
-				switch (type) {
-				case FILE_BASED:
-					builder = new FileBasedNetworkBuilder(getProject());
-					break;
-				case CHUNK_BASED:
-				default:
-					builder = new ChunkBasedNetworkBuilder(getProject(), getProgramType());
-					break;
-				}
+				NetworkBuilder builder = new NetworkBuilder(getProject(), getProgramType());
+				
 				builder.setLogFile(log);
 				builder.build();
 				builder.persist();

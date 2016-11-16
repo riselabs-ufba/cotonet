@@ -27,6 +27,7 @@ package br.com.riselabs.cotonet.model.enums;
  */
 public enum NetworkType {
 	CHUNK_BASED ("C"),
+	CHUNK_BASED_FULL ("CF"),
 	FILE_BASED ("F");
 	
 	String description;
