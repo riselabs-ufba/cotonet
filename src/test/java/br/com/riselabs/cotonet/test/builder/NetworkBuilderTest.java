@@ -26,85 +26,59 @@ import static org.junit.Assert.assertTrue;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.NetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
+import br.com.riselabs.cotonet.test.helpers.DBTestCase;
 
 /**
+ * 
  * @author Alcemir R. Santos
  *
  */
-public class FileBasedNetworkBuilderTest extends
+public class NetworkBuilderTest extends
 		ConflictBasedRepositoryTestCase {
 
-	private FileBasedNetworkBuilder builder;
+	private NetworkBuilder builder;
 
 	@Before
-	public void setup() {
-		builder = new FileBasedNetworkBuilder(new Project("", db));
+	public void setup() throws Exception {
+		super.setUp();
+		DBTestCase.resetTestDB();
+		builder =  new NetworkBuilder(new Project("", db), "c");
+	}
+	
+	@After
+	public void teardown() throws Exception{
 	}
 
 	@Test
-	public void shouldRetriveFileBasedContributors() throws Exception {
+	public void buildChunckBasedNetwork() throws Exception {
 		setCollaborationScenarioInTempRepository();
+
 		builder.build();
+		ConflictBasedNetwork connet = builder.getProject().getConflictBasedNetworks().iterator().next();
 		
-		Collection<DeveloperNode> list = builder.getProject().getDevs().values();
-
-		Iterator<DeveloperNode> i = list.iterator();
-		DeveloperNode aNode = i.next();
-		assertTrue(aNode.equals(new DeveloperNode("Dev B", "devb@project.com")));
-		assertTrue(aNode.getName().equals("Dev B"));
-		assertTrue(aNode.getEmail().equals("devb@project.com"));
-		aNode = i.next();
-		assertTrue(aNode.equals(new DeveloperNode("Dev C", "devc@project.com")));
-		assertTrue(aNode.getName().equals("Dev C"));
-		assertTrue(aNode.getEmail().equals("devc@project.com"));
-		aNode = i.next();
-		assertTrue(aNode.equals(new DeveloperNode("Dev A", "deva@project.com")));
-		assertTrue(aNode.getName().equals("Dev A"));
-		assertTrue(aNode.getEmail().equals("deva@project.com"));
-		aNode = i.next();
-		assertTrue(aNode.equals(new DeveloperNode("Dev E", "deve@project.com")));
-		assertTrue(aNode.getName().equals("Dev E"));
-		assertTrue(aNode.getEmail().equals("deve@project.com"));
-		aNode = i.next();
-		assertTrue(aNode.equals(new DeveloperNode("Dev D", "devd@project.com")));
-		assertTrue(aNode.getName().equals("Dev D"));
-		assertTrue(aNode.getEmail().equals("devd@project.com"));
-		assertFalse(i.hasNext());
-	}
-
-	@Test
-	public void buildFileBasedNetwork() throws Exception {
-		setCollaborationScenarioInTempRepository();
-		Project aProject = new Project("", db);
-		builder = new FileBasedNetworkBuilder(aProject);
-		builder.setProject(aProject);
-
-		builder.build();
-		ConflictBasedNetwork connet = builder.getProject()
-				.getConflictBasedNetworks().iterator().next();
-
 		Iterator<DeveloperNode> iNodes = connet.getNodes().iterator();
 		DeveloperNode node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
-		node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("deve@project.com")));
-		node = iNodes.next();
 		assertTrue(node.equals(new DeveloperNode("devb@project.com")));
 		node = iNodes.next();
 		assertTrue(node.equals(new DeveloperNode("devc@project.com")));
 		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
+		node = iNodes.next();
+		assertTrue(node.equals(new DeveloperNode("deve@project.com")));
+		node = iNodes.next();
 		assertTrue(node.equals(new DeveloperNode("devd@project.com")));
 		assertFalse(iNodes.hasNext());
-
+		
 		Iterator<DeveloperEdge> iEdges = connet.getEdges().iterator();
 		DeveloperEdge edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
@@ -132,13 +106,28 @@ public class FileBasedNetworkBuilderTest extends
 				new DeveloperNode(4, null, null, null), null, null, null)));
 		edge = iEdges.next();
 		assertTrue(edge.equals(new DeveloperEdge(
-				new DeveloperNode(5, null, null, null), 
-				new DeveloperNode(4, null, null, null), null, null, null)));
-		edge = iEdges.next();
-		assertTrue(edge.equals(new DeveloperEdge(
-				new DeveloperNode(5, null, null, null), 
-				new DeveloperNode(2, null, null, null), null, null, null)));
+				new DeveloperNode(2, null, null, null), 
+				new DeveloperNode(5, null, null, null), null, null, null)));
 		assertFalse(iEdges.hasNext());
 	}
 
+	@Test
+	public void shouldRetriveChunkBasedContributors() throws Exception {
+		setCollaborationScenarioInTempRepository();
+		builder.build();
+		
+		Collection<DeveloperNode> list = builder.getProject().getDevs().values();
+
+		Iterator<DeveloperNode> i = list.iterator();
+		DeveloperNode aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("devb@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("devc@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("deva@project.com")));
+		aNode = i.next();
+		assertTrue(aNode.equals(new DeveloperNode("devd@project.com")));
+		assertFalse(i.hasNext());
+	}
+	
 }

@@ -31,9 +31,7 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
-import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
-import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.NetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
@@ -116,16 +114,8 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-				AbstractNetworkBuilder builder = null;
-				switch (type) {
-				case FILE_BASED:
-					builder = new FileBasedNetworkBuilder(getProject());
-					break;
-				case CHUNK_BASED:
-				default:
-					builder = new ChunkBasedNetworkBuilder(getProject(), getProgramType());
-					break;
-				}
+				NetworkBuilder<Object> builder = new NetworkBuilder<Object>(getProject(), getProgramType());
+				
 				builder.setLogFile(log);
 				builder.build();
 				builder.persist();
