@@ -46,9 +46,8 @@ public class IOHandler {
 
 	public List<String> readFile(File fin) {
 		List<String> lines = null;
-		try {
-			FileInputStream fis = new FileInputStream(fin);
-
+		try (FileInputStream fis = new FileInputStream(fin);){
+			
 			// Construct BufferedReader from InputStreamReader
 			BufferedReader br = new BufferedReader(new InputStreamReader(fis));
 

@@ -138,8 +138,6 @@ public class ExternalGitCommand {
 				List<String> block;
 				while ((block = readPorcelainBlock(buf)) != null) {
 					String commit = block.get(0).split(" ")[0];
-//					for (String line : block)
-//						System.out.println(line);
 
 					Map<PKeys, String> data = getDataFromPorcelainBlock(block);
 
@@ -171,6 +169,11 @@ public class ExternalGitCommand {
 						conflict.setLine(Integer.valueOf(data.get(PKeys.linenumber)));
 						conflicts.add(conflict);
 						addBlame = false;
+						bResult = new CommandLineBlameResult(
+								file.getCanonicalPath());
+						cBlame = new Blame<CommandLineBlameResult>(
+								scenario.getLeft(), bResult);
+						
 						bResult = new CommandLineBlameResult(
 								file.getCanonicalPath());
 						cBlame = new Blame<CommandLineBlameResult>(
@@ -305,7 +308,11 @@ public class ExternalGitCommand {
 					value = value.substring(1, value.length() - 1);
 					map.put(PKeys.authormail, value);
 				}else{
+<<<<<<< HEAD
 //					System.err.print("author without email. ");
+=======
+					//System.err.print("author without email. ");
+>>>>>>> 0b1be907f12f89ca450b7cf2fa98218abc92a316
 					for (String s : filelines) {
 						if(s.startsWith("committer")){
 							map.put(PKeys.authorname, s.split(" ",2)[1]);

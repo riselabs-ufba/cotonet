@@ -102,7 +102,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 			throws InvalidCotonetBeanException {
 		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null,
 				null, null), new DeveloperNode(35, null, null, null), null,
-				null);
+				null, null);
 		assertTrue(edge.getDevA().getID() == 34);
 		assertTrue(edge.getDevB().getID() == 25);
 		edge.setNetworkID(1);
@@ -114,7 +114,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 	public void saveEdgeWithLeftInexistentDeveloper()
 			throws InvalidCotonetBeanException {
 		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(34, null,
-				null, null), new DeveloperNode(2, null, null, null), null, null);
+				null, null), new DeveloperNode(2, null, null, null), null, null, null);
 		assertTrue(edge.getDevA().getID() == 34);
 		assertTrue(edge.getDevB().getID() == 2);
 		edge.setNetworkID(1);
@@ -126,7 +126,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 	public void saveEdgeWithRightInexistentDeveloper()
 			throws InvalidCotonetBeanException {
 		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(35, null, null, null), null, null);
+				null), new DeveloperNode(35, null, null, null), null, null, null);
 		assertTrue(edge.getDevA().getID() == 1);
 		assertTrue(edge.getDevB().getID() == 25);
 		edge.setNetworkID(1);
@@ -137,7 +137,7 @@ public class DeveloperEdgeDAOTest extends ConflictBasedRepositoryTestCase {
 	@Test
 	public void saveEdgeSuccessfully() throws InvalidCotonetBeanException {
 		DeveloperEdge edge = new DeveloperEdge(new DeveloperNode(1, null, null,
-				null), new DeveloperNode(2, null, null, null), null, null);
+				null), new DeveloperNode(2, null, null, null), null, null, null);
 		assertTrue(edge.getDevA().getID() == 1);
 		assertTrue(edge.getDevB().getID() == 2);
 		assertNull(edge.getID());

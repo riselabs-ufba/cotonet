@@ -29,9 +29,7 @@ import java.util.Iterator;
 import org.junit.After;
 import org.junit.Test;
 
-import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
-import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
-import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.NetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
 import br.com.riselabs.cotonet.model.beans.DeveloperNode;
@@ -53,17 +51,18 @@ import br.com.riselabs.cotonet.test.helpers.ConflictBasedRepositoryTestCase;
  */
 public class DBWritterTest extends ConflictBasedRepositoryTestCase {
 
-	private AbstractNetworkBuilder builder;
+	private NetworkBuilder builder;
 	
 	@After
 	public void setup(){
 	}
 	
 	@Test
-	public void saveChunckBasedNetwork() throws Exception {
+	public void saveNetwork() throws Exception {
 		setResolvedMergeConflictScenario();
 		Project aProject = new Project("http://github.com/test", db);
-		builder = new ChunkBasedNetworkBuilder(aProject);
+		NetworkType programTypeTest = NetworkType.CHUNK_BASED;
+		builder = new NetworkBuilder(aProject, programTypeTest);
 		builder.build();
 		builder.persist();
 		
@@ -139,91 +138,5 @@ public class DBWritterTest extends ConflictBasedRepositoryTestCase {
 		assertTrue(node.getSystemID()==aProject.getID());
 		assertFalse(iNodes.hasNext());
 	}
-	
-	
-	@Test
-	public void saveFileBasedNetwork() throws Exception {
-		setResolvedMergeConflictScenario();
-		Project aProject = new Project("http://github.com/test", db);
-		builder = new FileBasedNetworkBuilder(aProject);
-		builder.build();
-		builder.persist();
 
-		// assert project saved
-		ProjectDAO dao = (ProjectDAO) DAOFactory.getDAO(CotonetBean.PROJECT);
-		aProject = dao.get(aProject);
-		assertTrue(aProject.getID()==1);
-		
-		// assert merge scenario saved
-		MergeScenarioDAO msdao = (MergeScenarioDAO) DAOFactory
-				.getDAO(CotonetBean.MERGE_SCENARIO);
-		MergeScenario ms = msdao.list().remove(0);
-		assertTrue(ms.getID()==1);
-		assertTrue(ms.getProjectID()==aProject.getID());
-		
-		// assert conflict network saved
-		ConflictBasedNetworkDAO cndao = (ConflictBasedNetworkDAO) DAOFactory.getDAO(CotonetBean.CONFLICT_NETWORK);
-		ConflictBasedNetwork connet = cndao.list().remove(0);
-		assertTrue(connet.getID()==1);
-		assertTrue(connet.getMergeScenarioID()==ms.getID());
-		assertEquals(NetworkType.CHUNK_BASED, connet.getType());
-		
-		// assert edges saved
-		DeveloperEdgeDAO edao = (DeveloperEdgeDAO) DAOFactory.getDAO(CotonetBean.EDGE);
-		Iterator<DeveloperEdge> iEdges = edao.list().iterator();
-		DeveloperEdge edge = iEdges.next();
-		
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==2);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==3);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==1);
-		assertTrue(edge.getDevB().getID()==4);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==2);
-		assertTrue(edge.getDevB().getID()==3);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==2);
-		assertTrue(edge.getDevB().getID()==4);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==3);
-		assertTrue(edge.getDevB().getID()==4);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==5);
-		assertTrue(edge.getDevB().getID()==4);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		edge = iEdges.next();
-		assertTrue(edge.getDevA().getID()==5);
-		assertTrue(edge.getDevB().getID()==2);
-		assertTrue(edge.getNetworkID()==connet.getID());
-		assertFalse(iEdges.hasNext());
-		
-		// assert developers saved
-		DeveloperNodeDAO ddao = (DeveloperNodeDAO) DAOFactory.getDAO(CotonetBean.NODE);
-		Iterator<DeveloperNode> iNodes = ddao.list().iterator();
-		DeveloperNode node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("deva@project.com")));
-		assertTrue(node.getSystemID()==aProject.getID());
-		node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("deve@project.com")));
-		assertTrue(node.getSystemID()==aProject.getID());
-		node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("devb@project.com")));
-		assertTrue(node.getSystemID()==aProject.getID());
-		node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("devc@project.com")));
-		assertTrue(node.getSystemID()==aProject.getID());
-		node = iNodes.next();
-		assertTrue(node.equals(new DeveloperNode("devd@project.com")));
-		assertTrue(node.getSystemID()==aProject.getID());
-		assertFalse(iNodes.hasNext());
-	}
 }

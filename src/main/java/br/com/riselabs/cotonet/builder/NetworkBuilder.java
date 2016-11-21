@@ -46,6 +46,7 @@ import org.eclipse.jgit.revwalk.RevWalk;
 
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand;
 import br.com.riselabs.cotonet.builder.commands.ExternalGitCommand.CommandType;
+import br.com.riselabs.cotonet.model.beans.CommandLineBlameResult;
 import br.com.riselabs.cotonet.model.beans.ConflictBasedNetwork;
 import br.com.riselabs.cotonet.model.beans.ConflictChunk;
 import br.com.riselabs.cotonet.model.beans.DeveloperEdge;
@@ -53,6 +54,7 @@ import br.com.riselabs.cotonet.model.beans.DeveloperNode;
 import br.com.riselabs.cotonet.model.beans.MergeScenario;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.db.DBWritter;
+import br.com.riselabs.cotonet.model.enums.MergeCommitSide;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.BlameException;
 import br.com.riselabs.cotonet.util.Logger;
@@ -63,11 +65,16 @@ import br.com.riselabs.cotonet.util.Logger;
  * @param <T>
  *
  */
-public abstract class AbstractNetworkBuilder<T> {
+public class NetworkBuilder<T> {
 
-	protected Project project;
 	protected NetworkType type;
+	protected Project project;
 	protected File log;
+
+	public NetworkBuilder(Project project, NetworkType type) {
+		setProject(project);
+		setType(type);
+	}
 
 	public Project getProject() {
 		return project;
@@ -76,7 +83,7 @@ public abstract class AbstractNetworkBuilder<T> {
 	public void setProject(Project project) {
 		this.project = project;
 	}
-
+	
 	public NetworkType getType() {
 		return type;
 	}
@@ -91,8 +98,9 @@ public abstract class AbstractNetworkBuilder<T> {
 
 	/**
 	 * Builds the conflict based network considering the previously network type
-	 * set and the repository information provided. In case the the type was not
-	 * set yet, this method used the <i>default</i> type (<i>i.e.,</i> the
+
+	 * set and the repository information provided. In case the type was not set
+	 * yet, this method used the <i>default</i> type (<i>i.e.,</i> the
 	 * chunk-based {@code NetworkType.CHUNK_BASED}).
 	 * 
 	 * OBS: You should set the repository first, otherwise this method will
@@ -103,30 +111,26 @@ public abstract class AbstractNetworkBuilder<T> {
 	 *         -<code>null</code> when the repository is not set.
 	 * @throws Exception
 	 */
-	public void build() throws IOException, CheckoutConflictException,
-			GitAPIException, InterruptedException {
+	public void build() throws IOException, CheckoutConflictException, GitAPIException, InterruptedException {
 		Logger.log(log, "[" + project.getName() + "] Network building start.");
 		List<MergeScenario> conflictingScenarios = getMergeScenarios();
 		for (MergeScenario scenario : conflictingScenarios) {
 			ConflictBasedNetwork connet = getConflictNetwork(scenario);
-			if (connet!=null) {
+			if (connet != null) {
 				project.add(scenario, connet);
 			}
 		}
-		Logger.log(log, "[" + project.getName()
-				+ "] Network building finished.");
+		Logger.log(log, "[" + project.getName() + "] Network building finished.");
 	}
 
 	/**
 	 * Triggers the persistence of the networks built for this project.
 	 */
 	public void persist() {
-		Logger.log(log, "[" + project.getName()
-				+ "] Project persistence start.");
+		Logger.log(log, "[" + project.getName() + "] Project persistence start.");
 		DBWritter.INSTANCE.setLogFile(log);
 		DBWritter.INSTANCE.persist(project);
-		Logger.log(log, "[" + project.getName()
-				+ "] Project persistence finished.");
+		Logger.log(log, "[" + project.getName() + "] Project persistence finished.");
 	}
 
 	/**
@@ -150,27 +154,20 @@ public abstract class AbstractNetworkBuilder<T> {
 					// we know there is only to parents
 					RevCommit leftParent = commit.getParent(0);
 					RevCommit rightParent = commit.getParent(1);
-					ThreeWayMerger merger = MergeStrategy.RECURSIVE.newMerger(
-							getProject().getRepository(), true);
+					ThreeWayMerger merger = MergeStrategy.RECURSIVE.newMerger(getProject().getRepository(), true);
 					// selecting the conflicting ones
 					boolean noConflicts = false;
 					try {
 						noConflicts = merger.merge(leftParent, rightParent);
 					} catch (NoMergeBaseException e) {
 						StringBuilder sb = new StringBuilder();
-						sb.append("[" + project.getName() + ":"
-								+ project.getUrl() + "] "
-								+ "Skipping merge scenario due to '"
-								+ e.getMessage() + "'\n");
+						sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
+								+ "Skipping merge scenario due to '" + e.getMessage() + "'\n");
 						sb.append("---> Skipped scenario:\n");
 						sb.append("::Base (<several>): \n");
-						sb.append("::Left ("
-								+ leftParent.getAuthorIdent().getWhen()
-										.toString() + "):"
+						sb.append("::Left (" + leftParent.getAuthorIdent().getWhen().toString() + "):"
 								+ leftParent.getName() + "\n");
-						sb.append("::Right ("
-								+ rightParent.getAuthorIdent().getWhen()
-										.toString() + "):"
+						sb.append("::Right (" + rightParent.getAuthorIdent().getWhen().toString() + "):"
 								+ rightParent.getName() + "\n");
 						Logger.log(log, sb.toString());
 						Logger.logStackTrace(log, e);
@@ -183,13 +180,11 @@ public abstract class AbstractNetworkBuilder<T> {
 					// for merges without a base commit
 					if (merger.getBaseCommitId() == null)
 						continue;
-					RevCommit baseCommit = walk.lookupCommit(merger
-							.getBaseCommitId());
+					RevCommit baseCommit = walk.lookupCommit(merger.getBaseCommitId());
 					walk.close();
-					
+
 					Timestamp mergeDate = new Timestamp(commit.getAuthorIdent().getWhen().getTime());
-					result.add(new MergeScenario(baseCommit, leftParent,
-							rightParent, commit, mergeDate));
+					result.add(new MergeScenario(baseCommit, leftParent, rightParent, commit, mergeDate));
 				}
 			}
 		} catch (GitAPIException e) {
@@ -206,24 +201,19 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @throws CheckoutConflictException
 	 * @throws GitAPIException
 	 */
-	private List<File> getConflictingFiles(MergeScenario scenario)
-			throws CheckoutConflictException, GitAPIException {
+	private List<File> getConflictingFiles(MergeScenario scenario) throws CheckoutConflictException, GitAPIException {
 		Git git = Git.wrap(getProject().getRepository());
 		// this is for the cases of restarting after exception in a conflict
 		// scenario analysis
 		try {
-			git.reset().setRef(scenario.getLeft().getName())
-					.setMode(ResetType.HARD).call();
+			git.reset().setRef(scenario.getLeft().getName()).setMode(ResetType.HARD).call();
 		} catch (JGitInternalException e) {
-			Logger.log(log, "[" + project.getName()
-					+ "] JGit Reset Command ended with exception."
+			Logger.log(log, "[" + project.getName() + "] JGit Reset Command ended with exception."
 					+ " Trying external reset command.");
 			ExternalGitCommand egit = new ExternalGitCommand();
 			try {
-				egit.setType(CommandType.RESET)
-						.setDirectory(
-								project.getRepository().getDirectory()
-										.getParentFile()).call();
+				egit.setType(CommandType.RESET).setDirectory(project.getRepository().getDirectory().getParentFile())
+						.call();
 			} catch (BlameException e1) {
 				Logger.logStackTrace(log, e1);
 				return null;
@@ -248,9 +238,8 @@ public abstract class AbstractNetworkBuilder<T> {
 			conflictingPaths = mResult.getConflicts().keySet();
 		} catch (NullPointerException | JGitInternalException e) {
 			StringBuilder sb = new StringBuilder();
-			sb.append("[" + project.getName() + ":" + project.getUrl() + "] "
-					+ "Skipping merge scenario due to '" + e.getMessage()
-					+ "'\n");
+			sb.append("[" + project.getName() + ":" + project.getUrl() + "] " + "Skipping merge scenario due to '"
+					+ e.getMessage() + "'\n");
 			sb.append("--> Exception: " + e.getClass());
 			sb.append("--> Skipped scenario:\n");
 			sb.append("::Base:" + scenario.getBase().getName() + "\n");
@@ -261,8 +250,7 @@ public abstract class AbstractNetworkBuilder<T> {
 		}
 		List<File> result = new ArrayList<File>();
 		for (String path : conflictingPaths) {
-			result.add(new File(getProject().getRepository().getDirectory()
-					.getParent(), path));
+			result.add(new File(getProject().getRepository().getDirectory().getParent(), path));
 		}
 		return result;
 	}
@@ -277,39 +265,57 @@ public abstract class AbstractNetworkBuilder<T> {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
 
 		for (File file : files) {
-			List<ConflictChunk<T>> cchunks;
+			List<ConflictChunk<CommandLineBlameResult>> cchunks;
 			try {
 				cchunks = getConflictChunks(scenario, file);
-			} catch (BlameException  e) {
+			} catch (BlameException e) {
 				Logger.log(log, "[" + project.getName() + "]" + e.getMessage());
 				continue;
 			}
 			HashMap<String, List<DeveloperNode>> fNodes = null;
 			List<DeveloperEdge> fEdges = null;
-			
+
 			/*
 			 * iterates in each chunk of the file
 			 */
-			
-			for (ConflictChunk<T> cChunk : cchunks) { 
+			for (ConflictChunk<CommandLineBlameResult> cChunk : cchunks) {
 				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
-				fEdges = getDeveloperEdges(fNodes, cChunk);
-				
-				if(fNodes!=null && fEdges!=null){
+
+				// if program type chunk-based get developer edges that
+				// contribute to the conflict
+				if (type == NetworkType.CHUNK_BASED) {
+					fEdges = getDeveloperEdges(fNodes, cChunk);
+					// else (chunk-based full or File-based get the full
+					// developer edges at chunk level)
+				} else {
+					fEdges = getFullDeveloperEdges(fNodes, cChunk);
+				}
+
+				if (fNodes != null && fEdges != null) {
 					Iterator<List<DeveloperNode>> igroups = fNodes.values().iterator();
 					nodes.addAll(igroups.next());
 					nodes.addAll(igroups.next());
 					edges.addAll(fEdges);
 				}
 			}
-			
+
+			// case file-based, get developer nodes that contribute to some
+			// chunk in the target file and
+			// make the previous graph full
+			if (type == NetworkType.FILE_BASED) {
+
+				edges = getDeveloperFileEdges(nodes, file.getAbsolutePath(), edges);
+			}
+
 		}
-		if(nodes.isEmpty()||edges.isEmpty()){
+
+		if (nodes.isEmpty() || edges.isEmpty()) {
 			return null;
 		}
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
+<<<<<<< HEAD:src/main/java/br/com/riselabs/cotonet/builder/AbstractNetworkBuilder.java
 	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
 			ConflictChunk<T> cChunk) {
 		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
@@ -332,11 +338,112 @@ public abstract class AbstractNetworkBuilder<T> {
 			for (DeveloperNode to : groupB) {
 				
 				if (from.equals(to)) { 
+=======
+	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes, String filePath,
+			List<DeveloperEdge> oldEdges) {
+
+		// if there is only one developer, create loop
+		if (nodes.size() == 1) {
+			return oldEdges;
+		}
+
+		// create a conflict file graph -> Edge's weight 2 or 3
+		for (DeveloperNode from : nodes) {
+			for (DeveloperNode to : nodes) {
+				if (from.equals(to)) {
+>>>>>>> 0b1be907f12f89ca450b7cf2fa98218abc92a316:src/main/java/br/com/riselabs/cotonet/builder/NetworkBuilder.java
 					continue;
 				}
 				DeveloperEdge newEdge;
-				newEdge = new DeveloperEdge(from, to, cChunk.getChunkRange(),
-						cChunk.getPath().toString());
+				// create edge with weight 2 to developers in which contribute
+				// in the same side
+				if (from.getSideCommitComesFrom().equals(to.getSideCommitComesFrom())) {
+					newEdge = new DeveloperEdge(from, to, 2, "-", filePath);
+
+				} else {
+					newEdge = new DeveloperEdge(from, to, 3, "-", filePath);
+				}
+				if (!oldEdges.contains(newEdge)) {
+					oldEdges.add(newEdge);
+				}
+			}
+		}
+		return oldEdges;
+	}
+
+	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+
+		// create a conflict chunk graph -> Edge's weight 1
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		return edges;
+	}
+
+	private List<DeveloperEdge> getFullDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
+
+		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
+		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
+		List<DeveloperNode> groupA = ilist.next();
+		List<DeveloperNode> groupB = ilist.next();
+
+		/*
+		 * Get each Chunk
+		 */
+
+		// create a fully connected graph -> Edge's weight 0
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupA) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		// create a fully connected graph -> Edge's weight 0
+		for (DeveloperNode from : groupB) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 0, cChunk.getChunkRange(), cChunk.getPath().toString());
+				if (!edges.contains(newEdge)) {
+					edges.add(newEdge);
+				}
+			}
+		}
+
+		// create a conflict chunk graph -> Edge's weight 1
+		for (DeveloperNode from : groupA) {
+			for (DeveloperNode to : groupB) {
+				if (from.equals(to)) {
+					continue;
+				}
+				DeveloperEdge newEdge;
+				newEdge = new DeveloperEdge(from, to, 1, cChunk.getChunkRange(), cChunk.getPath().toString());
 				if (!edges.contains(newEdge)) {
 					edges.add(newEdge);
 				}
@@ -354,8 +461,13 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @param file
 	 *            - a file with conflicts
 	 */
-	protected abstract List<ConflictChunk<T>> getConflictChunks(
-			MergeScenario aScenario, File file) throws BlameException;
+	private List<ConflictChunk<CommandLineBlameResult>> getConflictChunks(MergeScenario scenario, File file)
+			throws BlameException {
+		ExternalGitCommand egit = new ExternalGitCommand();
+		List<ConflictChunk<CommandLineBlameResult>> blames = null;
+		blames = egit.setMergeScenario(scenario).setDirectory(file).setType(CommandType.BLAME).call();
+		return blames;
+	}
 
 	/**
 	 * Creates the nodes for a given file.
@@ -363,7 +475,77 @@ public abstract class AbstractNetworkBuilder<T> {
 	 * @param cChunk
 	 * @return
 	 */
+<<<<<<< HEAD:src/main/java/br/com/riselabs/cotonet/builder/AbstractNetworkBuilder.java
 	protected abstract Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<T> cChunk);
+=======
+	private Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
+			ConflictChunk<CommandLineBlameResult> cChunk) {
 
+		Map<String, List<DeveloperNode>> result = new HashMap<>();
+
+		// getting nodes from the upper part of the conflict
+		CommandLineBlameResult leftResult = cChunk.getLeft().getResult();
+
+		result.put(scenario.getLeft().getName(),
+				extractNodes(scenario.getBase(), scenario.getLeft(), leftResult, MergeCommitSide.LEFT));
+		// getting nodes from the bottom part of the conflict
+		CommandLineBlameResult rightResult = cChunk.getRight().getResult();
+		result.put(scenario.getRight().getName(),
+				extractNodes(scenario.getBase(), scenario.getRight(), rightResult, MergeCommitSide.RIGHT));
+
+		return result;
+	}
+
+	private List<DeveloperNode> extractNodes(RevCommit base, RevCommit side, CommandLineBlameResult aResult,
+			MergeCommitSide mergeCommitSide) {
+
+		List<DeveloperNode> result = new ArrayList<>();
+		for (DeveloperNode aDev : aResult.getAuthors()) {
+			if (!getProject().getDevs().values().contains(aDev)) {
+				// if there is no such dev in the project, then add it
+				getProject().add(aDev);
+			} else {
+				// else update the reference with the project one
+				aDev = getProject().getDevByMail(aDev.getEmail());
+			}
+
+			if (!result.contains(aDev)) {
+				for (int line : aResult.getLineAuthorsMap().keySet()) {
+					String lineCommit = aResult.getLineCommitMap().get(line);
+
+					if (aResult.getLineAuthorsMap().get(line).equals(aDev) && inRange(lineCommit, base, side)) {
+						aDev.setSideCommitComesFrom(mergeCommitSide);
+						result.add(aDev);
+						break;
+					}
+				}
+			}
+		}
+
+		return result;
+	}
+
+	/**
+	 * Determines whether a commit in in a specified range of commits.
+	 *
+	 * TODO: This should be done in some kind of GitHelper class or somewhere
+	 * else.
+	 */
+	private boolean inRange(String commit, RevCommit begin, RevCommit end) {
+		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
+			rw.markStart(rw.parseCommit(end));
+			rw.markUninteresting(rw.parseCommit(begin));
+>>>>>>> 0b1be907f12f89ca450b7cf2fa98218abc92a316:src/main/java/br/com/riselabs/cotonet/builder/NetworkBuilder.java
+
+			for (RevCommit cur; (cur = rw.next()) != null;) {
+				if (!(cur.getName().equals(begin.getName())) && cur.getName().equals(commit)) {
+					return true;
+				}
+			}
+		} catch (IOException e) {
+		}
+
+		return false;
+	}
 }

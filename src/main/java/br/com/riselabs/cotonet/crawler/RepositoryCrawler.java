@@ -31,9 +31,7 @@ import org.eclipse.jgit.errors.RepositoryNotFoundException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
 
-import br.com.riselabs.cotonet.builder.AbstractNetworkBuilder;
-import br.com.riselabs.cotonet.builder.ChunkBasedNetworkBuilder;
-import br.com.riselabs.cotonet.builder.FileBasedNetworkBuilder;
+import br.com.riselabs.cotonet.builder.NetworkBuilder;
 import br.com.riselabs.cotonet.model.beans.Project;
 import br.com.riselabs.cotonet.model.enums.NetworkType;
 import br.com.riselabs.cotonet.model.exceptions.EmptyContentException;
@@ -42,10 +40,11 @@ import br.com.riselabs.cotonet.util.Directories;
 import br.com.riselabs.cotonet.util.Logger;
 
 /**
- * This Runnable class can execute four activities: </br>- it clones the
- * repository; </br>- it persists the tags mapping file; </br>- it creates the
- * <code>codeface</code> configuration file; and </br>- it triggers the conflict
- * based network construction.
+ * This Runnable class can execute four activities: </br>
+ * - it clones the repository; </br>
+ * - it persists the tags mapping file; </br>
+ * - it creates the <code>codeface</code> configuration file; and </br>
+ * - it triggers the conflict based network construction.
  * 
  * @author Alcemir R. Santos
  *
@@ -56,20 +55,24 @@ public class RepositoryCrawler implements Runnable {
 
 	private File repositoryDir;
 	private boolean skipNetworks;
-	private NetworkType type;
 	private File log;
+	
+	private NetworkType type;
 
-	public RepositoryCrawler(String systemURL, boolean mustClone,
-			NetworkType type) throws IOException {
+	public RepositoryCrawler(String systemURL, boolean mustClone, NetworkType type)
+			throws IOException {
 		setProject(new Project(systemURL));
 		setCloning(mustClone);
-		setLogFile(new File(Directories.getLogDir(), "thread-"
-				+ getProject().getName() + ".log"));
+		setLogFile(new File(Directories.getLogDir(), "thread-" + getProject().getName() + ".log"));
 		setRepositoryDir(new File(Directories.getReposDir(), project.getName()));
-		setType(type);
+		setProgramType(type);
 	}
 
-	private void setType(NetworkType type) {
+	public NetworkType getProgramType() {
+		return type;
+	}
+
+	public void setProgramType(NetworkType type) {
 		this.type = type;
 	}
 
@@ -106,24 +109,17 @@ public class RepositoryCrawler implements Runnable {
 			project.setRepository(repo);
 			if (!skipNetworks) {
 				// building networks
-				AbstractNetworkBuilder builder = null;
-				switch (type) {
-				case FILE_BASED:
-					builder = new FileBasedNetworkBuilder(getProject());
-					break;
-				case CHUNK_BASED:
-				default:
-					builder = new ChunkBasedNetworkBuilder(getProject());
-					break;
-				}
+
+				NetworkBuilder<Object> builder = new NetworkBuilder<Object>(getProject(), getProgramType());
+				
 				builder.setLogFile(log);
 				builder.build();
 				builder.persist();
 			}
 			// persisting aux files
 			CodefaceHelper.createCodefaceConfFiles(project);
-		} catch (NullPointerException | EmptyContentException | GitAPIException
-				| InterruptedException | IOException e) {
+		} catch (NullPointerException | EmptyContentException | GitAPIException | InterruptedException
+				| IOException e) {
 			Logger.logStackTrace(log, e);
 		}
 		System.gc();
@@ -145,10 +141,8 @@ public class RepositoryCrawler implements Runnable {
 		Git result;
 		try {
 			Logger.log(log, "[" + getProject().getName() + "] Cloning Start.");
-			result = Git.cloneRepository().setURI(project.getUrl() + ".git")
-					.setDirectory(repositoryDir).call();
-			Logger.log(log, "[" + getProject().getName()
-					+ "] Cloning Finished.");
+			result = Git.cloneRepository().setURI(project.getUrl() + ".git").setDirectory(repositoryDir).call();
+			Logger.log(log, "[" + getProject().getName() + "] Cloning Finished.");
 			return result.getRepository();
 		} catch (GitAPIException e) {
 			Logger.log(log, "[" + getProject().getName() + "] Cloning Failed.");

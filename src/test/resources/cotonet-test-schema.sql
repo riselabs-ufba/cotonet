@@ -80,7 +80,7 @@ DROP TABLE IF EXISTS `cotonet-test`.`networks` ;
 CREATE TABLE IF NOT EXISTS `cotonet-test`.`networks` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `merge_scenario_id` INT UNSIGNED NOT NULL,
-  `type` CHAR(1) NOT NULL,
+  `type` CHAR(2) NOT NULL,
   PRIMARY KEY (`id`),
   INDEX `fk_tags_merge_scenarios_idx` (`merge_scenario_id` ASC),
   CONSTRAINT `fk_tags_merge_scenarios`
