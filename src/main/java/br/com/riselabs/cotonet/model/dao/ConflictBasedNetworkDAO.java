@@ -98,8 +98,13 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork> {
 			while (rs.next()) {
 				ConflictBasedNetwork connet = new ConflictBasedNetwork();
 				connet.setID(rs.getInt("id"));
-				connet.setType(rs.getString("type").equals("C") ? NetworkType.CHUNK_BASED
-						: NetworkType.FILE_BASED);
+				if (rs.getString("type").equals("C")){
+					connet.setType(NetworkType.CHUNK_BASED);
+				}else if (rs.getString("type").equals("CF")){
+					connet.setType(NetworkType.CHUNK_BASED_FULL);
+				}else if (rs.getString("type").equals("F")){
+					connet.setType(NetworkType.FILE_BASED);
+				}
 				connet.setMergeScenarioID(rs.getInt("merge_scenario_id"));
 				result.add(connet);
 			}
@@ -142,7 +147,9 @@ public class ConflictBasedNetworkDAO implements DAO<ConflictBasedNetwork> {
 				NetworkType type = null;
 				if (rs.getString("type").equals("F")) {
 					type = NetworkType.FILE_BASED;
-				} else if (rs.getString("type").equals("C")) {
+				} else if (rs.getString("type").equals("FC")) {
+					type = NetworkType.CHUNK_BASED_FULL;
+				}else if (rs.getString("type").equals("C")) {
 					type = NetworkType.CHUNK_BASED;
 				}
 				ConflictBasedNetwork retrieved = new ConflictBasedNetwork(id,
