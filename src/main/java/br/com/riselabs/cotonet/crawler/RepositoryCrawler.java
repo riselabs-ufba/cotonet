@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.IOException;
 
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRemoteException;
 import org.eclipse.jgit.api.errors.TransportException;
@@ -103,6 +104,10 @@ public class RepositoryCrawler implements Runnable {
 			Repository repo;
 			try (Repository aux = openRepository()) {
 				repo = aux;
+
+				// repository already exists, so we reset it to master to make sure it is not in a weird state
+				Git git = Git.wrap(repo);
+				git.reset().setRef("master").setMode(ResetCommand.ResetType.HARD).call();
 			} catch (RepositoryNotFoundException e) {
 				repo = cloneRepository();
 			}
