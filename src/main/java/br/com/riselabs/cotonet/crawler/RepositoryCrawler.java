@@ -121,8 +121,13 @@ public class RepositoryCrawler implements Runnable {
 				builder.build();
 				builder.persist();
 			}
-			// persisting aux files
-			CodefaceHelper.createCodefaceConfFiles(project);
+
+			if (!project.getMergeScenarios().isEmpty()) {
+				// persisting aux files
+				CodefaceHelper.createCodefaceConfFiles(project);
+			} else {
+				Logger.log("[" + project.getName() + "] no merge scenarios found.");
+			}
 		} catch (NullPointerException | EmptyContentException | GitAPIException | InterruptedException
 				| IOException e) {
 			Logger.logStackTrace(log, e);
