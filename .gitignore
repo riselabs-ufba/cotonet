@@ -13,3 +13,4 @@ cotonet-files/*
 *.bak
 .idea/
 *.swp
+db.properties
