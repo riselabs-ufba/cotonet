@@ -5,7 +5,7 @@
 A tool to build conflict-based networks.
 
 ## Wait, what?
-Cotonet is a tool that collects information form _Git_ repositories concening branch merges' conflicts to build developer collaboration's networks.
+Cotonet is a tool that collects information form _Git_ repositories concerning branch merges' conflicts to build developer collaboration's networks.
 
 ## How?
 The implementation relies on JGit to clone repositories and extract project specific informations regarding its merge scenarios. 
