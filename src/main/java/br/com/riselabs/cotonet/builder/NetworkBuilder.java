@@ -278,6 +278,7 @@ public class NetworkBuilder<T> {
 			/*
 			 * iterates in each chunk of the file
 			 */
+
 			for (ConflictChunk<CommandLineBlameResult> cChunk : cchunks) {
 				fNodes = (HashMap<String, List<DeveloperNode>>) (getDeveloperNodes(scenario, cChunk));
 
@@ -315,30 +316,6 @@ public class NetworkBuilder<T> {
 		return new ConflictBasedNetwork(project, scenario, nodes, edges, type);
 	}
 
-<<<<<<< HEAD:src/main/java/br/com/riselabs/cotonet/builder/AbstractNetworkBuilder.java
-	private List<DeveloperEdge> getDeveloperEdges(Map<String, List<DeveloperNode>> nodes,
-			ConflictChunk<T> cChunk) {
-		List<DeveloperEdge> edges = new ArrayList<DeveloperEdge>();
-		
-//		
-//		// if there is only one developer, create loop
-//		if (nodes.size() == 1) {
-//			DeveloperNode node = nodes.get(0);
-//			edges.add(new DeveloperEdge(node, node, cChunk.getChunkRange(),
-//					cChunk.getPath().toString()));
-//			return edges;
-//		}
-		
-		Iterator<List<DeveloperNode>> ilist = nodes.values().iterator();
-		List<DeveloperNode> groupA = ilist.next();
-		List<DeveloperNode> groupB = ilist.next();
-			
-		// create a fully connected graph
-		for (DeveloperNode from : groupA) {
-			for (DeveloperNode to : groupB) {
-				
-				if (from.equals(to)) { 
-=======
 	private List<DeveloperEdge> getDeveloperFileEdges(List<DeveloperNode> nodes, String filePath,
 			List<DeveloperEdge> oldEdges) {
 
@@ -351,7 +328,6 @@ public class NetworkBuilder<T> {
 		for (DeveloperNode from : nodes) {
 			for (DeveloperNode to : nodes) {
 				if (from.equals(to)) {
->>>>>>> 0b1be907f12f89ca450b7cf2fa98218abc92a316:src/main/java/br/com/riselabs/cotonet/builder/NetworkBuilder.java
 					continue;
 				}
 				DeveloperEdge newEdge;
@@ -475,10 +451,6 @@ public class NetworkBuilder<T> {
 	 * @param cChunk
 	 * @return
 	 */
-<<<<<<< HEAD:src/main/java/br/com/riselabs/cotonet/builder/AbstractNetworkBuilder.java
-	protected abstract Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
-			ConflictChunk<T> cChunk);
-=======
 	private Map<String, List<DeveloperNode>> getDeveloperNodes(MergeScenario scenario,
 			ConflictChunk<CommandLineBlameResult> cChunk) {
 
@@ -536,7 +508,6 @@ public class NetworkBuilder<T> {
 		try (RevWalk rw = new RevWalk(getProject().getRepository())) {
 			rw.markStart(rw.parseCommit(end));
 			rw.markUninteresting(rw.parseCommit(begin));
->>>>>>> 0b1be907f12f89ca450b7cf2fa98218abc92a316:src/main/java/br/com/riselabs/cotonet/builder/NetworkBuilder.java
 
 			for (RevCommit cur; (cur = rw.next()) != null;) {
 				if (!(cur.getName().equals(begin.getName())) && cur.getName().equals(commit)) {

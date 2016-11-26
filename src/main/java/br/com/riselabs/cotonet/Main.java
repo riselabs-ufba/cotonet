@@ -61,13 +61,21 @@ public class Main {
 		Options options = new Options();
 
 		options.addOption(Option.builder("c").longOpt("chunkBased")
-				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
+				.desc("c - build a conflict chunk-based network with the developers that in fact conflits with each other."
+						+ " Additionally to the c argument the user should provide a path. This path should have"
+						+ " a file containig the repository's URL of the target systems.").hasArg().build());
 
 		options.addOption(Option.builder("cf").longOpt("chunkBasedFullGraph")
-				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
+				.desc("cf - like c, build a conflict chunk-based network adding all developers involved in "
+						+ "identified chunk conflicts. Additionally to the cf argument the user should provide a path. "
+						+ "This path should have a file containig the repository's URL of the target systems.").hasArg().build());
 
 		options.addOption(Option.builder("f").longOpt("fileBase")
-				.desc("The path to the file containig the repository's URL of the target systems.").hasArg().build());
+				.desc(" f - build a conflict file-based network. In other others all developers that contribute to some"
+						+ " conflict at file level should be part of this network. This network is based on network provides "
+						+ "by cf, adding edges between developers of different chunks. Additionally to the f argument the"
+						+ " user should provide a path. This path should have afile containig the repository's URL of "
+						+ "the target systems.").hasArg().build());
 		/*
 		 * options.addOption( Option.builder("rw").longOpt("rewrite-aux").
 		 * desc("Rewrite auxilary files (e.g., *.conf, *.sh) " + "_WITHOUT_ " +
