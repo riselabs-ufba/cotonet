@@ -1,0 +1,4 @@
+#Sat Nov 26 19:00:17 CET 2016
+database.password=root
+database.user=root
+database.name=cotonet-test

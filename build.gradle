@@ -57,7 +57,8 @@ def getDate() {
     return formattedDate
 }
 
-def dbProperties = new File(rootProject.projectDir, 'db.properties')
+def dbDefaultProperties = new File(rootProject.projectDir, 'src/main/resources/db.properties.sample')
+def dbProperties = new File(rootProject.projectDir, 'src/main/resources/db.properties')
 
 task prepareDefaultProperties {
     outputs.file(dbProperties)
@@ -69,9 +70,7 @@ task prepareDefaultProperties {
     doLast {
         if (!dbProperties.exists()) {
             Properties dbProps = new Properties()
-            dbProps.setProperty("database.name", "cotonet-test")
-            dbProps.setProperty("database.user", "root")
-            dbProps.setProperty("database.password", "root")
+            dbProps.load(new FileInputStream(dbDefaultProperties))
             dbProps.store(new FileOutputStream(dbProperties), null)
         }
     }
