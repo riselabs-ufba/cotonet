@@ -56,3 +56,24 @@ def getDate() {
     def formattedDate = date.format('yyyyMMddHHmm')
     return formattedDate
 }
+
+def dbDefaultProperties = new File(rootProject.projectDir, 'src/main/resources/db.properties.sample')
+def dbProperties = new File(rootProject.projectDir, 'src/main/resources/db.properties')
+
+task prepareDefaultProperties {
+    outputs.file(dbProperties)
+
+    outputs.upToDateWhen {
+        return dbProperties.exists()
+    }
+
+    doLast {
+        if (!dbProperties.exists()) {
+            Properties dbProps = new Properties()
+            dbProps.load(new FileInputStream(dbDefaultProperties))
+            dbProps.store(new FileOutputStream(dbProperties), null)
+        }
+    }
+}
+
+processResources.dependsOn prepareDefaultProperties

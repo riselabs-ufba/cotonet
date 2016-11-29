@@ -56,7 +56,7 @@ public class Directories {
 	
 	private static File getDir(String child) {
 		File dir;
-		if ((dir = new File(new File(APP_DIR, "cotonet-files"), child)).exists()) {
+		if (!(dir = new File(new File(APP_DIR, "cotonet-files"), child)).exists()) {
 			dir.mkdirs();
 		}
 		return dir;
